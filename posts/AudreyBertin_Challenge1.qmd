@@ -21,7 +21,6 @@ categories:
 #| warning: false
 
 library(tidyverse)
-library(readxl)
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
@@ -30,10 +29,11 @@ For this challenge, I'll be reading in the following datasets:
 -   birds.csv ⭐⭐
 -   wild_bird_data.xlsx ⭐⭐⭐
 
+## `birds.csv`
 
 First, we start with `birds.csv`:
 
-```{r}
+```{r, message=FALSE}
 birds <- readr::read_csv("_data/birds.csv")
 ```
 
@@ -77,3 +77,47 @@ Looking at missing data, most of our variables have records for every row. There
 ```{r}
 colSums(is.na(birds))
 ```
+
+## `wild_bird_data.xlsx`
+
+We read this in using `read_excel`:
+
+```{r message=FALSE}
+# We need to add skip=1 to skip the first row and get rid of duplicate header labels
+wild_birds <- readxl::read_excel("_data/wild_bird_data.xlsx", skip = 1)
+```
+
+
+A sample of this data can be seen below:
+
+```{r}
+head(wild_birds)
+```
+
+```{r}
+str(wild_birds)
+```
+
+
+As we can see, we just have two variables here, the wet body weight (in grams) and the size of the population.
+
+We can calculate some summary statistics about each of these variables:
+
+```{r}
+summary(wild_birds)
+```
+Body weight ranges from ~5.5 grams to ~9640 grams. Population size ranges from 5 to 5,093,378, and we can see the means/medians/quartiles above as well.
+
+
+There are 146 rows and none of the data appears to be missing.
+```{r}
+dim(wild_birds)
+```
+
+```{r}
+colSums(is.na(wild_birds))
+```
+
+It is difficult just from the dataset itself to understand the context of this data. Is the "Wet body weight [g]" the combined wet weight of the whole population?  The average weight of birds in that population? It is unclear how the two columns are related.
+
+Also, what type of birds are these? What does a row represent? We would need more information from the source to be able to understand this data further.
