@@ -1,0 +1,36 @@
+---
+title: "Challenge 1"
+author: "Audrey Bertin"
+description: "Reading in data and creating a post"
+date: "5/30/2023"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_1
+  - railroads
+  - faostat
+  - wildbirds
+---
+
+```{r}
+#| label: setup
+#| warning: false
+
+library(tidyverse)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+For this challenge, I'll be reading in the following datasets 
+
+-   birds.csv ⭐⭐
+-   wild_bird_data.xlsx ⭐⭐⭐
+
+
+```{r}
+readr::read_csv()
+```
+
