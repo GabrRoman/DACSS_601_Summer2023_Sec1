@@ -58,4 +58,102 @@ Beyond this, it is difficult to tell much. Does this cover all hotels in these r
 
 ## Additional Details
 
+We can further investigate to get a sense of patterns in the data.
+
+First, we can look into hotel type and customer type. In theory, different types of customers might stay at different varieties of hotels. We can verify if this is true.
+
+```{r}
+xtabs(~hotel + customer_type, hotels)
+```
+Groups appear more likely than other customer types to book resort hotels, booking them around half the time. Groups appear to be the standout here, so we will look into them further.
+
+Let's start by looking at how many people are registered for each group reservation, compared with other customer types:
+
+#### **Mean** number of people, by type
+
+```{r}
+hotels %>%
+  group_by(customer_type) %>%
+  mutate(total_people = adults + children + babies) %>%
+  select(adults, children, babies, total_people) %>%
+  summarise_all(funs(mean), na.rm = TRUE)
+```
+#### **Max** number of people, by type
+
+```{r}
+hotels %>%
+  group_by(customer_type) %>%
+  mutate(total_people = adults + children + babies) %>%
+  select(adults, children, babies, total_people) %>%
+  summarise_all(funs(max), na.rm = TRUE)
+```
+
+#### **Min** number of people, by type
+
+
+```{r}
+hotels %>%
+  group_by(customer_type) %>%
+  mutate(total_people = adults + children + babies) %>%
+  select(adults, children, babies, total_people) %>%
+  summarise_all(funs(min), na.rm = TRUE)
+```
+
+#### **SD** of number of people, by type
+
+
+```{r}
+hotels %>%
+  group_by(customer_type) %>%
+  mutate(total_people = adults + children + babies) %>%
+  select(adults, children, babies, total_people) %>%
+  summarise_all(funs(sd), na.rm = TRUE)
+```
+
+Groups appear to have the highest total average number of people, as well as a *much* higher maximum number of people. Transient and contract contract customers appear to have a higher maximum number of babies and children than group reservations, which appear to be adult-heavy.
+
+Looking at outliers, we can see for Group reservations that there are some stays with 0 total recorded people staying there for a recorded stay (we see this across all types of customers as well), and the maximum number of people is 55 for a single reservation. Both of those numbers are very odd. It does not make sense to reserve a hotel for no one, and 55 people would require a massive space and is bigger than any normal reservation, even a standard group reservation. 55 is MUCH higher than the mean number of people per group reservation, though we note that the standard deviation of group size is way bigger than the standard deviation for any other customer type.
+
+Looking into group reservations further, we can also look into length of stay by hotel type:
+
+```{r}
+hotels %>%
+  filter(customer_type == "Group") %>%
+  mutate(total_nights = stays_in_weekend_nights + stays_in_week_nights) %>%
+  group_by(hotel) %>%
+  summarise(n_stays = n(), max_stay = max(total_nights), min_stay = min(total_nights), mean_stay = mean(total_nights), sd_stay = sd(total_nights))
+```
+
+Remember from earlier that groups have an approximately equal number of stays at each hotel type: City and Resort. Maximum stay length is relatively similar between the two (12 vs 14 days). On average, stays are longer at resorts, and there is also a higher standard deviation there. This makes sense logically, as vacations often last longer than, say, a work trip, and they tend to be pretty varied in length depending on the customer.
+
+Again, we note a strange pattern with min stay length of 0 nights. 
+
+We've noted several outliers here so far. 0 night stays, as well as stays with 0 people and 55 people. Let's look into those outliers further to try and understand what is going on. A few columns appear specifically relevant/useful in identifying a pattern, so we will just look at those.
+
+```{r}
+hotels %>%
+  mutate(total_nights = stays_in_weekend_nights + stays_in_week_nights) %>%
+  filter(customer_type == "Group", total_nights==0) %>%
+  select(hotel, lead_time, adults, children, reservation_status, country)
+  
+```
+
+Almost all of the 0 night stays belong to resort hotels, many with very short lead time (indicating that potentially people just showed up on the day for a "spa" day or similar). One of them is canceled, which may impact why the result was 0. Perhaps most interestingly, all of those 0 day stays which we have a record for are in the same country: Portugal. Potentially the record keeping in Portugal is off or they allow/record 0 night stays for some reason, which other countries don't do.
+
+Next, we look at the stays with 0 and 55 people.
+
+```{r}
+hotels %>%
+  mutate(total_people = adults + children + babies) %>%
+  filter(customer_type == "Group", total_people %in% c(0, 55)) %>%
+  select(hotel, country, lead_time, market_segment, booking_changes, deposit_type, reservation_status, total_people)
+```
+
+We have 1 stay with 55 people and 3 with 0 people. There do not appear to be any obvious patterns linking these together. They are from all different countries and market segments. The 55-person hotel booking was cancelled and had no deposit, but long lead time. The two zero-person reservations that were not cancelled had many booking changes, which could potentially indicate an unusual booking in some other way.
+
+In order to understand what happened with these outliers further, and better understand the data more generally, some additional information would be helpful. Are 0 day stays possible at some of these places--for example, spa resorts where you just go in for the day? What does it mean to have a 0 person reservation? It is possible that that is a bug *or* maybe 0 was used instead of NA to represent missing data, causing confusion. It would also be interesting to have information on hotel name, as well as room price/total booking cost, and number of rooms. For example, for the 55 person reservation, did they just book a bunch of small rooms, or one giant suite? The room codes in the data as of now are not clear enough to determine this information.
+
+
+
+
 
