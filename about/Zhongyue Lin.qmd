@@ -11,22 +11,11 @@ about:
       text: Github
       href: https://github.com/LeoLin990405
 ---
-
-##Instructions
-
--   save a copy of this document as *FirstLast.qmd* in the **about** folder
--   replace *Your Name* in yaml header with your first and last name
--   save an image (jpeg, png) to use in the **about/images** folder
--   replace image names in yaml header
--   replace github user name
--   fill in information below, as appropriate
--   commit to github and submit pull request
-
 ## Education/Work Background
 
-I embarked on academic journey with a dual degree in Finance and Business Management from the University of Nebraska at Omaha. To elevate my understanding of human cognition and decision-making processes, I pursued a Master's degree in Behavioral and Economic Sciences at the University of Warwick in the UK. This rigorous academic training deepened my insights into the inherent biases within these processes and significantly broadened my knowledge base.
+My academic journey began with a dual degree in Finance and Business Management from the University of Nebraska Omaha. To further my understanding of human cognition and decision-making, I pursued a Master's degree in Behavioral and Economic Sciences at the University of Warwick in the UK. This experience expanded my knowledge and offered deeper insights into inherent biases within these processes.
 
-Despite lacking full-time work experience, I capitalized on a variety of internships and practical engagements during the gap year between my undergraduate and master's studies to teach myself data analysis and programming. I served as a student assistant in the Language Lab at the University of Nebraska Omaha, assisting with academic tasks and research. Additionally, I was a Data Science Teaching Assistant at an online seminar on organizational behavior hosted by the University of Southern California, which honed my pedagogical skills in data science. I also interned as a Behavioral Science Consulting Assistant at Cowry Consulting in UK, and as a Social Media Data Analyst at MININGLAMP Technology in Shanghai, China. In my role at Essence Securities in Shenzhen, China, I contributed as a Quantitative Financial Analyst, applying my skills in the dynamic financial sector. These experiences have not only sharpened my programming abilities but have also fostered a nuanced understanding of data science and behavioral science, thereby laying a solid foundation for my future research endeavors.
+Despite not having full-time work experience, I made the most of various internships and practical engagements during the gap year between my undergraduate and master's degrees. This period proved instrumental for self-teaching in data analysis and programming. I served as a student assistant at a language lab and a data science teaching assistant at an online seminar, both experiences honing my research and teaching skills. I also participated in internships across the behavioral science consulting industry in the UK, social media data analysis in China, and as a quantitative financial analyst within the financial sector in China. These diverse experiences have not only honed my programming abilities but also cultivated a comprehensive understanding of data science and behavioral science, forming a robust foundation for my future research.
 
 ## R experience
 
@@ -48,14 +37,9 @@ Shenzhen, China
 
 -   Cooking
 
--   Coding I find coding to be a great means of practice logical abilities :)
-
 -   Listening to classical music (I am particularly fond of Ryuichi Sakamoto and Shostakovich)
 
 ## Fun fact
 
--   This is my first attempt at completing a degree through online education, which is a new challenge for me compared to traditional education methods (especially balancing work and course time)
-
--   I really like fish and chips :)
 
 -   I was a student of film history before entering my undergraduate degree at UNO and I have seen 3000 films.
