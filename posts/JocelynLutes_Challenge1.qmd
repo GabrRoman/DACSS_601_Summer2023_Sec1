@@ -1,0 +1,114 @@
+---
+title: "Challenge 1"
+author: "Jocelyn Lutes"
+description: "Reading in data and creating a post"
+date: "05/31/2023"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_1
+  - jocelyn_lutes
+  - wildbirds
+  - tidyverse
+  - readxl
+---
+
+```{r}
+#| label: setup
+#| warning: false
+
+library(tidyverse)
+library(readxl)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to
+
+1)  read in a dataset, and
+
+2)  describe the dataset using both words and any supporting information (e.g., tables, etc)
+
+## Read in the Data
+
+For this challenge, I have chosen to read in the `wild_bird_data.xlsx` dataset. I chose to use this dataset because I have experience importing data from `csv` in R but have no experience importing `Excel` files. To read in the data, I utilized the `read_excel` function from the `readxl` library. 
+
+The raw `xlsx` file contains descriptive data in the first row of the file. Therefore, if we try to import the data using the default arguments of `read_excel`, the descriptive information is incorrectly assigned as the header row of the tibble. In order to import the data in the tabular form that we expect (header followed by the rows of data), we must set `skip = 1` to skip over the first row. As shown in the sample below, this results in a tibble where the header is correctly assigned.
+```{r}
+wild_birds_data <- read_excel('_data/wild_bird_data.xlsx', skip = 1)
+head(wild_birds_data)
+```
+
+## Describe the data
+
+### Data Source
+Based on the first row of the raw `xlsx` file, we can see that this data was extracted from Figure 1 of a paper written by Nee et al. Although I was not able to obtain a copy of the paper to confirm, it seems possible that this data could have come from the paper "[The relationship between abundance and body size in British birds](https://www.nature.com/articles/351312a0)", which was published in Nature by Nee, Read, Greenwood, and Harvey in 1991. 
+
+Assuming that this data was taken from Nee et al. (1991), then this data was collected to investigate the relationship between the size of birds and their population size.
+
+### Variables
+
+This dataset only contains two variables:  
+
+1. `Wet Body Weight [g]`: This is the weight in grams of the different bird species.
+
+2. `Population Size`: This is the size of the bird population. If the data was taken from Nee et al. (1991), the population sizes were published by the British Trust for Ornithology. 
+
+### Descriptive Statistics
+
+This dataset contains data for (presumably) 146 species of birds, which is very similar to the 147 species that were included in the analyses by Nee et al. (1991).
+
+```{r}
+paste("Number of Observations:", nrow(wild_birds_data))
+```
+
+The size of the birds in the sample varies greatly. The smallest bird species weighs just 5.46 grams and the largest species weighs 9639.85 grams. The average weight is 363.69 grams with a standard deviation of 983.55 grams.
+```{r}
+# calculate summary statistics for body weight
+wild_birds_data %>%
+  rename(bw = `Wet body weight [g]`) %>%
+  summarize(mean_weight = mean(bw), sd_weight = sd(bw), min_weight = min(bw), max_weight = max(bw))
+```
+
+There is also considerable variation in the population sizes for the birds in the sample. Population varies from 4.9 to over 5 million! The mean population is 382,874 with a standard deviation of 951938.7.
+
+```{r}
+# calculate summary statistics for population size
+wild_birds_data %>%
+  rename(pop = `Population size`) %>%
+  summarize(mean_population = mean(pop), sd_population= sd(pop), min_population = min(pop), max_population = max(pop))
+```
+
+The average weight (std dev) of the top 5 most populous birds is 47.27g (37.27g) , while the average weight (std dev) of the top 5 least populous birds is 96.3 g (154.37 g). Further analysis would be needed to determine if a meaningful relationship between body weight and population size exists in this dataset.
+
+```{r}
+# simple analysis to see how body weight differs based on population size
+
+# Most Populous Birds
+most_pop <- wild_birds_data %>%
+  rename(pop = `Population size`, bw = `Wet body weight [g]`) %>%
+  arrange(desc(pop)) %>% 
+  slice(1:5)
+
+paste('Average Weight of Top 5 Most Populous Birds:', round(mean(most_pop$bw), 2))
+paste('Std Dev of Weight of Top 5 Most Populous Birds:', round(sd(most_pop$bw), 2))
+
+# Least Populous Birds
+least_pop <- wild_birds_data %>%
+  rename(pop = `Population size`, bw = `Wet body weight [g]`) %>%
+  arrange(pop) %>% 
+  slice(1:5)
+
+paste('Average Weight of Top 5 Least Populous Birds:', round(mean(least_pop$bw), 2))
+paste('Std Dev of Weight of Top 5 Least Populous Birds:', round(sd(least_pop$bw), 2))
+```
+
+## References
+
+Nee, S., Read, A.F., Greenwood, J. J. D., & Harvey, P.H. (1991). The relationship between abundance and body size in British Birds, *Nature*, 351, 312-313.
