@@ -1,0 +1,124 @@
+---
+title: "Challenge 1 - Reading and understanding bird data"
+author: "Audrey Bertin"
+description: "Reading in csv and excel data"
+date: "5/30/2023"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_1
+  - birds
+  - wildbirds
+  - csv
+  - excel
+---
+
+```{r}
+#| label: setup
+#| warning: false
+
+library(tidyverse)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+For this challenge, I'll be reading in the following datasets:
+
+-   birds.csv ⭐⭐
+-   wild_bird_data.xlsx ⭐⭐⭐
+
+## `birds.csv`
+
+First, we start with `birds.csv`:
+
+```{r, message=FALSE}
+birds <- readr::read_csv("_data/birds.csv")
+```
+
+A sample of this data can be seen below:
+
+```{r}
+head(birds)
+```
+
+```{r}
+str(birds)
+```
+
+
+As we can see, we appear to have information on the number of different types of birds in different areas around the world, based on different data sources and estimates. The data appears to be measuring birds in captivity, rather than wild birds.
+
+We have 8 categorical variables and 6 numeric. The numeric variables appear to be discrete in that they can only have whole integer values.
+
+The different types of birds we are tracking are as follows. We have the most data on chickens and the least on pigeons and other birds.
+
+```{r}
+table(birds$Item)
+```
+
+The different type of measurements we have are:
+
+```{r}
+table(birds$`Flag Description`)
+```
+There appears to be a strange duplicate variable. Both `Year` and `Year Code` have identical values.
+
+
+The birds data has 30,977 rows and 14 columns:
+
+```{r}
+dim(birds)
+```
+
+Looking at missing data, most of our variables have records for every row. There are only two that have missing values, `Value` and `Flag`. About 1/30 of the Values are missing and about 1/3 of the flags.
+
+```{r}
+colSums(is.na(birds))
+```
+
+## `wild_bird_data.xlsx`
+
+We read this in using `read_excel`:
+
+```{r message=FALSE}
+# We need to add skip=1 to skip the first row and get rid of duplicate header labels
+wild_birds <- readxl::read_excel("_data/wild_bird_data.xlsx", skip = 1)
+```
+
+
+A sample of this data can be seen below:
+
+```{r}
+head(wild_birds)
+```
+
+```{r}
+str(wild_birds)
+```
+
+
+As we can see, we just have two variables here, the wet body weight (in grams) and the size of the population.
+
+We can calculate some summary statistics about each of these variables:
+
+```{r}
+summary(wild_birds)
+```
+Body weight ranges from ~5.5 grams to ~9640 grams. Population size ranges from 5 to 5,093,378, and we can see the means/medians/quartiles above as well.
+
+
+There are 146 rows and none of the data appears to be missing.
+```{r}
+dim(wild_birds)
+```
+
+```{r}
+colSums(is.na(wild_birds))
+```
+
+It is difficult just from the dataset itself to understand the context of this data. Is the "Wet body weight [g]" the combined wet weight of the whole population?  The average weight of birds in that population? It is unclear how the two columns are related.
+
+Also, what type of birds are these? What does a row represent? We would need more information from the source to be able to understand this data further.
