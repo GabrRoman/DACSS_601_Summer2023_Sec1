@@ -1,0 +1,61 @@
+---
+title: "Challenge 2"
+author: "Audrey Bertin"
+description: "Data wrangling: using group() and summarise()"
+date: "5/31/2023"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_2
+  - hotel_bookings
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+For this challenge I looked at the `hotel_bookings.csv ⭐⭐⭐⭐` dataset:
+
+
+```{r message = FALSE}
+hotels <- readr::read_csv("_data/hotel_bookings.csv")
+```
+
+
+## Data Overview
+
+
+```{r}
+glimpse(hotels)
+```
+
+This dataset has 119,300 rows and 32 columns. It contains many different data points on hotel reservations, including information about the customer (how many adults/children are staying, customer type, previous bookings by them, etc), the reservation (arrival date, length of stay, room type, etc), as well as the hotel (country location, distribution channel, hotel type, etc). Each row appears to refer to a single booking at a single hotel.
+
+The hotels appear to be located all around the world and data covers the years 2015-2017:
+
+```{r}
+#| label: summary
+unique(hotels$country)
+```
+```{r}
+unique(hotels$arrival_date_year)
+
+```
+
+Beyond this, it is difficult to tell much. Does this cover all hotels in these regions? Only certain hotels that decided to provide their data? Is this just a sample of bookings or is it all of the bookings. The number of data points is too low to cover all hotel bookings around the world over three years.
+
+## Additional Details
+
+
