@@ -1,0 +1,157 @@
+---
+title: "Challenge 4"
+author: "Audrey Bertin"
+description: "Data wrangling with mutate"
+date: "5/30/2023"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_4
+  - abc_poll
+  - eggs
+  - fed_rates
+  - hotel_bookings
+  - debt
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+
+For this challenge, I'll be continuing with the dataset I used in challenge 2: `hotel_bookings.csv⭐⭐⭐⭐`
+
+```{r message=FALSE}
+hotels <- readr::read_csv("_data/hotel_bookings.csv")
+```
+
+I provided an overview of the dataset in that challenge, which I'll share here as well.
+
+## Data Overview
+
+
+```{r}
+glimpse(hotels)
+```
+
+This dataset has 119,300 rows and 32 columns. It contains many different data points on hotel reservations, including information about the customer (how many adults/children are staying, customer type, previous bookings by them, etc), the reservation (arrival date, length of stay, room type, etc), as well as the hotel (country location, distribution channel, hotel type, etc). Each row appears to refer to a single booking at a single hotel.
+
+The hotels appear to be located all around the world and data covers the years 2015-2017:
+
+```{r}
+#| label: summary
+unique(hotels$country)
+```
+```{r}
+unique(hotels$arrival_date_year)
+
+```
+
+It is not entirely clear, however, which hotels are covered *or* any information about their cost.
+
+## Tidy Data
+
+This data is already in a tidy format, meeting Hadley Wickham's 3 rules of tidy data:
+
+1. *Each variable must have its own column* -- Data is correctly separated into columns, no concerns here
+2. *Each observation must have its own row* -- Each row represents one reservation at a hotel (which is one observation) 
+3. *Each value must have its own cell* -- There are not multiple pieces of information stored in the same cell of the data
+
+There is also no need to pivot this data, as it is not in "wide" format. To be in wide format, there would need to be multiple responses of some type per row, such as a row representing a customer and columns representing their history of bookings. Instead, a row represents a single reservation at a hotel, which cannot be broken down further.
+
+## Identify variables that need to be mutated
+
+Looking at this data, we consider each variable and what format they should be in:
+
+#### Currently **character** but should be **factor**
+
+Variables that only have a limited set of categories should be turned into factors. It usually only makes sense to keep strings as characters if there are an undefined set of options (e.g. free text responses to a survey) or if the options are regularly changing. Otherwise, factors usually save memory and make it easier to graph things/make comparisons.
+
+These are the following variables:
+
+- `hotel`
+- `arrival_date_month` 
+- `meal` 
+- `country` 
+- `market_segment`
+- `distribution_channel`
+- `reserved_room_type`
+- `assigned_room_type`
+- `deposit_type`
+`customer_type`
+
+#### Currently **double** but should be **factor**
+
+These are variables that technically only have a yes (1) or no (0) option, but are currently categorized as numerical instead of categorical.
+- `is_cancelled`
+
+
+
+- `hotel`: Currently **character**, but only has two options. Should instead be turned into a **factor**
+- `is_cancelled`: Currently **double** (numeric) but should just be either yes (1) or no (0), so a **factor** works better.
+- `lead_time`: Currently **double**. This technically works, but **int** is probably better since there are no decimal values.
+- `arrival_date_month`:  Currently **character**, but has a set list of options. Should instead be turned into a **factor**.
+- `arrival_date_{year/week_number/day_of_month} + stays_in_weekend_nights/stays_in_week_nights + adults/children/babies`: Currently **double**. This technically works, but **int** is probably better since there are no decimal values.
+- `: Same as above. Currently **double** but probably better as **int**.
+
+
+
+
+## Challenge Overview
+
+Today's challenge is to:
+
+1)  read in a data set, and describe the data set using both words and any supporting information (e.g., tables, etc)
+2)  tidy data (as needed, including sanity checks)
+3)  identify variables that need to be mutated
+4)  mutate variables and sanity check all mutations
+
+## Read in data
+
+Read in one (or more) of the following datasets, using the correct R package and command.
+
+-   abc_poll.csv ⭐
+-   poultry_tidy.xlsx or organiceggpoultry.xls⭐⭐
+-   FedFundsRate.csv⭐⭐⭐
+-   hotel_bookings.csv⭐⭐⭐⭐
+-   debt_in_trillions.xlsx ⭐⭐⭐⭐⭐
+
+```{r}
+
+
+```
+
+### Briefly describe the data
+
+## Tidy Data (as needed)
+
+Is your data already tidy, or is there work to be done? Be sure to anticipate your end result to provide a sanity check, and document your work here.
+
+```{r}
+
+
+```
+
+Any additional comments?
+
+## Identify variables that need to be mutated
+
+Are there any variables that require mutation to be usable in your analysis stream? For example, are all time variables correctly coded as dates? Are all string variables reduced and cleaned to sensible categories? Do you need to turn any variables into factors and reorder for ease of graphics and visualization?
+
+Document your work here.
+
+```{r}
+
+```
+
+Any additional comments?
