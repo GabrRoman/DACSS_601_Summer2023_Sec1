@@ -1,8 +1,8 @@
 ---
-title: "Challenge 2"
+title: "Challenge 2 - Investigating Hotel Bookings"
 author: "Audrey Bertin"
 description: "Data wrangling: using group() and summarise()"
-date: "5/31/2023"
+date: "6/1/2023"
 format:
   html:
     toc: true
@@ -134,11 +134,11 @@ We've noted several outliers here so far. 0 night stays, as well as stays with 0
 hotels %>%
   mutate(total_nights = stays_in_weekend_nights + stays_in_week_nights) %>%
   filter(customer_type == "Group", total_nights==0) %>%
-  select(hotel, lead_time, adults, children, reservation_status, country)
+  select(hotel, lead_time, adults, children, reservation_status, country, adr)
   
 ```
 
-Almost all of the 0 night stays belong to resort hotels, many with very short lead time (indicating that potentially people just showed up on the day for a "spa" day or similar). One of them is canceled, which may impact why the result was 0. Perhaps most interestingly, all of those 0 day stays which we have a record for are in the same country: Portugal. Potentially the record keeping in Portugal is off or they allow/record 0 night stays for some reason, which other countries don't do.
+Almost all of the 0 night stays belong to resort hotels, many with very short lead time (indicating that potentially people just showed up on the day for a "spa" day or similar). One of them is canceled, which may impact why the result was 0. Perhaps most interestingly, all of those 0 day stays which we have a record for are in the same country: Portugal. Potentially the record keeping in Portugal is off or they allow/record 0 night stays for some reason, which other countries don't do. The most strange thing about these reservations is that they all have an "average daily rate" (`adr`) of 0, meaning no charge.
 
 Next, we look at the stays with 0 and 55 people.
 
@@ -146,12 +146,12 @@ Next, we look at the stays with 0 and 55 people.
 hotels %>%
   mutate(total_people = adults + children + babies) %>%
   filter(customer_type == "Group", total_people %in% c(0, 55)) %>%
-  select(hotel, country, lead_time, market_segment, booking_changes, deposit_type, reservation_status, total_people)
+  select(hotel, country, lead_time, market_segment, booking_changes, deposit_type, reservation_status, total_people, adr)
 ```
 
-We have 1 stay with 55 people and 3 with 0 people. There do not appear to be any obvious patterns linking these together. They are from all different countries and market segments. The 55-person hotel booking was cancelled and had no deposit, but long lead time. The two zero-person reservations that were not cancelled had many booking changes, which could potentially indicate an unusual booking in some other way.
+We have 1 stay with 55 people and 3 with 0 people. There do not appear to be any obvious patterns linking these together. They are from all different countries and market segments. The 55-person hotel booking was cancelled and had no deposit, but long lead time. The two zero-person reservations that were not cancelled had many booking changes, which could potentially indicate an unusual booking in some other way. Again, the average daily rates are mostly 0 with one that is only 6.4, which is extremely low. There is something mysterious going on with these bookings.
 
-In order to understand what happened with these outliers further, and better understand the data more generally, some additional information would be helpful. Are 0 day stays possible at some of these places--for example, spa resorts where you just go in for the day? What does it mean to have a 0 person reservation? It is possible that that is a bug *or* maybe 0 was used instead of NA to represent missing data, causing confusion. It would also be interesting to have information on hotel name, as well as room price/total booking cost, and number of rooms. For example, for the 55 person reservation, did they just book a bunch of small rooms, or one giant suite? The room codes in the data as of now are not clear enough to determine this information.
+In order to understand what happened with these outliers further, and better understand the data more generally, some additional information would be helpful. Are 0 day stays possible at some of these places--for example, spa resorts where you just go in for the day? What does it mean to have a 0 person reservation? It is possible that that is a bug *or* maybe 0 was used instead of NA to represent missing data, causing confusion. More information on type of hotel would be useful as well. Could "city hotel" include something like a hostel, which would explain super low rates for some cases?
 
 
 
