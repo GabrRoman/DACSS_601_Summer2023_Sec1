@@ -1,0 +1,89 @@
+---
+title: "Challenge 1 Submission"
+author: "Matt Zambetti"
+description: "Reading in data and creating a post"
+date: "5/31/2023"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_1
+  - railroads
+  - faostat
+  - wildbirds
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to
+
+1)  read in a dataset, and
+
+2)  describe the dataset using both words and any supporting information (e.g., tables, etc)
+
+## Read in the Data
+
+Read in one (or more) of the following data sets, using the correct R package and command.
+
+-   railroad_2012_clean_county.csv ⭐
+-   birds.csv ⭐⭐
+-   FAOstat\*.csv ⭐⭐
+-   wild_bird_data.xlsx ⭐⭐⭐
+-   StateCounty2012.xls ⭐⭐⭐⭐
+
+Find the `_data` folder, located inside the `posts` folder. Then you can read in the data, using either one of the `readr` standard tidy read commands, or a specialized package such as `readxl`.
+
+```{r}
+#| warning: false
+#| message: false
+
+# getting the data with the read.csv command
+railroad_data <- read.csv("_data/railroad_2012_clean_county.csv")
+
+# printing the first 10 rows
+head(railroad_data, 10)
+```
+
+
+## Describe the data
+
+Using a combination of words and results of R commands, can you provide a high level description of the data? Describe as efficiently as possible where/how the data was (likely) gathered, indicate the cases and variables (both the interpretation and any details you deem useful to the reader to fully understand your chosen data).
+
+From what we can see using the "head" command, there are three columns: state, county, and total number of employees for each railroad.
+
+I predict that the data was gathered either from on online registry with the department of labor or something similar, or this was done via survey. The survey would consist of the surveyor sending a request to each station to report how many employees there were at that particular station.
+
+
+```{r}
+#| label: summary
+
+# Lets sort the data
+sorted <- railroad_data[order(railroad_data$total_employees, decreasing = TRUE),]
+
+# 10 stations with the most employees
+head(sorted, 10)
+
+# 10 stations with the least employees
+tail(sorted, 10)
+
+
+```
+
+The two tables above, we can see the first contains the 10 stations with the most employees and in the second one, we can see the 10 stations with the least employees.
+
+These two tables could be helpful for the challenge of distributing funds. For example, a station with more employees could be funded more since their payroll is higher than that of a station with fewer.
+
+Also, stations with more employees is likely to be more populated leading to more wear and tear on the station. So, the upkeep of these stations is probably greater as well.
