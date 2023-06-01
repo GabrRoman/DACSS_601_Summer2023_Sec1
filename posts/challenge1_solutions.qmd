@@ -194,7 +194,7 @@ wildbirds
 
 Hm, this doesn't seem quite right. It is clear that the first "case" has information in it that looks more like variable labels. Lets take a quick look at the raw data.
 
-![Wild Bird Excel File](solution_images/WildBirds.png) 
+![Wild Bird Excel File](WildBirds.png) 
 
 Sure enough the Excel file first row does contain additional information, a pointer to the article that this data was drawn from, and a quick Google reveals the article is \[Nee, S., Read, A., Greenwood, J. et al. The relationship between abundance and body size in British birds. Nature 351, 312--313 (1991)\] (https://www.nature.com/articles/351312a0)
 
@@ -223,7 +223,7 @@ wildbirds
 
 ## Railroad (xls) ⭐⭐⭐⭐
 
-The railroad data set is our most challenging data to read in this week, but is (by comparison) a fairly straightforward formatted table published by the Railroad Retirement Board. The *value* variable is a count of the number of employees in each *county* and *state* combination. ![Railroad Employment](solution_images/railroad.png)
+The railroad data set is our most challenging data to read in this week, but is (by comparison) a fairly straightforward formatted table published by the Railroad Retirement Board. The *value* variable is a count of the number of employees in each *county* and *state* combination. ![Railroad Employment](railroad.png)
 
 Looking at the excel file, we can see that there are only a few issues: 1. There are three rows at the top of the sheet that are not needed 2. There are blank columns that are not needed. 3. There are Total rows for each state that are not needed
 
