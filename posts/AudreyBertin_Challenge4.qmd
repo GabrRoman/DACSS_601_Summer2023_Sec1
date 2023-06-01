@@ -11,11 +11,9 @@ format:
     code-tools: true
 categories:
   - challenge_4
-  - abc_poll
-  - eggs
-  - fed_rates
   - hotel_bookings
-  - debt
+  - dplyr
+  - mutate
 ---
 
 ```{r}
@@ -88,70 +86,107 @@ These are the following variables:
 - `reserved_room_type`
 - `assigned_room_type`
 - `deposit_type`
-`customer_type`
+- `customer_type`
+- `reservation_status`
+
 
 #### Currently **double** but should be **factor**
 
 These are variables that technically only have a yes (1) or no (0) option, but are currently categorized as numerical instead of categorical.
-- `is_cancelled`
+
+- `is_canceled`
+- `is_repeated_guest`
 
 
 
-- `hotel`: Currently **character**, but only has two options. Should instead be turned into a **factor**
-- `is_cancelled`: Currently **double** (numeric) but should just be either yes (1) or no (0), so a **factor** works better.
-- `lead_time`: Currently **double**. This technically works, but **int** is probably better since there are no decimal values.
-- `arrival_date_month`:  Currently **character**, but has a set list of options. Should instead be turned into a **factor**.
-- `arrival_date_{year/week_number/day_of_month} + stays_in_weekend_nights/stays_in_week_nights + adults/children/babies`: Currently **double**. This technically works, but **int** is probably better since there are no decimal values.
-- `: Same as above. Currently **double** but probably better as **int**.
+#### Currently **double** but should probably be **int**
+
+Storing values as doubles when they can only take on integer and not decimal values can take up more memory. There are quite a few of this type of variable in the data. This sort of modification isn't necessary for data analysis, though:
+
+- `lead_time`
+- `arrival_date_week_number`
+- `arrival_date_day_of_month`
+- `stays_in_weekend_nights`
+- `stays_in_week_nights`
+- `adults`
+- `children`
+- `babies`
+- `previous_cancellations`
+- `previous_bookings_not_canceled`
+- `booking_changes`
+- `required_car_parking_spaces`
+- `total_of_special_requests`
 
 
+#### Not entirely clear, but should probably stay as-is (with a minor modification)
 
+There are two variables, `agent` and `company` that are currently character variables. They seem to store numeric IDs that refer to different agents and companies. 
 
-## Challenge Overview
-
-Today's challenge is to:
-
-1)  read in a data set, and describe the data set using both words and any supporting information (e.g., tables, etc)
-2)  tidy data (as needed, including sanity checks)
-3)  identify variables that need to be mutated
-4)  mutate variables and sanity check all mutations
-
-## Read in data
-
-Read in one (or more) of the following datasets, using the correct R package and command.
-
--   abc_poll.csv ⭐
--   poultry_tidy.xlsx or organiceggpoultry.xls⭐⭐
--   FedFundsRate.csv⭐⭐⭐
--   hotel_bookings.csv⭐⭐⭐⭐
--   debt_in_trillions.xlsx ⭐⭐⭐⭐⭐
+Looking into these variables further, they both have a LOT of options.
 
 ```{r}
+length(unique(hotels$agent))
+length(unique(hotels$company))
+```
 
+It is theoretically possible that these options change regularly. Maybe someone changes ID number or IDs get removed from the data if people quit or contracts end with companies, so it probably does not make sense to store this as a factor.
+
+It also does not make sense to store these as numeric (int), because there is no obvious meaning to an ordering. An agent of number "243" is not necessarily of higher status or importance than agent "5". 
+
+Therefore, these can be left as character. However, one note to improve this encoding is to replace "NULL" with R's `NA` so that we can more easily track null values in the data.
+
+
+#### Already in the optimal format
+
+- `adr` (is a double, and has decimal options so this is correct)
+- `reservation_status_date` (is a date, and currently formatted as one)
+
+
+## Mutate variables
+
+We now conduct the mutations that we described in the previous section:
+
+```{r}
+hotels_mutated <- hotels %>%
+  mutate(
+    # Character -> Factor
+    hotel = as_factor(hotel),
+    arrival_date_month = as_factor(arrival_date_month),
+    meal = as_factor(meal),
+    country = as_factor(country), 
+    market_segment = as_factor(market_segment), 
+    distribution_channel = as_factor(distribution_channel),
+    reserved_room_type = as_factor(reserved_room_type),
+    assigned_room_type = as_factor(assigned_room_type),
+    deposit_type = as_factor(deposit_type),
+    customer_type = as_factor(customer_type),
+    reservation_status = as_factor(reservation_status),
+    # Double -> Factor
+    is_canceled = as_factor(is_canceled),
+    is_repeated_guest = as_factor(is_repeated_guest),
+    # Double -> Int
+    lead_time = as.integer(lead_time),
+    arrival_date_week_number = as.integer(arrival_date_week_number),
+    arrival_date_day_of_month = as.integer(arrival_date_day_of_month),
+    stays_in_weekend_nights = as.integer(stays_in_weekend_nights),
+    stays_in_week_nights = as.integer(stays_in_week_nights),
+    adults = as.integer(adults),
+    children = as.integer(children),
+    babies = as.integer(babies),
+    previous_cancellations = as.integer(previous_cancellations),
+    previous_bookings_not_canceled = as.integer(previous_bookings_not_canceled),
+    booking_changes = as.integer(booking_changes),
+    required_car_parking_spaces = as.integer(required_car_parking_spaces),
+    total_of_special_requests = as.integer(total_of_special_requests)
+    ) %>%
+    # Replace "NULL" values with NA
+    mutate(across(where(is.character), ~na_if(., "NULL")))
 
 ```
 
-### Briefly describe the data
-
-## Tidy Data (as needed)
-
-Is your data already tidy, or is there work to be done? Be sure to anticipate your end result to provide a sanity check, and document your work here.
+Looking at the results, we see that all still looks in good order and none of the variables appear to have an obvious bug that was introduced:
 
 ```{r}
-
-
+glimpse(hotels_mutated)
 ```
 
-Any additional comments?
-
-## Identify variables that need to be mutated
-
-Are there any variables that require mutation to be usable in your analysis stream? For example, are all time variables correctly coded as dates? Are all string variables reduced and cleaned to sensible categories? Do you need to turn any variables into factors and reorder for ease of graphics and visualization?
-
-Document your work here.
-
-```{r}
-
-```
-
-Any additional comments?
