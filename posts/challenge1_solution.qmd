@@ -1,0 +1,99 @@
+---
+title: "Challenge 1 Instructions"
+author: "Sean Conway"
+description: "Reading in data and creating a post"
+date: "5/30/2023"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_1
+  - railroads
+  - faostat
+  - wildbirds
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to
+
+1)  read in a dataset, and
+
+2)  describe the dataset using both words and any supporting information (e.g., tables, etc)
+
+## Read in the Data
+
+Read in one (or more) of the following data sets, using the correct R package and command.
+
+-   railroad_2012_clean_county.csv ⭐
+-   birds.csv ⭐⭐
+-   FAOstat\*.csv ⭐⭐
+-   wild_bird_data.xlsx ⭐⭐⭐
+-   StateCounty2012.xls ⭐⭐⭐⭐
+
+Find the `_data` folder, located inside the `posts` folder. Then you can read in the data, using either one of the `readr` standard tidy read commands, or a specialized package such as `readxl`.
+
+```{r}
+list.files("_data")
+```
+
+```{r}
+railroad_csv <- read_csv("_data/railroad_2012_clean_county.csv") 
+birds_from_csv <- read_csv("_data/birds.csv")
+railroad_csv 
+birds_from_csv
+```
+
+Add any comments or documentation as needed. More challenging data sets may require additional code chunks and documentation.
+
+## Describe the data
+
+Using a combination of words and results of R commands, can you provide a high level description of the data? Describe as efficiently as possible where/how the data was (likely) gathered, indicate the cases and variables (both the interpretation and any details you deem useful to the reader to fully understand your chosen data).
+
+```{r}
+glimpse(railroad_csv) 
+
+spec(railroad_csv)
+
+typeof(railroad_csv$state)
+typeof(railroad_csv$county)
+typeof(railroad_csv$total_employees)
+```
+In the railroad_2012_clean_county dataset we have 2930 rows and 3 columns(state, county and total_employees). With the data given in this dataset we can only know about the total number of employees in  a county is and what state that county belongs to. And the types of the variables state, county and total_employees are character, character and double.
+
+```{r}
+glimpse(birds_from_csv) 
+
+spec(birds_from_csv) # To check data types of columns 
+
+typeof(birds_from_csv$'Domain Code') 
+typeof(birds_from_csv$Domain) 
+typeof(birds_from_csv$'Area Code') 
+typeof(birds_from_csv$Area) 
+typeof(birds_from_csv$'Element Code') 
+typeof(birds_from_csv$Element) 
+typeof(birds_from_csv$'Item Code') 
+typeof(birds_from_csv$Item) 
+typeof(birds_from_csv$'Year Code') 
+typeof(birds_from_csv$Year) 
+typeof(birds_from_csv$Unit) 
+typeof(birds_from_csv$Value) 
+typeof(birds_from_csv$Flag) 
+typeof(birds_from_csv$'Flag Description')
+
+```
+In the birds dataset we have 30977 rows and 14 columns(Domain, Area, Element, Year etc). 
+In this dataset , the data is recorded form 1961 - 2018 , about the region(Area) and different types of birds(like chicken and duck) in that region and information about birds like count(Unit), Value and flag. This information is liekly gathered to know the inforamtion of number of birds in each area for every year from 1961 to 2018 or it may also be the information of buying live animals(birds) every year from each area. 
