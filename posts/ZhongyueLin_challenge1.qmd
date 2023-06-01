@@ -1,5 +1,5 @@
 ---
-title: "Challenge 1 Instructions"
+title: "Challenge 1 "
 author: "Zhongyue Lin"
 description: "Reading in data and creating a post"
 date: "5/31/2023"
@@ -94,7 +94,8 @@ tail(data_clean,100)
 
 ```
 
-In the data import process, I made adjustments and expansions to the code based on the original file format. I skipped the first three rows, which contained the headers, and removed any "NA" values. However, there are still some issues with this dataset. Each letter code includes a "total" row, which can affect data summarization when performing calculations. This problem can be addressed in subsequent data processing steps.
+
+
 ## Describe the data
 Using a combination of words and results of R commands, can you provide a high level description of the data? Describe as efficiently as possible where/how the data was (likely) gathered, indicate the cases and variables (both the interpretation and any details you deem useful to the reader to fully understand your chosen data).
 
