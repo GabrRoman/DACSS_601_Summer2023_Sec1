@@ -1,0 +1,151 @@
+---
+title: "Challenge 1 Instructions"
+author: "Zhongyue Lin"
+description: "Reading in data and creating a post"
+date: "5/31/2023"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_1
+  - railroads
+  - faostat
+  - wildbirds
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+# Import the "readxl" package
+library(readxl)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to
+
+1)  read in a dataset, and
+
+2)  describe the dataset using both words and any supporting information (e.g., tables, etc)
+
+## Read in the Data
+
+Read in one (or more) of the following data sets, using the correct R package and command.
+
+-   wild_bird_data.xlsx ⭐⭐⭐
+-   StateCounty2012.xls ⭐⭐⭐⭐
+
+
+
+
+In this challenge 1, I have chosen the raw data files "wild_bird_data.xlsx" and "StateCounty2012.xls" for practice. Since I have not had prior experience with handling and importing xls and xlsx data formats in R, importing these two raw data files is a new challenge for me.
+
+### wild_bird_data
+
+While working with the data from "wild_bird_data.xlsx," I encountered a situation where the header of the dataset occupied one row. To avoid any data format errors during the import process, I used the setting "skip=1" to skip the first row while importing the data.
+
+```{r}
+# Read the file
+data_wild_brid <- read_excel("_data/wild_bird_data.xlsx",skip = 1)
+#Preview Data
+head(data_wild_brid)
+dim(data_wild_brid)
+```
+
+Then, I used the `dim()` function and `head()` function to have an initial preview of the data (146 rows, 2 columns).
+
+### StateCounty2012
+In the data import process, I made adjustments and expansions to the code based on the format of the original file. I skipped the first three rows, which contained the headers, and removed any "NA" values present in the dataset. I also removed any unrelated content at the end of the table.
+
+However, there are still some remaining issues with this dataset. Each letter code includes rows labeled as "total," which can affect data aggregation and analysis. However, this issue can be addressed in subsequent data processing steps.
+```{r}
+
+# Read the file, skipping the first 3 rows and specifying column names, then remove all columns that are completely empty, then replace NA values in the "COUNTY" column with "/" when "STATE" contains "Total"
+data_clean <- read_excel("_data/StateCounty2012.xls", skip = 3) %>%
+  select_if(~!all(is.na(.))) %>%
+  mutate(COUNTY = ifelse(is.na(COUNTY) & grepl("Total", STATE), "/", COUNTY))
+
+# Print out the first few lines of the cleaned data
+head(data_clean,100)
+
+# Identify the rows where "STATE" is "CANADA" and replace NA values in "COUNTY" with "Canada", then remove empty rows above the "CANADA" row
+data_clean <- data_clean %>%
+  mutate(COUNTY = replace(COUNTY, STATE == "CANADA", "Canada")) %>%
+  slice(1:(nrow(.)-4))
+
+# Print out the last few lines of the cleaned data to check
+tail(data_clean,100)
+
+# Remove the row before the "CANADA" row
+data_clean <- data_clean %>%
+  slice(-which(.$STATE == "CANADA") + 1)
+
+# Print out the last few lines of the cleaned data to check
+tail(data_clean,100)
+
+
+```
+
+In the data import process, I made adjustments and expansions to the code based on the original file format. I skipped the first three rows, which contained the headers, and removed any "NA" values. However, there are still some issues with this dataset. Each letter code includes a "total" row, which can affect data summarization when performing calculations. This problem can be addressed in subsequent data processing steps.
+## Describe the data
+Using a combination of words and results of R commands, can you provide a high level description of the data? Describe as efficiently as possible where/how the data was (likely) gathered, indicate the cases and variables (both the interpretation and any details you deem useful to the reader to fully understand your chosen data).
+
+### wild_bird_data
+
+```{r}
+#| label: summary
+# Print the structure of the data
+str(data_wild_brid)
+# Print a summary of the data
+summary(data_wild_brid)
+
+```
+Firstly, the dataset file does not provide specific background information on data collection, so the following description is based on assumptions from the data itself:
+
+The dataset, named "wild_bird_data," consists of 146 rows and 2 columns. This dataset is likely gathered from field research, where researchers possibly conducted bird weight measurements at a specific location or a series of locations, and recorded the bird population size in these areas.
+
+The two main variables are "Wet body weight [g]" and "Population size":
+
+"Wet body weight [g]": This variable represents the wet body weight of birds (in grams). The values range from 5.459g to 9639.845g, with an average of about 363.694g, and a median of about 69.232g. This variable could be very useful in studying the health conditions of birds, their life habits, or the impact of environmental changes on bird weight.
+
+"Population size": This variable represents the bird population size in a specific area. The values range widely, from a minimum of 5 to a maximum of 5093378, with an average of about 382874, and a median of about 24353. This variable could be very useful in studying the distribution of bird populations, dynamic changes in population, or the impact of environmental changes on population size.
+
+### StateCounty2012
+```{r}
+str(data_clean)
+# Remove rows where "STATE" contains "total"
+data_clean_rm <- data_clean %>%
+  filter(!grepl("total", STATE, ignore.case = TRUE))
+summary(data_clean_rm)
+tail(data_clean_rm,100)
+# Find the row with the maximum value
+max_row <- data_clean %>%
+  filter(TOTAL == max(TOTAL, na.rm = TRUE))
+
+# Print out the row with the maximum value
+print(max_row)
+
+# Find the row with the minimum value
+min_row <- data_clean %>%
+  filter(TOTAL == min(TOTAL, na.rm = TRUE))
+
+# Print out the row with the minimum value
+print(min_row)
+```
+The data comes from an Excel file called "StateCounty2012.xls". After  cleaning and processing, it now contains 2931 rows and 3 columns. These data likely come from a survey or statistic about railroad employment.
+
+The three columns are as follows:
+
+The "STATE" column: This is a character vector, representing various states and other areas in the United States (such as AE and AK), as well as Canada. The mode (most common value) of this column is "character".
+
+The "COUNTY" column: This is also a character vector, representing various counties or regions. Note some special values, for example, when the value of the "STATE" column contains "Total", the value of this column is replaced with "/", indicating that this is a summary row. In the row where the value of the "STATE" column is "CANADA", the value of this column is replaced with "Canada".
+
+The "TOTAL" column: This is a numeric vector, representing the total number of railroad employments in various states and counties. The minimum value of this column is 1, the first quartile is 7, the median is 21, the mean is 87.37, the third quartile is 65, and the maximum value is 8207 (located in Cook County, Illinois).
