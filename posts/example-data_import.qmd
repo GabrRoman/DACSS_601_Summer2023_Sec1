@@ -3,7 +3,7 @@ title: "Data Import"
 author: "Sean Conway"
 editor: visual
 description: "importing data with R"  
-date: "6/5/2022"
+date: "5/30/2023"
 editor_options: 
   chunk_output_type: console
 format:
