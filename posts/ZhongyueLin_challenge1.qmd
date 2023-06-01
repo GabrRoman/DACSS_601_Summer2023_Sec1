@@ -43,9 +43,6 @@ Read in one (or more) of the following data sets, using the correct R package an
 -   wild_bird_data.xlsx ⭐⭐⭐
 -   StateCounty2012.xls ⭐⭐⭐⭐
 
-
-
-
 In this challenge 1, I have chosen the raw data files "wild_bird_data.xlsx" and "StateCounty2012.xls" for practice. Since I have not had prior experience with handling and importing xls and xlsx data formats in R, importing these two raw data files is a new challenge for me.
 
 ### wild_bird_data
@@ -63,9 +60,11 @@ dim(data_wild_brid)
 Then, I used the `dim()` function and `head()` function to have an initial preview of the data (146 rows, 2 columns).
 
 ### StateCounty2012
+
 In the data import process, I made adjustments and expansions to the code based on the format of the original file. I skipped the first three rows, which contained the headers, and removed any "NA" values present in the dataset. I also removed any unrelated content at the end of the table.
 
 However, there are still some remaining issues with this dataset. Each letter code includes rows labeled as "total," which can affect data aggregation and analysis. However, this issue can be addressed in subsequent data processing steps.
+
 ```{r}
 
 # Read the file, skipping the first 3 rows and specifying column names, then remove all columns that are completely empty, then replace NA values in the "COUNTY" column with "/" when "STATE" contains "Total"
@@ -94,9 +93,8 @@ tail(data_clean,100)
 
 ```
 
-
-
 ## Describe the data
+
 Using a combination of words and results of R commands, can you provide a high level description of the data? Describe as efficiently as possible where/how the data was (likely) gathered, indicate the cases and variables (both the interpretation and any details you deem useful to the reader to fully understand your chosen data).
 
 ### wild_bird_data
@@ -109,17 +107,19 @@ str(data_wild_brid)
 summary(data_wild_brid)
 
 ```
+
 Firstly, the dataset file does not provide specific background information on data collection, so the following description is based on assumptions from the data itself:
 
 The dataset, named "wild_bird_data," consists of 146 rows and 2 columns. This dataset is likely gathered from field research, where researchers possibly conducted bird weight measurements at a specific location or a series of locations, and recorded the bird population size in these areas.
 
-The two main variables are "Wet body weight [g]" and "Population size":
+The two main variables are "Wet body weight \[g\]" and "Population size":
 
-"Wet body weight [g]": This variable represents the wet body weight of birds (in grams). The values range from 5.459g to 9639.845g, with an average of about 363.694g, and a median of about 69.232g. This variable could be very useful in studying the health conditions of birds, their life habits, or the impact of environmental changes on bird weight.
+"Wet body weight \[g\]": This variable represents the wet body weight of birds (in grams). The values range from 5.459g to 9639.845g, with an average of about 363.694g, and a median of about 69.232g. This variable could be very useful in studying the health conditions of birds, their life habits, or the impact of environmental changes on bird weight.
 
 "Population size": This variable represents the bird population size in a specific area. The values range widely, from a minimum of 5 to a maximum of 5093378, with an average of about 382874, and a median of about 24353. This variable could be very useful in studying the distribution of bird populations, dynamic changes in population, or the impact of environmental changes on population size.
 
 ### StateCounty2012
+
 ```{r}
 str(data_clean)
 # Remove rows where "STATE" contains "total"
@@ -141,7 +141,8 @@ min_row <- data_clean %>%
 # Print out the row with the minimum value
 print(min_row)
 ```
-The data comes from an Excel file called "StateCounty2012.xls". After  cleaning and processing, it now contains 2931 rows and 3 columns. These data likely come from a survey or statistic about railroad employment.
+
+The data comes from an Excel file called "StateCounty2012.xls". After cleaning and processing, it now contains 2931 rows and 3 columns. These data likely come from a survey or statistic about railroad employment.
 
 The three columns are as follows:
 
