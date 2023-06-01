@@ -5,6 +5,7 @@ description: "Data wrangling with mutate"
 date: "5/30/2023"
 format:
   html:
+    df-print: paged
     toc: true
     code-fold: true
     code-copy: true

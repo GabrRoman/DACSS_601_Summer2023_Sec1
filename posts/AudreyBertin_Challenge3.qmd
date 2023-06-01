@@ -5,13 +5,14 @@ description: "Tidy Data: Pivoting"
 date: "6/1/2023"
 format:
   html:
+    df-print: paged
     toc: true
     code-fold: true
     code-copy: true
     code-tools: true
 categories:
   - challenge_3
-  - australian_marriage
+  - eggs_tidy
   - pivot_longer
 ---
 
