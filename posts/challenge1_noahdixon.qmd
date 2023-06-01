@@ -1,0 +1,82 @@
+---
+title: "Challenge 1"
+author: "Noah Dixon"
+description: "Reading in data and creating a post"
+date: "6/02/2023"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_1
+  - railroads
+  - faostat
+  - wildbirds
+---
+
+Setup
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(dplyr)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Part 1: Read in the Data
+
+Using the read_csv function we can load the birds.csv data from the file.
+
+```{r}
+#| label: read data
+birds_from_csv <- read_csv("_data/birds.csv")
+```
+
+## Part 2: Describe the data
+
+Using the dim function we can see the dimensions of the data.
+
+```{r}
+#| label: dimension of data
+dim(birds_from_csv)
+```
+
+We can see that there are 14 columns and 30977 rows in the data set. Now, using the colnames and spec functions, we can see the names and data types of each of the 14 columns.
+
+```{r}
+#| label: columns of data
+colnames(birds_from_csv)
+spec(birds_from_csv)
+```
+
+In order to get a better sense of what the data in these columns looks like, we can print the first 6 rows of the data using the head function.
+
+```{r}
+#| label: head of data
+head(birds_from_csv)
+```
+
+We can see that each of the first 6 rows have data from the Area Afghanistan. Using the distinct and select functions, lets see a full list of all the Areas for this data
+
+```{r}
+#| label: select Area
+distinct(select(birds_from_csv, "Area"))
+```
+
+We can see that the full list of Areas is extensive, and we can infer that this data was collected from all around the world. Lets do some more select statements to get a better understanding of the data.
+
+```{r}
+#| label: select Item
+distinct(select(birds_from_csv, "Item"))
+distinct(select(birds_from_csv, "Year"))
+distinct(select(birds_from_csv, "Element"))
+distinct(select(birds_from_csv, "Unit"))
+```
+
+From these results we can see that the data set contains the number of "Stocks" of birds in "1000 Head" units for chickens, ducks, geese & guinea fowls, turkeys, and pigeons & other birds for areas all around the world from 1961-2018. Each record contains data specific to a bird type, area, and year.
