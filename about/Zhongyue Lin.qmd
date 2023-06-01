@@ -1,0 +1,45 @@
+---
+title: "Zhongyue Lin"
+image: images/Zhongyue Lin.jpeg
+about:
+  template: solana
+  image-width: 15em
+  image-shape: round
+  image: images/Zhongyue Lin.jpeg
+  links:
+    - icon: github
+      text: Github
+      href: https://github.com/LeoLin990405
+---
+## Education/Work Background
+
+My academic journey began with a dual degree in Finance and Business Management from the University of Nebraska Omaha. To further my understanding of human cognition and decision-making, I pursued a Master's degree in Behavioral and Economic Sciences at the University of Warwick in the UK. This experience expanded my knowledge and offered deeper insights into inherent biases within these processes.
+
+Despite not having full-time work experience, I made the most of various internships and practical engagements during the gap year between my undergraduate and master's degrees. This period proved instrumental for self-teaching in data analysis and programming. I served as a student assistant at a language lab and a data science teaching assistant at an online seminar, both experiences honing my research and teaching skills. I also participated in internships across the behavioral science consulting industry in the UK, social media data analysis in China, and as a quantitative financial analyst within the financial sector in China. These diverse experiences have not only honed my programming abilities but also cultivated a comprehensive understanding of data science and behavioral science, forming a robust foundation for my future research.
+
+## R experience
+
+I have taught myself R through Coursera and Udemy during my internship. Then I studied R for my first Masters at Warwick University, where I applied R to experimental analysis in behavioral science, psychology and cognitive science, but these experiences were entirely task-oriented and I did not learn R systematically.
+
+## Research interests
+
+My research interest is to extend behavioral science from the micro level of the individual to the macro level of society. The human decision making process is influenced by the social environment, but if the decisions of a group of decision makers will in turn influence society? I find the relationship between the two interesting, and I hope that my studies in the DACSS program will help me to construct a connection between the two. And I hope to have the opportunity to apply my knowledge to research in the field of gerontology in the future.
+
+## Hometown
+
+Shenzhen, China
+
+## Hobbies
+
+-   Watching movies (I've recently revisited Blade Runner and Blade Runner 2049!)
+
+-   Fitness
+
+-   Cooking
+
+-   Listening to classical music (I am particularly fond of Ryuichi Sakamoto and Shostakovich)
+
+## Fun fact
+
+
+-   I was a student of film history before entering my undergraduate degree at UNO and I have seen 3000 films.
