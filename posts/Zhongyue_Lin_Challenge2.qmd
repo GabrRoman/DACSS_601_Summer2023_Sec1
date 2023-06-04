@@ -1,0 +1,180 @@
+---
+title: "Challenge 2_Solutions "
+author: "Zhongyue Lin"
+description: "Data wrangling: using group() and summarise()"
+date: "6/1/2023"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_2
+  - railroads
+  - faostat
+  - hotel_bookings
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to
+
+1)  read in a data set, and describe the data using both words and any supporting information (e.g., tables, etc)
+2)  provide summary statistics for different interesting groups within the data, and interpret those statistics
+
+## Read in the Data
+
+-   hotel_bookings.csv ⭐⭐⭐⭐ In
+
+In this challenge 2 I chose the **hotel_bookings.csv** dataset as the raw data for the analysis
+
+```{r}
+#Data Import
+hotel_bookings <- read_csv("_data/hotel_bookings.csv")
+```
+
+## Describe the data
+
+```{r}
+#| label: summary
+# Preview the first few rows of data
+head(hotel_bookings)
+
+# Display the dimension of the data frame
+print(paste("The dataset has", dim(hotel_bookings)[1], "rows and", dim(hotel_bookings)[2], "columns."))
+```
+
+A quick preview of the data was performed after reading, and the `head()`function and `dim()` function were used to observe the underlying information of the data set (**119,390** rows **32** columns).
+
+```{r}
+
+# Check the type of each variable
+var_types <- sapply(hotel_bookings, class)
+
+# Calculate the total number of variables
+total_vars <- length(var_types)
+
+# Calculate the number of numerical and categorical variables
+num_vars <- sum(var_types == "numeric" | var_types == "integer")
+cat_vars <- sum(var_types == "factor" | var_types == "character")
+
+# Output results
+cat("Total variables: ", total_vars, "\n")
+cat("Numeric variables: ", num_vars, "\n")
+cat("Categorical variables: ", cat_vars, "\n")
+
+str(hotel_bookings)
+```
+
+However, since the `dim()` function cannot count the number of different kinds of variables in the dataset, I used the `sapply()` function to construct a code that classifies the variables in the dataset (**numeric variables: 18**,**categorical variables 13**). However, the total number of variables in the dataset is **32**, and after using `str()`double check, I found that **"reservation_status_date"** is a date type variable.
+
+```{r}
+#Summary statistics on the data
+summary(hotel_bookings)
+```
+Then use the `summary()` function to perform a statistical summary of the dataset, but the `summary()` function does not perform a statistical summary of the nominal data.
+```{r}
+#Identify non-numeric (categorical) variables in the dataframe
+non_numeric_vars <- sapply(hotel_bookings, function(x) !is.numeric(x))
+
+# Subset your dataframe to include only these variables
+non_numeric_data <- hotel_bookings[, non_numeric_vars]
+
+#Now can now operate on "non-numeric data". For example, the "hotel" variable
+summary_list <- lapply(names(non_numeric_data), function(var_name) {
+  freq_table <- table(non_numeric_data[[var_name]])
+  freq_df <- as.data.frame(freq_table)
+  colnames(freq_df) <- c("Level", "Frequency")
+  
+  return(freq_df)
+})
+
+names(summary_list) <- names(non_numeric_data)
+print(summary_list$hotel)
+
+
+
+
+```
+To compensate for the statistical subsidy of the `summary()` function on non-numeric variables, I used `lapply()` for frequency statistics on non-numeric variables.
+
+## Provide Grouped Summary Statistics
+If I were a data analyst for a hotel company, I would be very interested in the **cancellation rate** data, so I chose to explore the relationship between the cancellation rate and other characteristics data when I conducted further data exploration.
+
+```{r}
+# Grouping hotel types and calculating cancellation rates and average booking lead times
+hotel_stats <- hotel_bookings %>%
+  group_by(hotel) %>%
+  summarise(
+    count = n(),
+    cancel_rate = mean(is_canceled),
+    avg_lead_time = mean(lead_time),
+  )
+
+# Grouping of meal types and calculation of cancellation rates
+meal_stats <- hotel_bookings %>%
+  group_by(meal) %>%
+  summarise(
+    count = n(),
+    cancel_rate = mean(is_canceled),
+  )
+
+# Group the number of special requests and calculate the cancellation rate
+requests_stats <- hotel_bookings %>%
+  group_by(total_of_special_requests) %>%
+  summarise(
+    count = n(),
+    cancel_rate = mean(is_canceled),
+  )
+
+# Grouping customer types and calculating cancellation rates and average booking lead times
+customer_stats <- hotel_bookings %>%
+  group_by(customer_type) %>%
+  summarise(
+    count = n(),
+    cancel_rate = mean(is_canceled),
+    avg_lead_time = mean(lead_time),
+  )
+
+# Grouping booking intervals and calculating cancellation rates
+waiting_stats <- hotel_bookings %>%
+  filter(days_in_waiting_list > 0) %>%
+  summarise(
+    count = n(),
+    cancel_rate = mean(is_canceled),
+  )
+
+# Print the corresponding statistics
+print(hotel_stats)
+print(meal_stats)
+print(requests_stats)
+print(customer_stats)
+print(waiting_stats)
+
+
+```
+
+### Explain and Interpret
+
+In  exploratory data analysis of hotel booking behavior, I focused on specific groupings such as hotel type, meal type, number of special requests, customer type, and booking interval. We observed that city hotels (**79,330 bookings**) had significantly higher bookings and cancellation rates (**41.73%**) than resort hotels (**40,060 bookings**, **27.76% cancellation rate**), potentially due to their location and diverse clientele.
+
+Regarding meal type, although Full Board (**FB**) had the fewest bookings (**798**), it had the highest cancellation rate (**59.90%**), which might be due to its high price. As the number of special requests increased, the cancellation rate tended to decrease, suggesting that customers with specific demands are more likely to stick to their reservations.
+
+Transient customers made the most bookings (**89,613**), but also had a relatively high cancellation rate (**40.75%**). On the other hand, Contract and Transient-Party customers had lower cancellation rates, **30.96%** and **25.43%** respectively, possibly due to group booking nature reducing cancellation likelihood.
+
+Regarding the booking interval, we initially filtered reservations that had been waiting in the list for at least a day. Because for those reservations with no waiting time (i.e., booking interval of 0), calculating the cancellation rate may be meaningless. We found that bookings waiting in the list (**3,698**) were fewer than other categories but had a high cancellation rate of **63.79%**, suggesting that long waits might lead to cancellations.
+
+It's important to note the limitations of statistical information. For instance, calculating an average cancellation rate could mask data distribution. If the data distribution is skewed, the average may not be a good measure. In this case, we might need to use other statistical methods such as median or mode to better describe the data.
+
+These exploratory data analysis results provide some insights into hotel booking behavior but require further research and validation for a comprehensive understanding of factors influencing hotel booking behavior, enabling more accurate predictions and decisions.
