@@ -1,9 +1,3 @@
 comments:
   giscus:
-    repo: DACSS/DACSS_601_Summer2023_Sec1
-    category: General
-toc-location: right
-search: true
-execute:
-  freeze: true
-  error: true
+    repo: DACSS/SummerCommentRepo
