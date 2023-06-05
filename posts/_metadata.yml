@@ -1,3 +1,9 @@
 comments:
   giscus:
     repo: DACSS/SummerCommentRepo
+    category: Announcements
+toc-location: left
+search: false
+execute:
+  freeze: true
+  error: true
