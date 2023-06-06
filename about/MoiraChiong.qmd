@@ -1,0 +1,29 @@
+---
+title: "AboutMe_MoiraChiong"
+format: html
+editor: visual
+---
+
+\## Education/Work Background
+
+My name is Moira Chiong (she, her, hers) and I am an incoming student in the Higher Education PhD program in the Dept. of Educational Policy, Research and Administration (EPRA) here at UMass Amherst. I am really excited for this course as I hope to learn R and empirical methods to analyze educationalÂ data. I currently work at the Massachusetts Dept. of Higher Education as an Assistant Director of Academic and Workforce Analysis, and have worked in numerous MA community colleges as a researcher (mainly in institutional research). In my current role, I concentrate on workforce alignment of academic programs with the labor market. Basically, I do a lot of work on return on investment of higher education, with a specific equity lens. I have worked on Department's Strategic Plan for Racial Equity and designed quantitative forecasting models which lay the groundwork for student success goals. Previously, I was a student in UMass Amherst's Higher Education Leadership and Administration (HELA) graduate certificate program, and liked the program so much that I decided to apply for the PhD. Fortunately, I was admitted to the PhD program this past Spring 2023 and will officially begin my PhD studies this Fall.Prior to my career in higher education, I worked in international development which brought me as far a Kigali, Rwanda and Manila, Philippines. As you can imagine, I love to travel and learn about other cultures and traditions. I hold academic degrees from Stanford University (BA Economics, BA International Relations) and the University of Maryland, College Park (MS Agricultural and Resource Economics).
+
+\## R experience
+
+MATLAB, Lyx), and have taken and completed MOOCs on R.
+
+\## Research interests
+
+I am really interested in quantifying long term outcomes from higher education, and specifically looking at impacts of higher education on social and economic mobility. I am also interested in measuring student success, with particularly interest in upward transfer.
+
+\## Hometown
+
+Newton, Massachusetts
+
+\## Hobbies
+
+I also love to sing (a cappella), cook foreign cuisines and listen to great music.
+
+\## Fun fact
+
+I grew up in the metro Boston area and have a tradition of UMass in my family (my late father was an Economics professor at UMass Boston, and my mom is a doctoral alumna from UMass Amherst)\-- so I am very excited to continue that family history.
