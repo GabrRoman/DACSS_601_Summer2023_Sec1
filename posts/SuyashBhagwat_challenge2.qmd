@@ -1,0 +1,112 @@
+---
+title: "Challenge 2 Submission"
+author: "Suyash Bhagwat"
+description: "Data wrangling: using group() and summarise()"
+date: "6/05/2023"
+format:
+  html:
+    df-print: paged
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_2
+  - railroads
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to
+
+1)  read in a data set, and describe the data using both words and any supporting information (e.g., tables, etc)
+2)  provide summary statistics for different interesting groups within the data, and interpret those statistics
+
+## Read in the Data
+
+Read in one (or more) of the following data sets, available in the `posts/_data` folder, using the correct R package and command.
+
+-   railroad\*.csv or StateCounty2012.xls ⭐
+
+```{r}
+data_railroad <- read_csv("_data/railroad_2012_clean_county.csv")
+```
+Add any comments or documentation as needed. More challenging data may require additional code chunks and documentation.
+
+## Describe the data
+
+Using a combination of words and results of R commands, can you provide a high level description of the data? Describe as efficiently as possible where/how the data was (likely) gathered, indicate the cases and variables (both the interpretation and any details you deem useful to the reader to fully understand your chosen data).
+
+**Ans:** In challenge 1 last week, we saw that the glimpse() function is the best function to get an overall description of the data set. Using the glimpse() function on the railroad data we get size of the data set which is 2930 rows x 3 cols. We also get the datatype for each column; state(chr),county(chr) and total_employees(dbl).
+
+The head function gives us the first 6 rows.
+
+Looking at the data, it looks like it was gathered from the database of a railroad company in 2012 that keeps track of all its employees count by state and county.
+
+```{r}
+#| label: summary
+glimpse(data_railroad)
+head(data_railroad)
+```
+## Provide Grouped Summary Statistics
+
+Conduct some exploratory data analysis, using dplyr commands such as `group_by()`, `select()`, `filter()`, and `summarise()`. Find the central tendency (mean, median, mode) and dispersion (standard deviation, mix/max/quantile) for different subgroups within the data set.
+
+**Ans:** I decided to group the total_employees by state. This is because state names are unique but county names are not unique. So if we group by county, then it may be possible that two or more states may have the same county name and this will lead to erroneous grouping (e.g. Jefferson County exists in both Texas and Arkansas).
+
+The code below uses select(), group_by() and summarize() to calculate the different metrics like sum, mean, median, sd, IQR, min and max.
+```{r}
+data_grouped_by_state <- data_railroad %>%
+  select(state,total_employees) %>%
+  group_by(state) %>%
+  summarize(
+    total_employees_by_state = sum(total_employees, na.rm = TRUE),
+    mean_number_of_employee_per_county = round(mean(total_employees, na.rm = TRUE), 2),
+    median_number_of_employee_per_county = round(median(total_employees, na.rm = TRUE), 2),
+    sd_employees_per_county = round(sd(total_employees, na.rm = TRUE), 2),
+    IQR_employees_per_county = round(IQR(total_employees, na.rm = TRUE),2),
+    min = min(total_employees, na.rm = TRUE),
+    max = max(total_employees, na.rm = TRUE)
+  )
+data_grouped_by_state
+```
+
+Using the arrange() and slice() function, we can find the top 5 counties with the highest number of employees(code given below). This data tells us that the railroad company has major hubs or offices in the five counties given below. Cook County in Illinois has the highest employee count out of all counties. It is likely that Cook County IL is the headquarters (HQ) for the railroad company.
+```{r}
+max_employees <- data_railroad %>%
+  arrange(desc(total_employees)) %>%
+  slice(1:5)
+
+max_employees
+```
+Similarly we can find the bottom 5 counties with the lowest number of employees(code given below). This tells us that the railroad company does not have any significant operation/employees in these counties.
+```{r}
+min_employees <- data_railroad %>%
+  arrange(total_employees) %>%
+  slice(1:5)
+
+min_employees
+```
+Using the filter() function, we can filter the counties which have a median employee count above 150. Median is more robust to outliers as compared to mean and hence I have used the median employee count as a metric instead of the mean. The table below can give us an idea of the geographic location (or density) where majority of the railroad company's business is located. Looking at the 4 states below (DC, DE, MA, NJ), we can deduce that the railroad company's primary operations are based in the Northeast US region.
+```{r}
+filter(data_grouped_by_state,median_number_of_employee_per_county>150) 
+```
+### Explain and Interpret
+
+Be sure to explain why you choose a specific group. Comment on the interpretation of any interesting differences between groups that you uncover. This section can be integrated with the exploratory data analysis, just be sure it is included.
+
+**Ans:** I decided to group the employees by state. This is because state names are unique but county names are not unique. So if we group by county, then it may be possible that two or more states may have the same county name and this will lead to erroneous grouping (e.g. Jefferson County exists in both Texas and Arkansas).
+
+I have covered most of the data analysis in the above section. In summary, Cook County in Illinois has the highest employee count out of all counties. It is likely that Cook County IL is the headquarters (HQ) for the railroad company.
+
+Filtering out the counties which have a median employee count above 150, we can deduce that the railroad company's primary operations are based in the Northeast US region (DC, DE, MA, NJ).
