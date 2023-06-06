@@ -5,11 +5,11 @@ about:
   template: solana
   image-width: 15em
   image-shape: round
-  image: images/YourName.jpeg
+  image: images/prasann_ozil.jpg
   links:
     - icon: github
       text: Github
-      href: https://github.com/github_user
+      href: https://github.com/prasanndesai94
 ---
 
 ##Instructions
