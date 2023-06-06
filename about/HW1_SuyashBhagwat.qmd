@@ -1,0 +1,41 @@
+---
+title: "Suyash Bhagwat"
+image: images/SuyashBhagwat_profilePic.png
+about:
+  template: solana
+  image-width: 15em
+  image-shape: round
+  image: images/SuyashBhagwat_profilePic.png
+  links:
+    - icon: github
+      text: Github
+      href: https://github.com/sbhagwat95
+---
+
+##Instructions
+
+  - save a copy of this document as *FirstLast.qmd* in the **about** folder
+  - replace *Your Name* in yaml header with your first and last name
+  - save an image (jpeg, png) to use in the **about/images** folder
+  - replace image names in yaml header
+  - replace github user name
+  - fill in information below, as appropriate
+  - commit to github and submit pull request
+
+## Education/Work Background
+**Ans:** I am currently working as a Software Engineer at Intel and pursuing my part-time MSCS degree at UMass Amherst. I also have completed my Bachelors in Engineering from ICT, Mumbai. 
+
+## R experience
+**Ans:** I had taken a Coursera course 'Data Visualization and Analysis in R' about 3 years ago. The course taught me some basic data wrangling techniques and also introduced me to data visualization. But since it has been 3 years since I took the course, I still need to brush up on some of the data wrangling and visualization techniques.
+
+## Research interests
+**Ans:** I will be graduating this semester and I have not taken any research credits in my MS study. But in Spring 2023, I took CS685 Natural Language Processing and I was fascinated by how large language models work (especially ChatGPT). Given a choice, in future I would like to do some research in the field of NLP.
+
+## Hometown
+**Ans:** I live in Sacramento, CA but I am originally from Mumbai, India.
+
+## Hobbies
+**Ans:** I like reading books (especially non-fiction). I am currently reading 'The science of Interstellar' by Kip Thorne. My other hobbies include traveling and working out at the gym.
+
+## Fun fact
+**Ans:** I like collecting fridge magnets from every major city/destination/national park I have visited. Currently I have over 100 fridge magnet on my fridge. I also love collecting naturally occurring crystals and minerals. Fun fact, I have a large crystal of the heaviest non-radioactive element that is lying around in my living room (hint: Its used in peptobismol!). 
