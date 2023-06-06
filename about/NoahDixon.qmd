@@ -1,0 +1,31 @@
+---
+title: "Noah Dixon"
+image: images/NoahDixon.jpeg
+about:
+  template: solana
+  image-width: 15em
+  image-shape: round
+  image: images/NoahDixon.jpeg
+  links:
+    - icon: github
+      text: Github
+      href: https://github.com/noahdixon
+---
+
+## Education/Work Background
+I received my BS in Mechanical Engineering from UMass Amherst in 2020. I then worked for 2.5 years in HVAC Engineering, during which time I found an interest in programming and computer science. I took prerequisite computer science courses online, and was subsequently accepted back to UMass Amherst to pursue my MS in Computer Science. I am currently pursuing this degree and working part time as a BIM developer.
+
+## R experience
+I have decent programming experience but no experience using R. 
+
+## Research interests
+I am interested in software engineering.
+
+## Hometown
+Natick, MA
+
+## Hobbies
+Some of my hobbies include: gym, soccer, video games, music, going out with friends.
+
+## Fun fact
+I have run a half marathon, and want to run a full one someday soon.
