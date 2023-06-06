@@ -1,0 +1,42 @@
+---
+title: "Prasann Desai"
+image: images/prasann_ozil.jpg
+about:
+  template: solana
+  image-width: 15em
+  image-shape: round
+  image: images/YourName.jpeg
+  links:
+    - icon: github
+      text: Github
+      href: https://github.com/github_user
+---
+
+##Instructions
+
+  - save a copy of this document as *FirstLast.qmd* in the **about** folder
+  - replace *Your Name* in yaml header with your first and last name
+  - save an image (jpeg, png) to use in the **about/images** folder
+  - replace image names in yaml header
+  - replace github user name
+  - fill in information below, as appropriate
+  - commit to github and submit pull request
+
+## Education/Work Background
+Currently a M.S CS Student at UMass (Spring 2022 intake). 
+Did my undergrad in Information Technology from VESIT in Mumbai, India.
+
+## R experience
+I had taken STAT501 in the Fall2022 semester, so, I have little exposure to R.
+
+## Research interests
+Not professional, but I do want to do some research in the field of Soccer analytics.
+
+## Hometown
+Mumbai, India.
+
+## Hobbies
+Soccer, Reading, Netflix, Cooking.
+
+## Fun fact
+I am kinda ambidextrous -- I write with my right hand but I use scissors with my left hand.
