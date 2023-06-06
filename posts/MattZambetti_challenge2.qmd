@@ -1,0 +1,145 @@
+---
+title: "Challenge 2 - Matt Zambetti"
+author: "Matt Zambetti"
+description: "Data wrangling: using group() and summarise()"
+date: "6/5/2023"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_2
+  - railroads
+  - faostat
+  - hotel_bookings
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(readxl)
+library(dplyr)
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to
+
+1)  read in a data set, and describe the data using both words and any supporting information (e.g., tables, etc)
+2)  provide summary statistics for different interesting groups within the data, and interpret those statistics
+
+## Read in the Data
+
+Read in one (or more) of the following data sets, available in the `posts/_data` folder, using the correct R package and command.
+
+-   railroad\*.csv or StateCounty2012.xls ⭐
+-   FAOstat\*.csv or birds.csv ⭐⭐⭐
+-   hotel_bookings.csv ⭐⭐⭐⭐
+
+```{r}
+
+# getting the data with the read.csv command
+railroad_data <- read.csv("_data/railroad_2012_clean_county.csv")
+
+# printing the first 10 rows
+head(railroad_data, 10)
+
+```
+
+Add any comments or documentation as needed. More challenging data may require additional code chunks and documentation.
+
+## Describe the data
+
+Using a combination of words and results of R commands, can you provide a high level description of the data? Describe as efficiently as possible where/how the data was (likely) gathered, indicate the cases and variables (both the interpretation and any details you deem useful to the reader to fully understand your chosen data).
+
+```{r}
+#| label: summary
+
+# Using the comments Sidharth gave to me.
+railroad_data %>%
+  arrange(desc(total_employees)) %>%
+            head()
+
+railroad_data %>%
+  arrange(total_employees) %>%
+            head()
+
+```
+
+Here, I do the same analysis as in Challenge 1, but I use a better technique of piping the results from arrange into head, instead of creating a new object.
+
+In the first, we are able to see the ten stations with the most employees and in the second we see the 10 with the least.
+
+As I mentioned in the previous assignment, sorting the data based on total number of employees can be useful to figure out which stations to distributed funds to. Stations with a larger employee base will more likely have a larger payroll.
+
+Then another source of funding is upkeep. If a station has more employees this is most likely because it is a larger station, which means the cost of maintenance will be greater than that of a smaller station.
+
+## Provide Grouped Summary Statistics
+
+Conduct some exploratory data analysis, using dplyr commands such as `group_by()`, `select()`, `filter()`, and `summarise()`. Find the central tendency (mean, median, mode) and dispersion (standard deviation, mix/max/quantile) for different subgroups within the data set.
+
+I did not see a useful case of `group_by` other than to organize the data by state, which I think filter was more useful for analysis.
+
+
+```{r}
+# DOING SOME CENTRAL TENDENCY ANALYSIS
+# Finding the mean
+summarize(railroad_data, mean = mean(total_employees,na.rm=TRUE))
+# Finding the median
+summarize(railroad_data, median = median(total_employees,na.rm=TRUE))
+
+# DOING SOME DISPESION ANAYLSYS
+# Finding the sd
+summarize(railroad_data, sd = sd(total_employees,na.rm=TRUE))
+# Finding the max
+summarize(railroad_data, max = max(total_employees,na.rm=TRUE))
+# Finding the min
+summarize(railroad_data, min = min(total_employees,na.rm=TRUE))
+```
+
+If we take a look at the commands we use within summarize we can state some obvious things, such as the mean is ~87, the median is 21, the max and min are 8207 and 1 respectively with a standard deviation of ~284.
+
+What I concluded from this data was that to have a median and mean so low, there have to be a lot more towns with the total number of employees being very low. I say this because there is a station with 8207 employees and the mean is only 87, and the median is only 21. This means that There have to be a lot more values in the lower range (less than 100) to keep those numbers so low.
+
+```{r}
+# Finding all the stations in Wyoming
+filter(railroad_data, state == "WY") %>%
+  pull(total_employees) %>%
+  sum 
+
+# Finding all the stations in CA
+filter(railroad_data, state == "CA") %>%
+  pull(total_employees) %>%
+  sum
+
+# Finding all the stations in AK
+filter(railroad_data, state == "AK") %>%
+  pull(total_employees) %>%
+  sum
+
+```
+
+If we look at the next set of numbers I wanted to compare the number of railroad employees in the least populated state, versus the number of railroad employees in most populated state. Using Google, I found the least populated state is Wyoming, which has 2876 employees, and California is the most populated state and has 13137 total employees. This is a pretty significant number.
+
+But, what I also found interesting was that even though Wyoming is the least populated state is does not have the least number of employees. An example of a state that has less is Alaska with 103 employees. This might have something to do with geographical location, or this might have something to do with history and maybe the importance of railroads in the development of both. 
+
+```{r}
+# Total Number of counties in the data
+select(railroad_data, county) %>% nrow()
+
+```
+
+The final piece of analysis I did was to get familiar with select, so I selected the column of counties and observes how many counties there were in the data set. Interestingly enough, 2930 different counties have railroad stations.
+
+
+### Explain and Interpret
+
+Be sure to explain why you choose a specific group. Comment on the interpretation of any interesting differences between groups that you uncover. This section can be integrated with the exploratory data analysis, just be sure it is included.
+
+This is included in the sectoin above.
