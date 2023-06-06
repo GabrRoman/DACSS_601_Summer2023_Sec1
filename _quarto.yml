@@ -25,7 +25,6 @@ website:
 execution:
   freeze: auto
 
-
 format:
   html:
     mainfont: Open Sans
