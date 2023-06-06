@@ -1,0 +1,145 @@
+---
+title: "Challenge 2"
+author: "Noah Dixon"
+description: "Data wrangling: using group() and summarise()"
+date: "6/05/2023"
+format:
+  html:
+    df-print: paged
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_2
+  - railroads
+  - faostat
+  - hotel_bookings
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Part 1: Read in Data
+
+Using the read_csv function we can load the birds.csv data from the file.
+
+```{r}
+birds_from_csv <- read_csv("_data/birds.csv")
+```
+
+## Part 2: Describe the data
+
+In order to get a better sense of what the data looks like, we can print the first 6 rows of the data using the head function.
+
+```{r}
+#| label: check data
+head(birds_from_csv)
+```
+
+From the above output we can see that there are several redundant columns which all contain the word "Code". We can remove these columns to make the data more tidy.
+
+```{r}
+#| label: remove redunt columns
+birds_without_redundancy <- birds_from_csv %>%
+  select(-contains("Code"))
+```
+
+Now, we can check the remaining columns to see how many unique values each column has. We will use the sapply function with the length and unique functions to generate the number of unique entries in each columns
+
+```{r}
+#| label: check data again
+print(sapply(birds_without_redundancy, function(x) length(unique(x))))
+```
+We can see that the Domain, Element, and Unit columns all contain only 1 unique value across all rows. This means they essentially provide no valuable information for a given case, and can be removed from the data set. Additionally, from the head() output above we know that the Flag Description column correlates exactly to the Flag column. Therefore, we can remove it as well since it doesn't provide additional information. We will print the results to see the new data.
+
+```{r}
+#| label: further tidy data
+birds_tidy <- birds_without_redundancy %>%
+  select(Area, Item, Year, Value, Flag)
+birds_tidy
+```
+
+With the new tidy data, we still need to remove cases with the flag "A", as this indicates that the area is not a country but a larger region. Therefore, these cases do not belong in the same data set as the cases for single countries.
+
+```{r}
+#| label: finialize tidy data
+birds_tidy_final <- birds_tidy %>%
+  filter(Flag != "A" | is.na(Flag))
+dim(birds_tidy_final)
+```
+
+We can see that the dimension of the new birds_tidy_final data frame is smaller than the birds_tidy data frame, indicating that we have removed rows where the flag is equal to "A". Now we have tidied data, where each case represents the number of birds purchased in a single country for a given year.
+
+
+## Part 3: Provide Grouped Summary Statistics
+
+First, lets generate some interesting groups for this data. We can use the Area, Year, and Item columns to group the data
+
+```{r}
+#| label: create groups
+birds_by_country <- birds_tidy_final %>%
+  group_by(Area)
+  
+birds_by_year <- birds_tidy_final %>%
+  group_by(Year)
+  
+birds_by_type <- birds_tidy_final %>%
+  group_by(Item)
+```
+
+Now, lets examine the created groups by generating statistics for each group. We will start with the cases grouped by country.
+
+```{r}
+#| label: generate country stats
+country_group_stats <- summarize(birds_by_country,
+                                 mean = mean(Value, na.rm = TRUE),
+                                 median = median(Value, na.rm = TRUE),
+                                 min = min(Value, na.rm = TRUE),
+                                 max = max(Value, na.rm = TRUE),
+                                 sd = sd(Value, na.rm = TRUE),
+                                 var = var(Value, na.rm = TRUE),
+                                 IQR = IQR(Value, na.rm = TRUE))
+arrange(country_group_stats, desc(mean))
+```
+
+Let's also examine cases grouped by year. 
+
+```{r}
+#| label: generate year stats
+year_group_stats <- summarize(birds_by_year,
+                              mean = mean(Value, na.rm = TRUE),
+                              median = median(Value, na.rm = TRUE),
+                              min = min(Value, na.rm = TRUE),
+                              max = max(Value, na.rm = TRUE),
+                              sd = sd(Value, na.rm = TRUE),
+                              var = var(Value, na.rm = TRUE),
+                              IQR = IQR(Value, na.rm = TRUE))
+arrange(year_group_stats, desc(mean))
+```
+
+And finally lets examine cases grouped by bird type. 
+
+```{r}
+#| label: generate bird type stats
+type_group_stats <- summarize(birds_by_type,
+                              mean = mean(Value, na.rm = TRUE),
+                              median = median(Value, na.rm = TRUE),
+                              min = min(Value, na.rm = TRUE),
+                              max = max(Value, na.rm = TRUE),
+                              sd = sd(Value, na.rm = TRUE),
+                              var = var(Value, na.rm = TRUE),
+                              IQR = IQR(Value, na.rm = TRUE))
+arrange(type_group_stats, desc(mean))
+```
+
+### Part 4: Explain and Interpret
+
+Grouping the data based on country, year, and bird type yields some interesting results because these are the 3 main categorical variables represented by the data set. As we can see from the generated statistics, China, the US, and the USSR had the highest median and average birds sold over the the time period. Also, we can see that the average number of birds sold per year worldwide increased steadily over the time period covered by the data (1961 - 2018). Finally, we can see that chickens were by far the highest bird sold over the time frame, with a maximum value of 5,274,475 * 1000 heads sold in one year.
