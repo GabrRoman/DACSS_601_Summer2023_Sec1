@@ -1,0 +1,39 @@
+---
+title: "Hunter Major"
+image: images/HunterMajor.jpeg
+about:
+  template: solana
+  image-width: 15em
+  image-shape: round
+  image: images/HunterMajor.jpg
+  links:
+    - icon: github
+      text: Github
+      href: https://github.com/huntmaj
+---
+
+
+## Education/Work Background
+
+#### New York University
+B.A. Global Studies, concentration in Cultural and Social Identities
+
+#### UMass Amherst
+M.Ed International Education-in progress
+
+Graduate Certificate in Data Analytics and Computational Social Science [DACSS]-in progress
+
+## R experience
+No prior experience
+
+## Research interests
+Disaster Resilience, Africana Studies, Multi-generational Families and Communities, Critical Food(ways) Studies/Community Nutrition, Sociology of Education, Decolonization-Emancipatory Pedagogies
+
+## Hometown
+New Orleans
+
+## Hobbies
+Cooking
+
+## Fun fact
+I like color-coding things!
