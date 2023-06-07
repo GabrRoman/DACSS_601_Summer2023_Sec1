@@ -1,0 +1,75 @@
+---
+title: "Challenge 3 Instructions"
+author: "Danny Holt"
+description: "Tidy Data: Pivoting"
+date: "6/7/2023"
+format:
+  html:
+    df-print: paged
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_3
+  - eggs
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+2.  identify what needs to be done to tidy the current data
+3.  anticipate the shape of pivoted data
+4.  pivot the data into tidy format using `pivot_longer`
+
+## Read in data
+
+First, we'll read in the data set eggs_tidy.csv
+
+```{r}
+  #Read in data
+  eggs <- readr::read_csv("_data/eggs_tidy.csv")
+  #Number of rows and columns:
+  nrow(eggs)
+  ncol(eggs)
+  #Data:
+  eggs
+```
+
+### Briefly describe the data
+
+The data set appears to show the number of sets of a dozen and half dozen large and extra large eggs, likely on a specific farm. Each observation/row shows data from a specific month. The data has 120 rows and 6 columns.
+
+Because the columns other than `year` and `month` all measure number of eggs, we can pivot the data to combine the eggs together, and add the new columns `type` and `amount` to maintain the dozen/half dozen information and the amount information. Based on this, we know that the pivot will have four (2+2) columns.
+
+We are effectively turning the existing columns `large_half_dozen`, `large_dozen`, `extra_large_half_dozen`, and `extra_large_dozen` into rows with the resulting rate of four rows in the pivot to one row in the existing data (four rows for a given month). This means that our data should have the following number of rows:
+```{r}
+nrow(eggs)*4
+```
+
+## Pivot the Data
+
+Now we will pivot the data.
+
+``` {r}
+eggs<-
+  eggs%>%
+    pivot_longer(col=c(large_half_dozen,large_dozen,extra_large_half_dozen,extra_large_dozen),
+                                 names_to="type",
+                                 values_to="amount")
+eggs
+```
+Here, we see that we do indeed have 480 rows and 4 columns.
+
+A new "case" in the pivoted data will contain month and year data, as well as the type (dozen/half dozen and large/extra large) and amount.
+
+In our pivoted data, each variable forms a column and each observation forms a row. All values have their own cells. The data is easier to examine because of this.
