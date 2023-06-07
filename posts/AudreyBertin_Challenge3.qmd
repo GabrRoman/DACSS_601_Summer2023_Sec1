@@ -2,7 +2,7 @@
 title: "Challenge 3"
 author: "Audrey Bertin"
 description: "Tidy Data: Pivoting"
-date: "6/1/2023"
+date: "6/6/2023"
 format:
   html:
     df-print: paged
@@ -14,6 +14,7 @@ categories:
   - challenge_3
   - eggs_tidy
   - pivot_longer
+  - audrey_bertin
 ---
 
 ```{r}
