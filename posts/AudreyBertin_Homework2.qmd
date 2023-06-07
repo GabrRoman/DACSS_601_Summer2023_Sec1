@@ -115,13 +115,16 @@ head(circuits)
 
 Each circuit has a `circuitId` that uniquely identifies it. We also have location information. The column `alt` is not entirely clear. 
 
-All of the data types seem reasonable here so there is no need to modify them. 
-
-There appear to be 77 unique circuits.
+All of the data types seem reasonable here so there is no need to modify them. However, we have a bunch of data frames that are all going to have a column called `name` as we'll see later. We should rename these columns to avoid confusion when we join tables in the future.
 
 ```{r}
-length(unique(circuits$circuitId))
+circuits <- circuits %>%
+  rename(circuit_name = name)
+
+colnames(circuits)
 ```
+
+
 
 
 
@@ -161,6 +164,14 @@ For each constructor we have a unique `constructorId` (211 of them), which can b
 
 All of the data types are reasonable here. Converting team names to factors would again be better after completing joins.
 
+We can again rename the `name` column to avoid confusion later.
+
+```{r}
+constructors <- constructors %>%
+  rename(constructor_name = name)
+
+colnames(constructors)
+```
 
 
 #### `driver_standings.csv` 
@@ -217,7 +228,16 @@ lap_times <- readr::read_csv("_data/formula1/lap_times.csv")
 lap_times
 ```
 
-Lap times has unique identifiers referring to the race and driver who completed them, which we can use to join tables later. We also have lap number, driver position, and lap times. The `time` variable is in an `hms` class format, which is appropriate for storing time. We don't need to modify any data types here.
+Lap times has unique identifiers referring to the race and driver who completed them, which we can use to join tables later. We also have lap number, driver position, and lap times. The `time` variable is in an `hms` class format, but to make analysis easier, we'll get rid of it and just use the `milliseconds` column converted to seconds.
+
+```{r}
+lap_times <- lap_times %>%
+  mutate(laptime_seconds = milliseconds/1000) %>%
+  select(-c(time, milliseconds))
+
+lap_times
+```
+
 
 #### `pit_stops.csv` 
 
@@ -242,8 +262,92 @@ pit_stops
 ```
 
 #### `qualifying.csv` 
+
+```{r message=FALSE}
+qualifying <- readr::read_csv("_data/formula1/qualifying.csv")
+```
+
+```{r}
+qualifying
+```
+
+For qualifying, we get a unique race, driver, and constructor ID. We also have a column called "number" which is not entirely clear what it refers to. We then have overall qualifying position and qualifying times in the three different sections of qualifying (q1/q2/q3).
+
+Since number is not clear, we can remove it. `q1/q2/q3` are all times and should be converted as such. To make this easy, we'll just convert the times to seconds. We'll then rename the columns slightly to make them more clear. In the process, we'll also replace the weird NA characters with normal NA values.
+
+```{r}
+qualifying <- qualifying %>%
+  select(-number) %>%
+  mutate(across(q1:q3, ~ period_to_seconds(ms(na_if(.x, "\\N"))))) %>%
+  rename(q1_time_s = q1, q2_time_s = q2, q3_time_s = q3)
+
+qualifying
+
+```
+
 #### `races.csv` 
+
+```{r message=FALSE}
+races <- readr::read_csv("_data/formula1/races.csv")
+```
+
+```{r}
+races
+```
+
+This table contains information about each race -- year, round (race number within year), circuit, race name, date, time, url, and some blank columns. For the purpose of analyzing anything about the sport, race dates and times are not relevant, so we'll remove them. We can also remove all of the blank columns.
+
+Again, we see the `name` variable, so we'll rename this as well.
+
+```{r}
+races <- races %>%
+  select(raceId:name) %>%
+  rename(gp_name = name)
+
+races
+```
+
 #### `results.csv` 
+
+```{r message=FALSE}
+results <- readr::read_csv("_data/formula1/results.csv")
+```
+
+```{r}
+results
+```
+
+For race results, we see a race, driver, and constructor ID we can use to join other tables with. Again, we see a column called number that we don't know what it means, so we can remove it.
+
+`grid` represents starting position, so we can rename it as such (`start_position`).
+
+For position, we have three different columns that are telling us something similar (almost duplicates). `positionText` is helpful because it shows us information such as whether the driver was disqualified ("D") or whether they retired from the race ("R"). `positionOrder` is also helpful as this is the official classification used by F1 (D/R don't matter for the classification). Rather than keep both `positionText` and `positionOrder`, we'll keep `positionOrder` and then create new indicator columns for retirements and disqualifications. We will also rename `position_order` to `finish_position` to be more accurate.
+
+The character representations of time are useless for analysis, so we'll just keep milliseconds but convert to seconds. We will also make this a numeric column instead of character.
+
+Fastest lap and rank should also be numeric, as should fastest lap speed. Fastest lap time should be converted to seconds like we did before.
+
+Status ID is fine as is.
+
+We make all of these modifications below:
+
+```{r}
+results <- results %>%
+  mutate(
+    disqualified = as_factor(ifelse(positionText == "D", 1, 0)),
+    retired = as_factor(ifelse(positionText == "R", 1, 0)),
+    fastestLap = as.numeric(fastestLap),
+    rank = as.numeric(rank),
+    fastestLapTime = period_to_seconds(ms(na_if(fastestLapTime, "\\N"))),
+    fastestLapSpeed = as.numeric(fastestLapSpeed),
+    finishTimeSeconds = as.numeric(na_if(milliseconds, "\\N"))/1000) %>%
+  rename(start_position = grid, finish_position = positionOrder) %>%
+  select(-c(number, position, positionText, time, milliseconds)) 
+
+results
+```
+
+
 #### `seasons.csv` 
 #### `status.csv` 
 
