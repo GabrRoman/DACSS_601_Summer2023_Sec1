@@ -1,0 +1,101 @@
+---
+title: "Challenge 2 Post"
+author: "Hunter Major"
+description: "Data wrangling: using group() and summarise()"
+date: "6/6/2023"
+format:
+  html:
+    df-print: paged
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_2
+  - railroads
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(dplyr)
+library (readr)
+library(readxl)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to
+
+1)  read in a data set, and describe the data using both words and any supporting information (e.g., tables, etc)
+2)  provide summary statistics for different interesting groups within the data, and interpret those statistics
+
+## Read in the Data
+
+Read in one (or more) of the following data sets, available in the `posts/_data` folder, using the correct R package and command.
+
+-  Expanding on challenge 1, for challenge 2, I will also be reading in railroad\*.csv also known as railroad_2012_clean_county.csv ⭐  
+
+```{r}
+read.csv("_data/railroad_2012_clean_county.csv")
+```
+
+Add any comments or documentation as needed. More challenging data may require additional code chunks and documentation.
+
+## Describe the data
+
+Using a combination of words and results of R commands, can you provide a high level description of the data? Describe as efficiently as possible where/how the data was (likely) gathered, indicate the cases and variables (both the interpretation and any details you deem useful to the reader to fully understand your chosen data).
+
+```{r}
+#| label: summary
+dim(railroad_2012_clean_county)
+
+colnames(railroad_2012_clean_county)
+
+spec(railroad_2012_clean_county)
+
+summary(railroad_2012_clean_county)
+
+railroad_2012_clean_county %>%
+  select(state) %>%
+  n_distinct(.)
+
+
+```
+As mentioned previously in my challenge 1 post, broadly speaking, this dataset provides a snapshot into the United States’ railroad workforce in 2012; the total number of railroad employees are sorted alongside their respective state and county.This data was likely compiled by either a governmental body, like the U.S. Bureau of Labor Statistics, or a railroad association, such as the Association of American Railroads. Historical societies, railroad museums, and websites like Ancestry.com may also have varying capacities to compile datasets similar to this.The dim () function shows us that this dataset has 2930 rows and 3 columns. By using piping to link the name of the dataset, railroad_2012_clean_county to the select(state) function to the n_distinct () function, we're able to see that the are 53 unique character values in the state column. Because there are 50 states in the United States, we believe that the remaining 3 values in this column may potentially refer to U.S. Territories, districts like D.C., APO/FPO addresses, a railroad station in a neighboring landlocked country like Canada or Mexico etc. The colnames () function lists the names of the 3 columns from left to right as "state," "county," and "total_employees." The spec () function tells us that the state and county columns are character values-namely the two letter abbreviation of states and the names counties included in the study; the total_employees column lists numerical values, the number of railroad employee working within a specific county/state. Using the summary () function, we see that the number of railroad employees within any given county ranges from a minimum of one employee to a maximum of 8207 employees, which evidences that railroad employment varies considerably across the country/from county to county.
+
+## Provide Grouped Summary Statistics
+
+Conduct some exploratory data analysis, using dplyr commands such as `group_by()`, `select()`, `filter()`, and `summarise()`. Find the central tendency (mean, median, mode) and dispersion (standard deviation, mix/max/quantile) for different subgroups within the data set.
+
+```{r}
+filter(railroad_2012_clean_county, `state` == "LA") %>%
+  summarise(mean(`total_employees`), median(`total_employees`), sd (`total_employees`))
+```
+
+```{r}
+summarise(railroad_2012_clean_county, sum(`state` == "LA"))
+```
+```{r}
+summarize(railroad_2012_clean_county, mean(`total_employees`, na.rm=TRUE))
+
+summarize(railroad_2012_clean_county, median(`total_employees`, na.rm = TRUE))
+
+filter(railroad_2012_clean_county,
+       `total_employees` < 100)
+
+
+```
+
+### Explain and Interpret
+
+Be sure to explain why you choose a specific group. Comment on the interpretation of any interesting differences between groups that you uncover. This section can be integrated with the exploratory data analysis, just be sure it is included.
+
+Since I'm from the state of Louisiana, commonly abbreviated as LA, I decided to use the filter () function to solely show the data for Louisiana railroad employees across counties, which are actually referred to using the term parishes in Louisiana. Scanning the Louisiana specific data, it appears that Caddo Parish, a parish on the northwestern side of the state, had the highest amount of recorded employees-within the state-in 2012, 546 in total. Given that Caddo Parish boarders neighboring states of Texas and Arkansas and also contains the city of Shreveport, which is the third biggest city in the state after New Orleans and Baton Rouge-the state capital, it makes sense that the Caddo Parish railroad workforce is the largest to better facilitate interstate rail transport and commerce flowing in and out of Louisiana from this 'hub-like' area. I used a combination of the summarise () function and the sum () function to determine the amount of times the railroad_2012_clean_county dataset as a whole featured rows with LA, or the state of Louisiana; the value LA within the state column appeared 63 times. This suggests that this 2012 dataset included 63 of Louisiana's counties/parishes. There are 64 parishes in Louisiana in total, so only one was not included in the study.
+
+I used the summarize () function with the mean () function to get the average number of railroad employees across all state/county list items studies; there are roughly 87 railroad employees per county on average. I used a combination of summarize () and median () to compute the median number of employees per county, which came out as 21. To account for the possibility of missing data, I included na.rm = TRUE in my approach to both of those calculations.The distribution is skewed because the mean and the median are not the same, but they are relatively close in the grand scheme of things, evidencing that the central tendency statistics of the 2012 railroad employee workforce does point to the commonality of having under 100 employees per county, even though there are a sizeable portion of counties that have a higher employee count than this. Using a pipe alongside using the filter () to procure Louisiana-specific data, I was able to calculate that the mean for railroad employees in Louisiana was roughly 62 employees per county/parish and what I'll term the 'Louisiana median' came out to be 20 employees. Louisiana is not one of the largest states and doesn't boast some of the largest employee per county/state data that we see across the board, so it makes since that its mean of 62 employees is smaller than the railroad_2012_clean_county dataset-wide mean of roughly 87 employees. The standard deviation for Louisiana railroad employees was determined to be 101.4813, which I believe means there's a distance of about 101 railroad employees by county/parish in Louisiana from the dataset's overall mean of 87 employees per county/state.
