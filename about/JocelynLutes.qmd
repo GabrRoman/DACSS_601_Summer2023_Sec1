@@ -1,11 +1,11 @@
 ---
 title: "Jocelyn Lutes"
-image: images/JocelynLutes.jpg
+image: images/JocelynLutes.JPG
 about:
   template: solana
   image-width: 15em
   image-shape: round
-  image: images/JocelynLutes.jpg
+  image: images/JocelynLutes.JPG
   links:
     - icon: github
       text: Github
