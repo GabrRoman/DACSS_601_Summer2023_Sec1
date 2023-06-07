@@ -1,0 +1,105 @@
+---
+title: "Challenge 2 Submission"
+author: "Danny Holt"
+description: "Data wrangling: using group() and summarise()"
+date: "5/30/2023"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_2
+  - railroads
+  - faostat
+  - hotel_bookings
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(dplyr)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Read in the Data
+
+For this challenge, I will read in the data set railroad_2012_clean_county.csv.
+```{r}
+  railroad <- readr::read_csv("_data/railroad_2012_clean_county.csv")
+  railroad
+```
+
+## Describe the data
+
+We can see that there are three variables in the dataset: state, county, and total employees. Based on the name of the file, we can infer that the data shows the state, county, and number of employees of a location on a railroad (or multiple railroads) in 2012. I would guess that this data came directly from the railroad operator(s).
+
+First, we can use the `glimpse()` function to take a quick look at the data.
+```{r}
+  glimpse(railroad)
+```
+
+To look at the distinct states in the data, we can see that there are 53 "states." If we look at the data, this includes "states" beyond the 50 in the US, including "DC," likely Washington, D.C., as wells as "AE" and AP."
+```{r}
+  railroad %>%
+    select(state) %>%
+    n_distinct()
+```
+
+## Provide Grouped Summary Statistics
+
+Conduct some exploratory data analysis, using dplyr commands such as `group_by()`, `select()`, `filter()`, and `summarise()`. Find the central tendency (mean, median, mode) and dispersion (standard deviation, mix/max/quantile) for different subgroups within the data set.
+
+Let's look at the central tendency and dispersion of employee data.
+
+Let's find the mean number of employees per railroad location:
+```{r}
+  summarize(railroad, mean.employees=mean(total_employees), na.rm=TRUE)
+```
+Next, we'll examine the median:
+```{r}
+  summarize(railroad, median.employees=median(total_employees), na.rm=TRUE)
+```
+Here, we see that the median number of employees is significantly lower than the median. Let's look at the standard deviation and interquartile range for more clarity:
+```{r}
+  summarize(railroad, employees.sd=sd(total_employees), employees.IQR=IQR(total_employees), na.rm=TRUE)
+```
+The standard deviation of 284 suggests high variance in the numberof employees by location. The IQR of 58 tells us that 50% of the employee numer data is clustered within 29 employees more or less than our median of 21.
+
+Next, let's look at how many employees are in each state.
+```{r}
+  railroad %>%
+  group_by(state) %>%
+  summarize(employees_per_state=sum(total_employees))  
+```
+
+Now, let's look at the statewide average numbers of employees (from all locations within each state), from highest to lowest.
+```{r}
+  railroad %>%
+  group_by(state) %>%
+  summarize(avg_employees_per_state=(mean(total_employees)))
+```
+
+Finally, we can look at employees by region (note that the strange state designations like "AE" will not fit into regions):
+```{r}
+#mutate to code regions
+railroad <- railroad %>%
+  mutate(region=case_when(
+    state == "CT" | state =="ME" | state =="MA" | state =="NH" | state =="RI" | state =="VT" | state =="NJ" | state =="NY" | state =="PA" ~ "Northeast",
+    state == "IN" | state =="IL" | state =="MI" | state =="OH" | state =="WI" | state =="IA" | state =="KS" | state =="MN" | state =="MO" | state =="NE" | state =="ND" | state =="SD" ~ "Midwest",
+    state=="DE" | state =="DC" | state =="FL" | state =="GA" | state =="MD" | state =="NC" | state =="SC" | state =="VA" | state =="WV" | state =="AL" | state =="KY" | state =="MS" | state =="TN" | state =="AR" | state =="LA" | state =="OK" | state =="TX" ~ "South",
+    state=="AZ" | state =="CO" | state =="ID" | state =="NM" | state =="MT" | state =="UT" | state =="NV" | state =="WY" | state =="AK" | state =="CA" | state =="HI" | state =="OR" | state =="WA" ~ "West")
+    )
+#summarize to view regional breakdown
+  railroad %>%
+  group_by(region) %>%
+  summarize(employees_per_region=sum(total_employees, na.rm=TRUE))  
+```
+This shows us that, relatively speaking, railroad employees are clustered more in the South and Midwest than in the Northeast and West of the US.
+
+Looking at the data by state and region allows us to look at the data on a medium level between its zoomed-out original state and the zoomed-in county level. This approach gives the viewer a stronger sense of the geographical distribution of employees across the country.
