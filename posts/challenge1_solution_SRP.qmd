@@ -1,0 +1,67 @@
+---
+title: "Challenge 1 Solution"
+author: "Susannah Reed Poland"
+description: "Reading in data and creating a post"
+date: "6/6/2023"
+format:
+  html:
+    df-print: paged
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_1
+  - railroads
+  - faostat
+  - wildbirds
+  - Susannah Reed Poland
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today I have read in a dataset and described it. 
+
+## Read in the Data
+
+I read in the following dataset: railroad_2012_clean_county.csv ⭐
+
+```{r}
+read_csv("_data/railroad_2012_clean_county.csv")
+railroad<-read_csv("_data/railroad_2012_clean_county.csv")
+railroad
+```
+
+## Describe the data
+
+This dataframe seems to contain 3 variables (State, County, and Total Employees) and 2930 observations. Inferring from the title of the table, it seems that this table is showing us the number of people working for the railroad in each county in 2012. 
+
+```{r}
+#| label: summary
+railroad%>%
+  select(state)%>%
+  n_distinct()
+```
+
+There are 53 unique "States" in the table, and I would presume that this count includes some territories, districts, or areas that are not official U.S. states. Here is a list of the distinct states: 
+
+```{r}
+railroad%>%
+  select(state)%>%
+  distinct()
+
+```
+
+A quick scan of this list reveals that 'DC' is included, which I presume to be the District of Columbia plus others perhaps including Puerto Rico, etc. 
