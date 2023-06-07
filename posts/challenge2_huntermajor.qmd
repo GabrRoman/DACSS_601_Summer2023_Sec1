@@ -76,6 +76,11 @@ As mentioned previously in my challenge 1 post, broadly speaking, this dataset p
 Conduct some exploratory data analysis, using dplyr commands such as `group_by()`, `select()`, `filter()`, and `summarise()`. Find the central tendency (mean, median, mode) and dispersion (standard deviation, mix/max/quantile) for different subgroups within the data set.
 
 ```{r}
+filter(railroad_2012_clean_county, `state` == "LA")
+```
+
+
+```{r}
 filter(railroad_2012_clean_county, `state` == "LA") %>%
   summarise(mean(`total_employees`), median(`total_employees`), sd (`total_employees`))
 ```
