@@ -42,7 +42,9 @@ Read in one (or more) of the following data sets, available in the `posts/_data`
 -  Expanding on challenge 1, for challenge 2, I will also be reading in railroad\*.csv also known as railroad_2012_clean_county.csv ⭐  
 
 ```{r}
-read.csv("_data/railroad_2012_clean_county.csv")
+railroad_2012_clean_county <- read.csv("_data/railroad_2012_clean_county.csv")
+
+railroad_2012_clean_county
 ```
 
 Add any comments or documentation as needed. More challenging data may require additional code chunks and documentation.
