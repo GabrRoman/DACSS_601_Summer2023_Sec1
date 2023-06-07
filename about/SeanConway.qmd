@@ -1,0 +1,31 @@
+---
+title: "Sean Conway"
+image: images/sean_conway.jpeg
+about:
+  template: solana
+  image-width: 15em
+  image-shape: round
+  image: images/sean_conway.jpeg
+  links:
+    - icon: github
+      text: Github
+      href: https://github.com/sp-conway
+---
+
+## Education/Work Background
+PhD Candidate in Cognitive Psychology
+
+## R experience
+I love `R` and work with it constantly.
+
+## Research interests
+Decision-making, categorization, computational modeling.
+
+## Hometown
+La Crosse, WI
+
+## Hobbies
+Reading, running, music, cooking
+
+## Fun fact
+I play the saxophone!
