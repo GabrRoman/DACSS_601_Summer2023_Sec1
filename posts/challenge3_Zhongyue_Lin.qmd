@@ -1,0 +1,216 @@
+---
+title: "Challenge 3 "
+author: "Zhongyue Lin"
+description: "Tidy Data: Pivoting"
+date: "6/7/2023"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_3
+  - animal_weights
+  - eggs
+  - australian_marriage
+  - usa_households
+  - sce_labor
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(readxl)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to:
+
+1.  read in a data set, and describe the data set using both words and any supporting information (e.g., tables, etc)
+2.  identify what needs to be done to tidy the current data
+3.  anticipate the shape of pivoted data
+4.  pivot the data into tidy format using `pivot_longer`
+
+## Read in data
+-   USA Households\*.xlsx ⭐⭐⭐⭐
+
+For Challenge 3 I chose the **USA Households\*.xlsx** dataset as the original dataset
+```{r}
+# List all files in the "_data" directory that start with "USA Households"
+files <- list.files(path = "_data", pattern = "USA Households.*\\.xlsx$", full.names = TRUE)
+
+# Read each file, skip the first six lines, and save the results to a list
+data_list <- lapply(files, function(x) read_excel(x, skip = 6))
+
+# Use the bind_rows function to merge all the data boxes in the list into one data box
+data_combined <- bind_rows(data_list)
+# Rename the columns of the table according to the format of the original data
+colnames(data_combined) <-  c(
+  "Race and Hispanic origin of householder and year", 
+  "Number (thousands)", 
+  "Percent distribution Total", 
+  "Percent distribution Under $15,000", 
+  "Percent distribution $15,000 to $24,999", 
+  "Percent distribution $25,000 to $34,999", 
+  "Percent distribution $35,000 to $49,999", 
+  "Percent distribution $50,000 to $74,999", 
+  "Percent distribution $75,000 to $99,999", 
+  "Percent distribution $100,000 to $149,999", 
+  "Percent distribution $150,000 to $199,999", 
+  "Percent distribution $200,000 and over", 
+  "Median income (dollars) Estimate", 
+  "Median income (dollars) Margin of error1 (±)", 
+  "Mean income (dollars) Estimate", 
+  "Mean income (dollars) Margin of error1 (±)"
+)
+```
+The goal of this code is to consolidate all Excel files starting with "USA Households" in the "_data" directory into a single data frame. First, the `list.files` function lists all files that meet the specified criteria. Next, the `lapply` and `read_excel` functions are used to read each file, skipping the first six lines. Finally, the `bind_rows` function merges all the data frames that have been read into a single one.
+
+In dealing with the issue of complex table headers,I first identified the problem of the double-layered headers, which is not easy to handle directly in R. I proposed two potential solutions: simplifying the headers or storing data in a list, and decided to pursue the simplification approach. To do this, I designed new column names, integrating "Percent distribution" into each income bracket and adding **"Median income (dollars)"** and **"Mean income (dollars)"** into the respective **Estimate** and **Margin of error1 (±)** fields. Finally, I applied these new column names to the data frame using the `colnames()` function. Throughout this process, they demonstrated a clear and logical approach, ensuring the retention of all original data information while adapting the data structure to be more compatible with R's handling capabilities.
+
+```{r}
+#Remove text comments from the original table
+data_clean <- head(data_combined, nrow(data_combined) - 31)
+```
+Then code removes the last 31 rows (which are presumably comments in the original data) from the `data_combined` data frame and assigns the resulting data frame to `data_clean`.
+```{r}
+# Clear numeric comments in columns
+data_clean$`Race and Hispanic origin of householder and year` <- gsub("\\s.*", "", data_clean$`Race and Hispanic origin of householder and year`)
+```
+I use the `gsub`function in this code to remove any text after the space in the 'Race and Hispanic origin of householder and year' column of the `data_clean' data frame, as defined, and then overwrite the original column with the cleaned up version.
+```{r}
+# Get the column name of the original data frame
+original_colnames <- colnames(data_clean)
+
+# Create a new row with column names that exactly match the column names of the original data frame
+new_row <- data.frame(t(rep("/", length(original_colnames))))
+colnames(new_row) <- original_colnames
+
+# Fill the value of the new line
+new_row[1, "Race and Hispanic origin of householder and year"] <- "ALL RACE"
+
+# Bind the new row to the original data frame
+data_clean <- rbind(new_row, data_clean)
+# Find all the NA values in the data box and replace them with "/"
+data_clean[is.na(data_clean)] <- "/"
+```
+This code first creates a new row with the same column names as the original `data_clean` dataframe, assigns "/" to all the cells of this new row, and "ALL RACE" to the "Race and Hispanic origin of householder and year" column. Then it appends this new row to the beginning of the `data_clean` dataframe and finally replaces all NA values in `data_clean` with "/".
+
+```{r}
+# Find rows of non-year data
+non_year_rows <- data_clean[!grepl("^\\d{4}$", data_clean$`Race and Hispanic origin of householder and year`), ]
+# Define the value to replace
+replacement_values <- c("WHITE ALONE", "WHITE", "WHITE ALONE, NOT HISPANIC", 
+                        "WHITE, NOT HISPANIC", "BLACK ALONE OR IN COMBINATION",
+                        "BLACK ALONE", "BLACK", "ASIAN ALONE OR IN COMBINATION",
+                        "ASIAN ALONE", "ASIAN AND PACIFIC ISLANDER", "HISPANIC (ANY RACE)")
+
+# Define the line to be replaced
+replacement_rows <- c(56, 77, 113, 134, 165, 186, 207, 243, 264,285, 301)
+
+# Replace the value in the `Race and Hispanic origin of householder and year` specified line
+data_clean$`Race and Hispanic origin of householder and year`[replacement_rows] <- replacement_values
+
+# View the updated data box
+dim(data_clean)
+```
+This last code uses regular expressions to find rows in the "data_clean" data box where the **"Race and Hispanic Origin and Year of Head of Household"** column does not match the four-digit year pattern and stores these rows in the **"non_year_rows"** data box. And renamed the rows corresponding to these non-year data
+
+### Briefly describe the data
+Current dataset presents a report on household incomes in the United States, broken down by race and Hispanic origin, spanning multiple years. It includes a percent distribution of households across various income brackets, median income, and average income, with each item accompanied by a measure of error.
+
+At present, the structure of the data is quite wide, with each row representing a combination of a specific year and racial group, and each column corresponding to an income bracket, or to an estimate or error measurement for median or average income.
+
+While this wide format may be suitable for a report or a spreadsheet, it is not considered "tidy" in terms of data analysis. According to the principles of tidy data, each variable should form a column, each observation should form a row, and each type of observational unit should form a table.
+
+Therefore, to make the data "tidy", I plan to pivot it so that income brackets become values in a new "income_bracket" column, and the corresponding percent distributions, estimates, and error measurements become values in new columns as well. This will allow for a more streamlined and flexible analysis, as it will be much easier to filter, aggregate, and visualize the data according to various variables of interest.
+
+## Anticipate the End Result
+In our existing dataset, there are 16 columns in total, out of which 2 are identifier columns ("Race" and "Year"). This implies that there are $16 - 2 = 14$ variables that we'll need to pivot.
+
+Our original data frame consists of 'n' rows. Following the pivot, we anticipate that the tidy data frame will encompass $n * 14$ rows. If the row count of the reshaped data frame after executing the pivot operation matches this figure, we can assert that the pivot was carried out accurately, ensuring no data was lost.
+
+Moreover, it's crucial to confirm that the reshaped data's content is consistent, not just its structure. Every row in the newly shaped data should still capture the same information as the original dataset but in a tidier and more analysis-friendly layout. This means that the values must correctly correspond to the accurate combination of year, racial category, and income bracket.
+
+Having a well-defined expectation of the final shape of the pivoted data assists in avoiding confusion, data loss, or misinterpretation throughout the data transformation process.
+
+
+
+### Challenge: Describe the final dimensions
+```{r}
+# Create a new column and initialize it with 'ALL RACE'
+data_clean$Race <- "ALL RACE"
+
+# Loop the start row of each race
+for(i in 1:length(replacement_rows)){
+  # If it is the last race, then assign that race to the last row
+  if(i == length(replacement_rows)){
+    data_clean$Race[replacement_rows[i]:nrow(data_clean)] <- replacement_values[i]
+  } 
+  # Otherwise, assign the race to the start row and all rows before the start of the next race
+  else {
+    data_clean$Race[replacement_rows[i]:(replacement_rows[i+1]-1)] <- replacement_values[i]
+  }
+}
+
+# Retain all year rows
+data_clean <- data_clean[grepl("^\\d{4}$", data_clean$`Race and Hispanic origin of householder and year`), ]
+# Rename the "Race and Hispanic origin of householder and year" line
+names(data_clean)[names(data_clean) == "Race and Hispanic origin of householder and year"] <- "Year"
+
+# Dimensionality of cleaned data
+original_dim <- dim(data_clean)
+print(paste("Cleaned data dimensions: ", original_dim[1], " rows x ", original_dim[2], " columns"))
+
+# of expected rotation variables
+num_pivot_vars <- original_dim[2] - 2
+
+# Expected new data dimensions
+expected_new_dim <- original_dim[1] * num_pivot_vars
+print(paste("Expected new data dimensions: ", expected_new_dim, " rows"))
+
+```
+Our dataset represents a report on household incomes in the United States, broken down by race and Hispanic origin over several years. It includes details such as the number of households, percentage distribution of households across various income brackets, median and mean income, each associated with a corresponding measure of error.
+
+Currently, the data is organized in a wide format, with each row combining information for a particular year and racial group, and each column corresponding to an income bracket, or an estimate or error for median or mean income.
+
+Although this wide format may be suitable for some types of analysis, it is not considered "tidy" for most data analysis tasks. According to the principles of tidy data, each variable should be a column, each observation a row, and each type of observational unit a table.
+
+In order to make this data "tidy", I plan to reshape it such that income brackets become values in a new "Income Bracket" column, and their corresponding percentage distributions, estimates, and error measures become values in corresponding new columns. This transformation will make the data easier to filter, aggregate, and visualize according to various variables of interest.
+
+Before the transformation, I have ensured to clean up the data by initializing a new column 'Race' with 'ALL RACE', and then looping through each row to correctly assign the racial category.So the final total number of columns is $n=17$ and the total number of rows $n=339$.
+
+I've also retained all the rows corresponding to specific years and renamed the "Race and Hispanic origin of householder and year" column to "Year". This preliminary cleaning step is crucial to maintain data integrity during the transformation. 
+
+Finally, I computed the expected dimensions of the tidied data based on the dimensions of the cleaned data and the number of variables to be pivoted.(**5085  rows**) This will serve as a check to verify the successful execution of the pivot operation.
+## Pivot the Data
+
+### Challenge: Pivot the Chosen Data
+```{r}
+data_tidy <- data_clean %>%
+  # Select columns to pivot into a longer format
+  pivot_longer(
+    # Select columns for the 'names_to' argument
+    cols = -c(`Race`, `Year`),
+    # Specify name of 'names_to' column
+    names_to = "Income Bracket",
+    # Specify name of 'values_to' column
+    values_to = "Value"
+  )
+new_dim <- dim(data_tidy)
+print(paste("New data dimensions: ", new_dim[1], " rows x ", new_dim[2], " columns"))
+```
+After executing our data transformation, we pivoted the original **339 rows**and **17 columns** into a "tidy" format yielding **5085 rows** and **4 columns**. This data transformation entailed reorienting the data frame, such that our new unit of observation was delineated by the 'Year', 'Race', and 'Income Bracket'. 
+
+This restructuring adheres to the principles of tidy data and enhances the readability and malleability of the data for subsequent analysis and visualization.
+
+Furthermore, verifying that the actual data dimensions post-transformation align with our projected dimensions is a vital validation step. This congruity attests to the success of our data transformation process and underscores the importance of accurate data cleaning and reshaping.
+
+
