@@ -1,0 +1,80 @@
+---
+title: "Challenge 3"
+author: "Audrey Bertin"
+description: "Tidy Data: Pivoting"
+date: "6/6/2023"
+format:
+  html:
+    df-print: paged
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_3
+  - eggs_tidy
+  - pivot_longer
+  - audrey_bertin
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Data Overview 
+
+For this challenge, I'll be reading and tidying the `eggs_tidy.csv ⭐⭐` dataset:
+
+```{r message = FALSE}
+eggs <- readr::read_csv("_data/eggs_tidy.csv")
+```
+
+Looking at this data before tidying, we see the following:
+
+```{r}
+glimpse(eggs)
+```
+The dataset has 120 rows and 6 columns. Each row appears to represent a specific month, with the variables showing how many eggs packages (or how much money's worth) of each size were either sold or produced within that month.
+
+The two variables that uniquely describe each row are `month` and `year`, so these will NOT be pivoted and will need to remain constant. However, the other four variables (`large_half_dozen`, `large_dozen`, `extra_large_half_dozen` and `extra_large_dozen`) can be pivoted together because they all store the exact same type of information (count).
+
+When we pivot the data, we want to reformat so that we have the following columns:
+
+- `month`
+- `year`
+- `carton_type`
+- `amount`
+
+Note: It is not clear exactly what the amount is representing without more information about the dataset, so we will use a generic name here for now.
+
+We are starting with `n = 120` rows and `k = 6` columns and pivoting `4` (or `k - 2`) variables. This means we should expect our final dataset to have `n * (k-2) = 120 * 4 = 480` rows and `4` columns.
+
+
+## Conducting the Pivot
+
+```{r}
+eggs_pivoted <- pivot_longer(eggs, col = large_half_dozen:extra_large_dozen,
+                 names_to="carton_type",
+                 values_to = "amount")
+eggs_pivoted
+```
+
+Once we conduct this pivot, we see we have the correct (predicted) number of rows and columns, as well as the variables we want.
+
+Before, a case/row represented a month in a particular year (and *all* cartons from within that month). Now a case represents only a specific egg carton type within a specific month/year, and there are four cases per month/year.
+
+The three conditions of tidy data (according to Hadley Wickham) are:
+
+1. Each variable must have its own column.
+2. Each observation must have its own row.
+3. Each value must have its own cell.
+
+We can see that all of these are true. Variables are in their own unique columns, observations are separated out and have one unique row each, and there are not multiple values per cell.
+
+The data is also in a much easier format for plotting, as with `carton_type` as a variable, it makes it much easier to do something like a `facet_wrap` to compare across types, versus having to separately draw four plots.
