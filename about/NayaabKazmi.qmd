@@ -1,0 +1,41 @@
+---
+title: "Nayaab Kazmi"
+image: images/NayaabKazmi.jpeg
+about:
+  template: solana
+  image-width: 15em
+  image-shape: round
+  image: images/NayaabKazmi.jpeg
+  links:
+    - icon: github
+      text: Github
+      href: https://github.com/nkazmiumass
+---
+
+##Instructions
+
+  - save a copy of this document as *FirstLast.qmd* in the **about** folder
+  - replace *Your Name* in yaml header with your first and last name
+  - save an image (jpeg, png) to use in the **about/images** folder
+  - replace image names in yaml header
+  - replace github user name
+  - fill in information below, as appropriate
+  - commit to github and submit pull request
+
+## Education/Work Background
+I work in post-secondary education in a department called Institutional Research where we analyze large sets of data about students, enrollment and retention
+
+## R experience
+I have excel and tableau experience but no R experience
+
+## Research interests
+colleges, universities 
+
+## Hometown
+chino hills, california
+
+## Hobbies
+taking photos, staring at walls and going on walks around my local pond
+
+## Fun fact
+I love the desert!
