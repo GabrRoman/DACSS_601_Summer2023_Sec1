@@ -85,7 +85,7 @@ It contains F1 race data from the series' start in 1950 to the present season, w
 There are 14 separate files within this dataset:
 
 - `circuits.csv` contains information about the different tracks the drivers race on (a row here is a track)
-- `constructor_standings.csv` contains information about how many points each team was awarded at each race (a row here is a single team at a single race)
+- `constructor_standings.csv` contains information about how many points each team has after each race (a row here is a single team at a single race)
 - `constructors.csv` stores the names and nationalities of teams (a row here is a team)
 - `driver_standings.csv` stores information about how many points each driver was awarded at each race (a row here is a single driver at a single race)
 - `drivers.csv` stores the names and nationalities of drivers (a row here is a driver)
@@ -97,5 +97,156 @@ There are 14 separate files within this dataset:
 - `seasons.csv` contains the years and urls for wikipedia pages associated with each season (a row here is a season)
 - `sprint_results.csv` same as results.csv but for sprint races, which we'll be excluding (a row here is a single sprint race)
 - `status.csv` contains the encodings of a `status` variable that is referenced in the results files (a row here is a status)
+
+
+## Data Cleaning
+
+We now look at each of these one by one, excluding the sprint race results.
+
+#### `circuits.csv`
+
+```{r message=FALSE}
+circuits <- readr::read_csv("_data/formula1/circuits.csv")
+```
+
+```{r}
+head(circuits)
+```
+
+Each circuit has a `circuitId` that uniquely identifies it. We also have location information. The column `alt` is not entirely clear. 
+
+All of the data types seem reasonable here so there is no need to modify them. 
+
+There appear to be 77 unique circuits.
+
+```{r}
+length(unique(circuits$circuitId))
+```
+
+
+
+#### `constructor_standings.csv`
+
+```{r message=FALSE}
+constructor_standings <- readr::read_csv("_data/formula1/constructor_standings.csv")
+```
+
+```{r}
+head(constructor_standings)
+```
+
+The constructors standings data has a unique identifier for each row, as well as an id that refers to the races df as well as the constructors df. For each constructor/race we see how many points they have after that race, their current standing in the championship, as well as their running tally of wins in the season so far. 
+
+All of the data types seem reasonable here as well. `constructorId` would make more sense as a factor, but we would want to wait until later on when we join tables together to make this update since this refers to a column in another table. For now, `positionText` seems to duplicate `position` so we can remove `positionText`.
+
+```{r}
+constructor_standings <- constructor_standings %>%
+  select(-positionText)
+
+constructor_standings
+```
+
+
+
+#### `constructors.csv` 
+
+```{r message=FALSE}
+constructos <- readr::read_csv("_data/formula1/constructors.csv")
+```
+
+```{r}
+constructors
+```
+For each constructor we have a unique `constructorId` (211 of them), which can be used to join this data with other tables. We also get names, nationalities and wikipedia URLs.
+
+All of the data types are reasonable here. Converting team names to factors would again be better after completing joins.
+
+
+
+#### `driver_standings.csv` 
+
+```{r message=FALSE}
+driver_standings <- readr::read_csv("_data/formula1/driver_standings.csv")
+```
+
+```{r}
+driver_standings
+```
+This file has the exact same format as the constructors standings. A unique ID for each row, a race ID and driver ID to join with other tables, cumulative points, race position, and a running count of wins.
+
+Again, `positionText` duplicates `position` so we can remove it.
+
+```{r}
+driver_standings <- driver_standings %>%
+  select(- positionText)
+
+driver_standings
+```
+
+
+
+#### `drivers.csv` 
+
+```{r message=FALSE}
+drivers <- readr::read_csv("_data/formula1/drivers.csv")
+```
+
+```{r}
+drivers
+```
+
+We have 857 unique drivers. Each driver has a unique ID, a race number, a 3 letter code used to refer to them on score sheets/race documentation, a full name, DOB, nationality, and wikipedia link.
+
+Driver number seems like it should be numeric, but it makes sense to leave as a character because the numbers aren't actually ordered in any way (drivers choose them based on personal preference). There does seem to be a strange missing data marker (`\\N`), so we will replace this with a normal `NA`.
+
+```{r}
+drivers <- drivers %>%
+  mutate(number = na_if(number, "\\N"))
+
+drivers
+```
+
+
+#### `lap_times.csv` 
+
+```{r message=FALSE}
+lap_times <- readr::read_csv("_data/formula1/lap_times.csv")
+```
+
+```{r}
+lap_times
+```
+
+Lap times has unique identifiers referring to the race and driver who completed them, which we can use to join tables later. We also have lap number, driver position, and lap times. The `time` variable is in an `hms` class format, which is appropriate for storing time. We don't need to modify any data types here.
+
+#### `pit_stops.csv` 
+
+```{r message=FALSE}
+pit_stops <- readr::read_csv("_data/formula1/pit_stops.csv")
+```
+
+```{r}
+pit_stops
+```
+
+For the pit stops, we have a unique race and driver ID to join with other tables. We also get the stop number for that driver within the race, the lap in which the stop was taken, time of day and pit stop duration.
+
+The only column with obviously the wrong data type is duration. Since this measures time, it should be a double. We can also rename duration to `duration_seconds` to make the units more obvious. 
+
+```{r}
+pit_stops <- pit_stops %>%
+  mutate(duration = as.numeric(duration)) %>%
+  rename(duration_seconds = duration)
+
+pit_stops
+```
+
+#### `qualifying.csv` 
+#### `races.csv` 
+#### `results.csv` 
+#### `seasons.csv` 
+#### `status.csv` 
+
+
 
 
