@@ -1,0 +1,29 @@
+---
+title: "Homework 2"
+author: "Audrey Bertin"
+description: "Reading in final project data - Formula 1"
+date: "6/9/2023"
+format:
+  html:
+    df-print: paged
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - hw2
+  - audrey_bertin
+  - formula_1
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+
