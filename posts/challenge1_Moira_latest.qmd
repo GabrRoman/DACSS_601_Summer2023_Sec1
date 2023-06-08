@@ -1,8 +1,8 @@
 ---
-title: "Challenge 1 Solutions"
+title: "Challenge 1 Solutions Final"
 author: "Moira Chiong"
 description: "Reading in data and creating a post"
-date: "06/05/2023"
+date: "06/06/2023"
 format:
   html:
     toc: true
@@ -33,9 +33,8 @@ knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
 
 Today's challenge is to
 
-1)  read in a dataset, and
-
 2)  describe the dataset using both words and any supporting information (e.g., tables, etc)
+
 
 ## Read in the Data
 
@@ -49,9 +48,11 @@ Read in one (or more) of the following data sets, using the correct R package an
 
 Find the `_data` folder, located inside the `posts` folder. Then you can read in the data, using either one of the `readr` standard tidy read commands, or a specialized package such as `readxl`.
 
-```{r}
-wild_bird_data <- read_excel("_data/wild_bird_data.xlsx")
-print(wild_bird_data)  #rename columns to easier names
+#read in excel file and remove first observation
+library(readxl)
+wild_bird_data <- read_excel("posts/_data/wild_bird_data.xlsx", skip=1)
+View(wild_bird_data)
+library("dplyr")
 
 ```
 
@@ -61,7 +62,65 @@ Add any comments or documentation as needed. More challenging data sets may requ
 
 Using a combination of words and results of R commands, can you provide a high level description of the data? Describe as efficiently as possible where/how the data was (likely) gathered, indicate the cases and variables (both the interpretation and any details you deem useful to the reader to fully understand your chosen data).
 
-```{r}
-#| label: summary
-glimpse(wild_bird_data)
-```
+1)  read in a dataset, and
+#This data set looks at weight and population size of Wild Birds. There are two variables, weight and population size. There are 146 
+# observations with 2 variables. The mean and median of the weight variable are 363.69 and 69.23 respectively. The mean and median
+# of the population size variable are 382874 and 24353.21 respectively. The minimum and maximum of the weight variable is 5.46 and 9639.85 
+#respectively. The minimum and maximum of the population size variable are 4.92 and 5093378 respectively. The Interquartile range for 
+#weight and population size is 291 and 196694 respectively.
+
+
+
+#install packages to read in an excel file
+
+install.packages("readxl")
+install.packages("dplyr")
+library("readxl")
+
+#rename columns to easier names
+names(wild_bird_data) <- NULL           
+wild_bird_data
+colnames(wild_bird_data) <- c("weight","population_size")
+print(wild_bird_data)
+
+#round the variables to 2 significant figures
+round(wild_bird_data_SANDBOX,digits=2)
+
+#find the mean of each variable
+mean(wild_bird_data_SANDBOX$weight)
+mean(wild_bird_data_SANDBOX$popsize)
+
+#find the median of each variable
+median(wild_bird_data_SANDBOX$weight)
+median(wild_bird_data_SANDBOX$popsize)
+
+#find the number of observations
+nrow(wild_bird_data_SANDBOX)
+#find the number of variables
+ncol(wild_bird_data_SANDBOX)
+
+#find the min of each variable
+min(wild_bird_data_SANDBOX$weight)
+min(wild_bird_data_SANDBOX$popsize)
+
+#find the max of each variable
+max(wild_bird_data_SANDBOX$weight)
+max(wild_bird_data_SANDBOX$popsize)
+
+library(dplyr)
+#calculating mean value
+data <- wild_bird_data_SANDBOX
+data %>%
+summarize_all(mean)
+
+#calculating median value
+data <- wild_bird_data_SANDBOX
+data %>%
+
+summarize_all(median)
+
+#calculating Interquartile Range (IQR) value
+data <- wild_bird_data_SANDBOX
+data %>%
+summarize_all(IQR)
+#END

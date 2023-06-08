@@ -1,7 +1,21 @@
-title: "Challenge 2 Solution"
-author: "Moira Chiong"
+---
+title: "Challenge 2 Final Solutions"
+author: "Moira AChiong"
 description: "Data wrangling: using group() and summarise()"
-date: "6/6/2023"
+date: "6/7/2023"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_2
+  - railroads
+  - faostat
+  - hotel_bookings
+---
+
 
 ## Challenge Overview
 
@@ -18,6 +32,12 @@ Read in one (or more) of the following data sets, available in the `posts/_data`
 -   FAOstat\*.csv or birds.csv ⭐⭐⭐
 -   hotel_bookings.csv ⭐⭐⭐⭐
 
+#install packages to read in an excel file
+
+install.packages("readxl") 
+library("readxl")
+birds <- read_excel("C:\Users\chion\OneDrive\Desktop\DACSS 601\Challenge 2\birds.xlsx")
+
 ```{r}
 
 ```
@@ -25,11 +45,8 @@ Read in one (or more) of the following data sets, available in the `posts/_data`
 Add any comments or documentation as needed. More challenging data may require additional code chunks and documentation.
 
 ## Describe the data
-#Description of dataset:
-#Moira Chiong
-#DACSS 601 Challenge 2
-#Summer 2023
-#Birds.csv data set
+
+Using a combination of words and results of R commands, can you provide a high level description of the data? Describe as efficiently as possible where/how the data was (likely) gathered, indicate the cases and variables (both the interpretation and any details you deem useful to the reader to fully understand your chosen data).
 
 #This data set was a much larger dataset than in Challenge 1. There was a mix of categorical and numerical data. There were 14 columns of variables, with 30977 rows of observations. The variable, BIrds$Value had the following summary statistics:
   
@@ -88,12 +105,21 @@ Add any comments or documentation as needed. More challenging data may require a
 
 #It is clear from the data set that Chickens, Ducks and Turkeys are the most consumed in the world.
 
-#install packages to read in an excel file
+## Provide Grouped Summary Statistics
+#See above
+Conduct some exploratory data analysis, using dplyr commands such as `group_by()`, `select()`, `filter()`, and `summarise()`. Find the central tendency (mean, median, mode) and dispersion (standard deviation, mix/max/quantile) for different subgroups within the data set.
 
-install.packages("readxl") 
-library("readxl")
-birds <- read_excel("C:\Users\chion\OneDrive\Desktop\DACSS 601\Challenge 2\birds.xlsx")
+```{r}
 
+```
+
+### Explain and Interpret
+
+Be sure to explain why you choose a specific group. Comment on the interpretation of any interesting differences between groups that you uncover. This section can be integrated with the exploratory data analysis, just be sure it is included.
+
+Add any comments or documentation as needed. More challenging data may require additional code chunks and documentation.
+
+#Code
 # count the number of observations (rows)
 nrow(birds)
 
@@ -110,14 +136,11 @@ str(birds$Value)
 #convert value variable to numeric
 as.numeric(birds$Value)
 
-
 #find the mean of the value column
 mean(birds$Value,na.rm=TRUE)
 
-
 #find the median of the value column
 median(birds$Value,na.rm=TRUE)
-
 
 #find the IQR of the value column
 IQR(birds$Value, na.rm=TRUE)
@@ -130,14 +153,11 @@ library(dplyr)
 #Count frequencies for Domain
 table1 <-table(birds$Domain)
 
-
 #count frequencies for Area
 table2 <-table(birds$Area)
 #count percentages by Area
 table2a <- table(birds$Area)
 prop.table(table2a)
-
-
 
 #count frequencies for Item
 table3 <-table(birds$Item)
@@ -177,19 +197,13 @@ agg_tbl_1
 
 #END
 
-```{r}
-#| label: summary
-
-```
-
 ## Provide Grouped Summary Statistics
+
+#Answered above.
 
 Conduct some exploratory data analysis, using dplyr commands such as `group_by()`, `select()`, `filter()`, and `summarise()`. Find the central tendency (mean, median, mode) and dispersion (standard deviation, mix/max/quantile) for different subgroups within the data set.
 
-```{r}
-
-```
-
 ### Explain and Interpret
+#Answered Above
 
 Be sure to explain why you choose a specific group. Comment on the interpretation of any interesting differences between groups that you uncover. This section can be integrated with the exploratory data analysis, just be sure it is included.
