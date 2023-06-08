@@ -1,6 +1,6 @@
 ---
 title: "Challenge 2 Final Solutions"
-author: "Moira Chiong"
+author: "Moira AChiong"
 description: "Data wrangling: using group() and summarise()"
 date: "6/7/2023"
 format:
