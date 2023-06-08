@@ -1,0 +1,78 @@
+---
+title: "Challenge 1 Solutions"
+author: "Gabrielle Roman"
+description: "Reading in data and creating a post"
+date: "6/5/2023"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_1
+  - railroads
+  - faostat
+  - wildbirds
+  - Gabrielle Roman
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to
+
+1)  read in a dataset, and
+
+2)  describe the dataset using both words and any supporting information (e.g., tables, etc)
+
+## Read in the Data
+
+Read in one (or more) of the following data sets, using the correct R package and command.
+
+-   railroad_2012_clean_county.csv ⭐
+-   birds.csv ⭐⭐
+-   FAOstat\*.csv ⭐⭐
+-   wild_bird_data.xlsx ⭐⭐⭐
+-   StateCounty2012.xls ⭐⭐⭐⭐
+
+Find the `_data` folder, located inside the `posts` folder. Then you can read in the data, using either one of the `readr` standard tidy read commands, or a specialized package such as `readxl`.
+
+```{r}
+library(readr)
+library(readxl)
+library(dplyr)
+list.files("_data")
+railroad_from_csv <- read.csv("_data/railroad_2012_clean_county.csv")
+railroad_from_csv
+typeof(railroad_from_csv$total_employees)
+typeof(railroad_from_csv$state)
+typeof(railroad_from_csv$county)
+typeof(railroad_from_csv$total_employees)
+# spec(railroad_from_csv) isn't working on the basis that tbl_df is not true. I take it this means that my dataframe isn't a tibble.
+railroad_from_csv %>% 
+  select(state)%>%
+  distinct()
+head(railroad_from_csv)
+
+```
+
+Add any comments or documentation as needed. More challenging data sets may require additional code chunks and documentation.
+
+## Describe the data
+
+Using a combination of words and results of R commands, can you provide a high level description of the data? Describe as efficiently as possible where/how the data was (likely) gathered, indicate the cases and variables (both the interpretation and any details you deem useful to the reader to fully understand your chosen data).
+
+```{r}
+#| label: summary
+# The data describes the quantity of employees by county and respective state in 2012. Variables include the state, county, and number of employees. 
+```
