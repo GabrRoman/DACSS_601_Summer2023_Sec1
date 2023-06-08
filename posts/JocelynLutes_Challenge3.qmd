@@ -56,8 +56,7 @@ Prior to being able to use this dataset to conduct analyses, there are several c
 4. **Convert "Too Few" to `NA`**: There are a few columns, where the presence of "Too Few" will cause the `Price` column to be a `character` data type. To ensure that this column has a `numeric` data type, we should replace all "Too Few" instances with `NA`.
 
 **Expected Results:**
-If we tidy our data correctly, we should have four columns: `Year`, `Month`, `Product` and `Price` and 972 rows (9 years * 12 months * 9 products.)
-
+If we tidy our data correctly, we should have four columns: `Year`, `Month`, `Product` and `Price` and 1080 rows (10 years * 12 months * 9 products.)
 
 ## Tidying the Data
 
