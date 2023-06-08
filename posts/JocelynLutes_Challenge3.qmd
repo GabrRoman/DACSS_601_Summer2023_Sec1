@@ -2,7 +2,7 @@
 title: "Challenge 3: Tidying Data"
 author: "Jocelyn Lutes"
 description: "Tidying the Organic Eggs & Poultry Dataset"
-date: "06/07/2023"
+date: "06/08/2023"
 format:
   html:
     df-print: paged
@@ -30,7 +30,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Import Data
 
-To begin, we will read in the Organic Eggs and Poultry data that is stored in the `Data` sheet of `organiceggpoultry.xls`. From inspecting the raw file, we see that there are four additional heading rows that are not needed to view our data in tabular form, so we begin reading the data at line 5. 
+To begin, we will read in the Organic Eggs and Poultry data that is stored in the `Data` sheet of `organiceggpoultry.xls`. From inspecting the raw file, we see that there are four additional heading rows that are not needed to view our data in tabular form. Therefore, we begin reading the data at line 5.
 
 A sample of the data is shown below.
 
@@ -43,20 +43,20 @@ head(df_raw)
 
 This dataset is from the U.S. Department of Agriculture, and it contains data for the prices that "first receivers" (i.e., people who purchase the product directly from the egg or poultry seller) paid for egg and poultry products. The data covers the years 2004-2013. 
 
-The raw data contains `r nrow(df_raw)` rows, each of which represents a price reading for a specific month and year. There are `r ncol(df_raw) - 2` columns that represent the price for different egg and poultry products.
+The raw data contains `r nrow(df_raw)` rows, each of which represents the price recorded for a specific month and year. There are `r ncol(df_raw) - 2` columns that represent the price for different egg and poultry products.
 
-Prior to being able to use this dataset to conduct analyses, there are several changes that should be made to "tidy" the data:
+Prior to being able to use this data to conduct analyses, there are several changes that should be made to "tidy" the data:
 
 1. **Remove Non-informative Columns**: The formatting of the raw data resulted in a completely null column. We should remove this from the data.
 
-2. **Separate Year and Months**: The raw data is formatted so that the year appears in the "January" row, and February-December of that same year are unlabeled. We should ensure that every row has a value in the row and month column.
+2. **Separate Year and Months**: The raw data is formatted so that the year appears in the January row, and February-December of that same year are unlabeled. We should ensure that every row has a value in the Year and Month columns.
 
-3. **Pivot Longer to Create Product and Price Columns**: The raw data is formatted so that price of each product is given its own column. Because each of these columns represents the same thing (price), it would be better to move the names of the columns into a `Product` row and the prices into `Price` row. 
+3. **Convert "Too Few" to `NA`**: There are a few columns where the presence of "Too Few" causes the price to be encoded as a `character` data type. To ensure that this column has a `numeric` data type, we should replace all "Too Few" instances with `NA` and cast the column to `numeric`.
 
-4. **Convert "Too Few" to `NA`**: There are a few columns, where the presence of "Too Few" will cause the `Price` column to be a `character` data type. To ensure that this column has a `numeric` data type, we should replace all "Too Few" instances with `NA`.
+4. **Pivot Longer to Create Product and Price Columns**: The raw data is formatted so that the price of each product is given its own column. Because each of these columns represents the same thing, it would be better to move the names of the columns into a `Product` column and the values (prices) into a `Price` column. 
 
 **Expected Results:**
-If we tidy our data correctly, we should have four columns: `Year`, `Month`, `Product` and `Price` and 1080 rows (10 years * 12 months * 9 products.)
+If we tidy our data correctly, we should have four columns: `Year`, `Month`, `Product` and `Price` and 1080 rows (10 years * 12 months * 9 products).
 
 ## Tidying the Data
 
@@ -65,28 +65,35 @@ We begin by removing column `...6` from the data.
 ``` {r}
 df_tidy <- df_raw %>% 
   select(-`...6`)
-
-df_tidy
 ```
 
 ### 2. Separate the Year and Months into Separate Columns
 
 #### *Create `Month` and `Year` columns*
+Next, we extract the month and year from the first column. This breaks the date column into `Month` and `Year` columns.
+
 ``` {r}
 df_tidy <- df_tidy %>%
   rename(date = `...1`) %>%
   # use a regular expression to extract months as words (alpha characters only)
-  # and years as digits
+  # and years as digits (4-digit numerics only)
   mutate(
     Month = stringr::str_extract(date, "\\b[a-zA-Z]+\\b"),
     Year = as.numeric(stringr::str_extract(date, "\\b[0-9]{4}\\b"))
-  ) %>%
-  select(-date)
+  )
 
-df_tidy
+df_tidy %>%
+  select(date, Month, Year) %>%
+  head()
+
+# remove unneeded date column
+df_tidy <- df_tidy %>%
+  select(-date)
 ```
 
 #### *Fill in the null years*
+
+Next, because the year is only included in the January column, we must fill in the `NA` years.
 ``` {r}
 # Manually assign the years - not sure if there is an easier way to do this!
 df_tidy$Year[2:12] <- 2004
@@ -100,6 +107,13 @@ df_tidy$Year[86:96] <- 2011
 df_tidy$Year[98:108] <- 2012
 df_tidy$Year[110:nrow(df_tidy)] <- 2013
 
+product_cols <- df_tidy %>%
+  select(-Month, -Year) %>%
+  colnames()
+
+df_tidy <- df_tidy %>%
+  select(Year, Month, all_of(product_cols))
+
 df_tidy
 ```
 
@@ -109,6 +123,8 @@ df_tidy %>% group_by(Year) %>% tally()
 ```
 
 #### *Convert "Too Few" to `NA`*
+
+Next, to ensure that all prices are of `numeric` type, we replace the "too few" string with NA and use `as.numeric` to convert the data to the `numeric` type.
 ``` {r warning = FALSE}
 # first get the columns that are character type
 # remove columns that are expected to be character
@@ -122,6 +138,7 @@ df_tidy <- df_tidy %>%
   mutate(across(all_of(char_cols), ~ifelse(. == 'too few', NA, as.numeric(.))))
 ```
 #### *Pivot Longer*
+Finally, we pivot our data so that each of the product names becomes a value in the `Product` column and each corresponding price becomes a value in the `Price` column. 
 
 ``` {r message = FALSE, warning = FALSE}
 # get the columns that we need to pivot by removing Month and Year
@@ -130,10 +147,20 @@ cols_to_pivot <- df_tidy %>%
   colnames()
 
 # Pivot the data
-df_tidy %>%
+df_tidy <- df_tidy %>%
   pivot_longer(
     cols = cols_to_pivot, 
     names_to = 'Product', 
     values_to = 'Price'
     )
+
+# Rearrange cols
+df_tidy <- df_tidy %>%
+  select(Year, Month, Product, Price)
+```
+
+Our final data frame, which has a shape of `r nrow(df_tidy)` rows and `r ncol(df_tidy)` columns (as expected!), is shown below. This data is now tidy because each column represents a single variable and each row represents the price of a single product for a given year and month. 
+
+``` {r}
+df_tidy
 ```
