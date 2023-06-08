@@ -154,7 +154,7 @@ constructor_standings
 #### `constructors.csv` 
 
 ```{r message=FALSE}
-constructos <- readr::read_csv("_data/formula1/constructors.csv")
+constructors <- readr::read_csv("_data/formula1/constructors.csv")
 ```
 
 ```{r}
@@ -349,8 +349,78 @@ results
 
 
 #### `seasons.csv` 
+
+```{r message=FALSE}
+seasons <- readr::read_csv("_data/formula1/seasons.csv")
+```
+
+```{r}
+seasons
+```
+
+The seasons data is very simple and just has a year and wikipedia URL. There is no need to modify anything here, and this data overall does not look very useful.
+
 #### `status.csv` 
 
+```{r message=FALSE}
+status <- readr::read_csv("_data/formula1/status.csv")
+```
+
+```{r}
+status
+```
+
+
+In the `results` data frame there is a column called status ID:
+
+```{r}
+results %>%
+  select(resultId, raceId, driverId, constructorId, start_position, finish_position, statusId)
+```
+
+
+The `status` table contains the encodings for this table. For example, the first 5 status IDs are all 1, which indcates "Finished", while the two people with status 5 had "Engine" issues.
+
+We can quickly see what the top statuses are:
+
+```{r message = FALSE}
+top_statuses <- results %>%
+  inner_join(status,by="statusId") %>%
+  group_by(statusId, status) %>%
+  summarize(n = n()) %>%
+  arrange(desc(n)) 
+```
+
+```{r}
+top_statuses %>%
+  head(15) %>%
+  ggplot(aes(x=reorder(status,n), y=n)) + geom_col() +
+  ggtitle("Most Common Race Statuses by Count") + theme_minimal() + xlab("Status") + ylab("Count") + coord_flip()
+```
+
+
+
+Most drivers finished. A good number were lapped. Most common reasons for DNF appear to be engine failure, accident, and collision.
+
+As we can see, the status table will only be useful if joined with the results table in future analysis.
+
+We don't need to change anything about the data types in the status table. They all look good.
+
+## Research Questions
+
+For my final project, I'm specifically insterested in the driver *Max Verstappen* (Driver ID: 830, Constructor IDs: 5 -- Toro Rosso & 9 -- Red Bull), who has won the last two Drivers Championships, in 2021 and 2022. From purely an observational (and non-data-based) standpoint, he seems like he is in a league above everyone else in F1 right now, and I'm curious to see how the data stacks up and where his strengths are. Some specific areas to look into are:
+
+- **Pole to Win Ratio:** How often does Max convert pole position (starting first) to winning a race, compared with other drivers with lots of pole positions?
+- **Lap Times:** How does Max's lap time (both in qualifying and in the race) compare to his teammates?
+- **Wins and Podiums:** Max seems to be picking up wins and podiums at an *insane* rate. How does this rate compare to other great drivers like Michael Schumacher or Lewis Hamilton?
+- **Points:** The constructors championship is based on the combined points earned by both drivers. What proportion of these points is Max bringing in for his team, and how does this stack up to other teammate pairs?
+- **Rise to Success:** How has Max's performance changed since joining the sport?
+- **Come-From-Behinds:** Max seems to have an insane ability to win, even if he's starting a race at the back of the grid (i.e. in 11th-20th place). How does this ability stack up to other drivers?
+- **DNFs:** How often does Max DNF a race? And how much of the time is it *his* fault, versus a mechanical failure?
+
+For the purposes of this analysis, I will likely just look at drivers who raced at least a season between 2006 and 2022, including those whose first season was prior to 2006. Why start at 2006? Because this was a huge regulations change year which shifted the car design dramatically, toward what we have today, and comparing across historical eras that are *too* different can make numbers pretty meaningless.
+
+This analysis will likely be pretty complicated, involving a lot of table joining, but the data looks to be in a good format for this sort of joining with all the unique identifier columns in each table.
 
 
 
