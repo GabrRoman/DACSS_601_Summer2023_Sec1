@@ -1,0 +1,83 @@
+---
+title: "Challenge 3 Submission"
+author: "Matt Zambetti"
+description: "Tidy Data: Pivoting"
+date: "5/30/2023"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_3
+  - animal_weights
+  - eggs
+  - australian_marriage
+  - usa_households
+  - sce_labor
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Read in data
+
+The data set I chose is:
+
+-   eggs_tidy.csv ⭐⭐ 
+
+```{r}
+eggs_table <- read_csv("_data/eggs_tidy.csv")
+eggs_table
+
+```
+
+### Briefly describe the data
+
+The data, as seen above is a list of the sales of large half dozen, large dozen, extra large half dozen, and extra large dozen carton of eggs for every month from January 2004 through December 2013.
+
+In pivoting the data, I am looking to 'pivot longer' so that our data is listed by the month, year and the product instead of month and year. This way, we can do the 'group by' function to more easily compare the sales of the the same egg carton size over time.
+
+## Anticipate the End Result
+
+Here we look into the dimensions of the data and predict the output shape.
+
+### Challenge: Describe the final dimensions
+
+Document your work here.
+
+```{r}
+ncol(eggs_table)
+
+nrow(eggs_table)
+
+(ncol(eggs_table)-2)*(nrow(eggs_table))
+
+```
+
+Looking at the current dimensions of my data we know there are 120 rows already (12 months over 10 years) and the data we're separating by 6 variables to start. However, we want to keep the month and year so we will expand the number of rows 4 times for each month and year combination. Leaving us with the expected size of 480 rows and 4 columns (month, year, product, and count). The columns with go to a size of four because we will add in the count variable for each month, year, and product combination as well as the month, year, and product variable.
+
+## Pivot the Data
+
+Now we will pivot the data, and compare our pivoted data dimensions to the dimensions calculated above as a "sanity" check.
+
+### Challenge: Pivot the Chosen Data
+
+```{r}
+eggs_table %>%
+  pivot_longer(
+    cols= -c(year, month),
+    names_to = "product",
+    values_to = "count")
+
+```
+
+Here we can see that my predictions were correct, in that the expected number of rows was 480 which we received and the number of columns was 4 as also predicted.
