@@ -113,18 +113,17 @@ circuits <- readr::read_csv("_data/formula1/circuits.csv")
 head(circuits)
 ```
 
-Each circuit has a `circuitId` that uniquely identifies it. We also have location information. The column `alt` is not entirely clear. 
+Each circuit has a `circuitId` that uniquely identifies it. We also have location information. The column `alt` is not entirely clear, so we can remove it.
 
 All of the data types seem reasonable here so there is no need to modify them. However, we have a bunch of data frames that are all going to have a column called `name` as we'll see later. We should rename these columns to avoid confusion when we join tables in the future.
 
 ```{r}
 circuits <- circuits %>%
-  rename(circuit_name = name)
+  rename(circuit_name = name) %>%
+  select(-alt)
 
-colnames(circuits)
+circuits %>% head(1)
 ```
-
-
 
 
 
@@ -217,6 +216,16 @@ drivers <- drivers %>%
 drivers
 ```
 
+We can look at the popularity of different nationalities to get a sense of the driver makeup of the sport. We see that British and American drivers have historically made up the vast majority, followed by drivers from Brazil and Argentina.
+
+```{r}
+drivers %>%
+  group_by(nationality) %>%
+  summarize(n = n()) %>%
+  head(10) %>%
+  ggplot(aes(x = reorder(nationality, n), y = n)) + geom_col() + coord_flip() + xlab("Count") + ylab("Driver Nationality") + ggtitle("Top 10 Driver Nationalities 2015-present") + theme_minimal()
+```
+
 
 #### `lap_times.csv` 
 
@@ -238,6 +247,23 @@ lap_times <- lap_times %>%
 lap_times
 ```
 
+We can look at the distribution of `laptime_seconds` with a histogram:
+
+```{r, message=FALSE}
+lap_times %>%
+  filter(laptime_seconds < 300) %>%
+  ggplot(aes(x=laptime_seconds)) + geom_histogram() + xlab("Lap Time in Seconds") + ylab("Count") + ggtitle("Distribution of Lap Times, 1950-present") + theme_minimal()
+```
+We can also generate a quick graph of how laptimes have changed from the first to the last recorded race in the data:
+
+```{r}
+lap_times %>%
+  group_by(raceId) %>%
+  summarize(avg_lap = mean(laptime_seconds)) %>%
+  ggplot(aes(x= raceId, y=avg_lap)) + geom_point() + xlab("Race ID") + ylab("Avg Lap Time in Seconds") + ggtitle("Avg Lap Times From 1950-present") + theme_minimal()
+```
+
+There seems to be a huge chunk of missing data in the middle. In the more recent races, lap times seem to have potentially decreased over time (though more analysis would be needed to determine this).
 
 #### `pit_stops.csv` 
 
@@ -259,6 +285,14 @@ pit_stops <- pit_stops %>%
   rename(duration_seconds = duration)
 
 pit_stops
+```
+
+Like lap times, we can look at the distribution of pit stop durations:
+
+```{r, message=FALSE}
+pit_stops %>%
+  filter(duration_seconds < 300) %>%
+  ggplot(aes(x=duration_seconds)) + geom_histogram() + xlab("Pit Stop Duration in Seconds") + ylab("Count") + ggtitle("Distribution of Pit Stop Durations, 1950-present") + theme_minimal()
 ```
 
 #### `qualifying.csv` 
@@ -284,6 +318,19 @@ qualifying <- qualifying %>%
 qualifying
 
 ```
+
+We can look at how times compare across each qualifying session:
+
+```{r}
+qualifying %>%
+  select(contains("time_s")) %>%
+  rename(q1 = q1_time_s, q2 = q2_time_s, q3 = q3_time_s) %>%
+  pivot_longer(everything(), names_to = "session", values_to = "time_s") %>%
+  group_by(session) %>%
+  summarize(mean_time = mean(time_s, na.rm=TRUE), sd_time = sd(time_s, na.rm=TRUE))
+```
+
+At a quick glance, we see that times seem to, on average, decrease from Q1 -> Q3. There is also more variability in Q1 than in the other sessions (which makes logical sense, as Q1 is the session that includes *ALL* cars, including those that are very slow/not fast enough to move on to Q2/Q3).
 
 #### `races.csv` 
 
@@ -346,7 +393,20 @@ results <- results %>%
 
 results
 ```
+To check our new variables, we can take a quick look at how number of disqualifications and retirements has changed over time.
 
+```{r}
+results %>%
+  mutate(finished = as_factor(ifelse(statusId == 1, 1, 0))) %>%
+  select(raceId, disqualified, retired, finished) %>%
+  pivot_longer(disqualified:finished, names_to = "status", values_to = "status_met") %>%
+  filter(status_met == 1) %>%
+  group_by(raceId, status) %>%
+  summarize(count = n()) %>%
+  ggplot(aes(x=raceId, y=count, color=status)) + geom_smooth()
+
+```
+Using smoothing (so we don't see too much noise), we see that disqualifications have remained steady and very low over time, while retirements and finishes have changed significantly, with a significant period where more cars retired than finished on average.
 
 #### `seasons.csv` 
 
@@ -379,7 +439,7 @@ results %>%
 ```
 
 
-The `status` table contains the encodings for this table. For example, the first 5 status IDs are all 1, which indcates "Finished", while the two people with status 5 had "Engine" issues.
+The `status` table contains the encodings for this table. For example, the first 5 status IDs are all 1, which indicates "Finished", while the two people with status 5 had "Engine" issues.
 
 We can quickly see what the top statuses are:
 
