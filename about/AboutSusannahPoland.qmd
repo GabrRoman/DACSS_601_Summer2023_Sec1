@@ -1,0 +1,47 @@
+---
+title: "Susannah Reed Poland"
+image: images/SusannahPolandPic.jpeg
+about:
+  template: solana
+  image-width: 15em
+  image-shape: round
+  image: images/SusannahPolandPic.jpeg
+  links:
+    - icon: github
+      text: Github
+      href: https://github.com/SusannahPoland
+---
+
+##Instructions
+
+  - save a copy of this document as *FirstLast.qmd* in the **about** folder
+  - replace *Your Name* in yaml header with your first and last name
+  - save an image (jpeg, png) to use in the **about/images** folder
+  - replace image names in yaml header
+  - replace github user name
+  - fill in information below, as appropriate
+  - commit to github and submit pull request
+
+## Education/Work Background
+I graduated from Stanford University in 2012 with a B.A. in anthropology. My thesis focused on processes of meaning-making around beadwork that was used in colonial East Africa and collected into European ethnographic museums. I conducted fieldwork amongst the Chagga of present-day Tanzania, and archival research in the British Museum. 
+
+After graduating I worked as a researcher in the curatorial department of the Smithsonian National Museum of African Art for exhibitions exploring contemporary African feminisms. I left the museum to work as an ethnographer on Mount Everest, Nepal, studying decision-making in extreme environments and ethical reflexivity in situations of mortal risk. I shifted back to the US and spent the next 4 years designing and directing global student programs with experiential and interdisciplinary curricula, partnering with schools and companies including National Geographic and the Smithsonian Institute. 
+
+Between 2018 and 2021 I worked in Bhutan as an education researcher for an education initiative under the royal secretariat. We developed and began implementation of a holistic public education system that is grounded in Buddhist values and pedagogies. After 3 years in Bhutan I moved to Missoula, Montana, where I currently live. For the past year I have been working for the Tang Institute at Phillips Academy in Andover, overseeing an action research program and the development of an ethics pedagogy for high school computer science courses. 
+
+In September I'll be a full-time student on campus, and I hope to meet all of you who are on campus! 
+
+## R experience
+I have zero experience with R! 
+
+## Research interests
+My interests cluster around religiosity, education, and human social development. I love working with teachers, studying processes for organizational and community change, and I continuously reflect on the cultural and social systems that promote ethical reflexivity. I have deep experience working in Bhutan, and to a lesser extent in Nepal, France, and Tanzania. On projects I often focus on creating dynamic processes for learning and design, reflect through analytical writing, and focus on issues of alignment between strategy and values. 
+
+## Hometowns
+Newfane, Vermont, and Andover, Massachusetts.
+
+## Hobbies
+I sing much, and love cooking for groups. I study early Buddhism and have practiced Theravadan meditation intensively for about a decade. I also engage with Quaker groups in my community and support refugee and indigenous land rights activism in Montana. 
+
+## Fun fact
+I am a tahini fanatic and am planning to start importing double-roasted Turkish tahini with a Turkish economist friend. (If she thinks it's a sensible idea, I'm in!) 
