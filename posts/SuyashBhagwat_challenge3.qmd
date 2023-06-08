@@ -47,8 +47,9 @@ data_animals
 
 ### Briefly describe the data
 
-Describe the data, and be sure to comment on why you are planning to pivot it to make it "tidy"
-**Ans:** From the table above, it looks like the data lists the price for different farm animals(domesticated animals) based on the IPCC Area. Note, this is the price to buy the entire animal and not the price/lb. 
+Describe the data, and be sure to comment on why you are planning to pivot it to make it "tidy".
+
+**Ans:** From the table above, it looks like the data lists the weight for different farm animals(domesticated animals) based on the IPCC Area.
 
 ## Anticipate the End Result
 
@@ -91,7 +92,8 @@ Or simple example has $n = 6$ rows and $k - 3 = 2$ variables being pivoted, so w
 ### Challenge: Describe the final dimensions
 
 Document your work here.
-**Ans:** The original data_animals tibble contains 9 rows x 17 cols. Out of the 17 cols, only 1 (IPCC Area) is used to identify each case. The other columns can be pivoted and added under the 'farm_animal_price' column. So we will be keeping 1 col constant and pivoting the other 16 cols. The final number of rows and cols in the pivoted table is given in the code below:
+
+**Ans:** The original data_animals tibble contains 9 rows x 17 cols. Out of the 17 cols, only 1 (IPCC Area) is used to identify each case. The other columns can be pivoted. So we will be keeping 1 col constant and pivoting the other 16 cols. The final number of rows and cols in the pivoted table is given in the code below:
 ```{r}
 
 #existing rows
@@ -135,7 +137,7 @@ Yes, once it is pivoted long, our resulting data are $12x5$ - exactly what we ex
 
 Document your work here. What will a new "case" be once you have pivoted the data? How does it meet requirements for tidy data?
 
-**Ans:** A new case or observation in our tidy data will have three columns. The first is the IPCC Area, the second will be the type of farm_animal and the third is the price of the farm animals. 
+**Ans:** A new case or observation in our tidy data will have three columns. The first is the IPCC Area, the second will be the type of farm_animal and the third is the weight of the farm animals. 
 
 In R, the requirements for tidy data are defined by the principles of tidy data, as outlined by Hadley Wickham, the creator of the tidyverse. Each variable should be represented by a separate column(e.g. farm_animal). Also, each observation or instance should be represented by a separate row in the data frame. This means that each row contains the values for each variable related to a specific observation.
 
@@ -145,7 +147,7 @@ data_pivoted <- pivot_longer(
   data_animals,
   cols = c(`Cattle - dairy`:Llamas),
   names_to = "farm_animal",
-  values_to = "price"
+  values_to = "weight"
 )
 data_pivoted
 
@@ -159,4 +161,5 @@ ncol(data_pivoted)
 ```
 
 Any additional comments?
-**Ans:** As seen in the above code, the actual number of rows and columns (144 x 3) in the pivoted table match the expected number of rows and columns (144 x 3). Hence we have successfuly pivoted the data_animals tibble.
+
+**Ans:** As seen in the above code, the actual number of rows and columns (144 x 3) in the pivoted table match the expected number of rows and columns (144 x 3). Hence we have successfully pivoted the data_animals tibble.
