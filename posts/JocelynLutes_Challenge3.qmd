@@ -15,7 +15,7 @@ categories:
   - jocelyn_lutes
   - organic_egg_poultry
   - tidyverse
-  - ggplot2
+  - readxl
 ---
 
 ```{r message = FALSE}
