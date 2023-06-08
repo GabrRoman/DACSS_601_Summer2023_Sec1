@@ -408,19 +408,20 @@ We don't need to change anything about the data types in the status table. They 
 
 ## Research Questions
 
-For my final project, I'm specifically insterested in the driver *Max Verstappen* (Driver ID: 830, Constructor IDs: 5 -- Toro Rosso & 9 -- Red Bull), who has won the last two Drivers Championships, in 2021 and 2022. From purely an observational (and non-data-based) standpoint, he seems like he is in a league above everyone else in F1 right now, and I'm curious to see how the data stacks up and where his strengths are. Some specific areas to look into are:
+In 2022, there was a big regulations change that shifted how F1 cars look and perform. Just by watching (and not looking at any data) this change seems to have shaken things up considerably, finally ending the Mercedes' team's dominant win streak in the Constructors championship and seeing Red Bull take first place instead.
 
-- **Pole to Win Ratio:** How often does Max convert pole position (starting first) to winning a race, compared with other drivers with lots of pole positions?
-- **Lap Times:** How does Max's lap time (both in qualifying and in the race) compare to his teammates?
-- **Wins and Podiums:** Max seems to be picking up wins and podiums at an *insane* rate. How does this rate compare to other great drivers like Michael Schumacher or Lewis Hamilton?
-- **Points:** The constructors championship is based on the combined points earned by both drivers. What proportion of these points is Max bringing in for his team, and how does this stack up to other teammate pairs?
-- **Rise to Success:** How has Max's performance changed since joining the sport?
-- **Come-From-Behinds:** Max seems to have an insane ability to win, even if he's starting a race at the back of the grid (i.e. in 11th-20th place). How does this ability stack up to other drivers?
-- **DNFs:** How often does Max DNF a race? And how much of the time is it *his* fault, versus a mechanical failure?
+I'm interested in using this dataset to take a deeper look into how things have changed since the regulations shift -- comparing the previous era (called the "Turbo Hybrid" era, which started in 2014 and went through 2021) to the new era, which started in 2022.
 
-For the purposes of this analysis, I will likely just look at drivers who raced at least a season between 2006 and 2022, including those whose first season was prior to 2006. Why start at 2006? Because this was a huge regulations change year which shifted the car design dramatically, toward what we have today, and comparing across historical eras that are *too* different can make numbers pretty meaningless.
+There are a few different aspects within this comparison that would be interesting to look into:
 
-This analysis will likely be pretty complicated, involving a lot of table joining, but the data looks to be in a good format for this sort of joining with all the unique identifier columns in each table.
+1. The new regulations were designed to make it easier for cars to follow one another, theoretically making passing easier. How has this translated in reality? Is it easier now than before for "top" cars that start out of position to make up positions? Being "out of position" here means starting the race from a position worse than would be expected based on their car's performance due to a qualifying mistake, mechanical failure, etc.
 
+2. How have lap times changed, both in qualifying and the race? Are the new cars getting faster/slower overall? Is this change the same across all race tracks?
+
+3. How has car reliability changed? Are mechanical failures in races more common or less common than before? Are certain types of failures popping up that we didn't see much of before (or the opposite)?
+
+4. Which drivers did the best job adapting to the regulations? We could look into how lap times changed overall on average, and then compare how close each driver's lap time changes were to the mean. 
+
+5. How did the regulations shake up the order in the Drivers and Constructors championships? Did anyone suddenly shoot up out of nowhere? Did any teams go from dominant to mediocre? etc.
 
 
