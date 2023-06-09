@@ -1,14 +1,16 @@
 ---
-title: "Challenge 1 Instructions"
-author: "Sean Conway"
+title: "Challenge 1 Submission"
+author: "Xinpeng Liu"
 description: "Reading in data and creating a post"
 date: "5/30/2023"
 format:
   html:
+    df-print: paged
     toc: true
     code-fold: true
     code-copy: true
     code-tools: true
+    css: "styles.css"
 categories:
   - challenge_1
   - railroads
