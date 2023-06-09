@@ -1,0 +1,194 @@
+---
+title: "Challenge 4"
+author: "Audrey Bertin"
+description: "Data wrangling with mutate"
+date: "6/9/2023"
+format:
+  html:
+    df-print: paged
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_4
+  - hotel_bookings
+  - dplyr
+  - mutate
+  - audrey_bertin
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+
+For this challenge, I'll be continuing with the dataset I used in challenge 2: `hotel_bookings.csv⭐⭐⭐⭐`
+
+```{r message=FALSE}
+hotels <- readr::read_csv("_data/hotel_bookings.csv")
+```
+
+I provided an overview of the dataset in that challenge, which I'll share here as well.
+
+## Data Overview
+
+
+```{r}
+glimpse(hotels)
+```
+
+This dataset has 119,300 rows and 32 columns. It contains many different data points on hotel reservations, including information about the customer (how many adults/children are staying, customer type, previous bookings by them, etc), the reservation (arrival date, length of stay, room type, etc), as well as the hotel (country location, distribution channel, hotel type, etc). Each row appears to refer to a single booking at a single hotel.
+
+The hotels appear to be located all around the world and data covers the years 2015-2017:
+
+```{r}
+#| label: summary
+unique(hotels$country)
+```
+```{r}
+unique(hotels$arrival_date_year)
+
+```
+
+It is not entirely clear, however, which hotels are covered *or* any information about their cost.
+
+## Tidy Data
+
+This data is already in a tidy format, meeting Hadley Wickham's 3 rules of tidy data:
+
+1. *Each variable must have its own column* -- Data is correctly separated into columns, no concerns here
+2. *Each observation must have its own row* -- Each row represents one reservation at a hotel (which is one observation) 
+3. *Each value must have its own cell* -- There are not multiple pieces of information stored in the same cell of the data
+
+There is also no need to pivot this data, as it is not in "wide" format. To be in wide format, there would need to be multiple responses of some type per row, such as a row representing a customer and columns representing their history of bookings. Instead, a row represents a single reservation at a hotel, which cannot be broken down further.
+
+## Identify variables that need to be mutated
+
+Looking at this data, we consider each variable and what format they should be in:
+
+#### Currently **character** but should be **factor**
+
+Variables that only have a limited set of categories should be turned into factors. It usually only makes sense to keep strings as characters if there are an undefined set of options (e.g. free text responses to a survey) or if the options are regularly changing. Otherwise, factors usually save memory and make it easier to graph things/make comparisons.
+
+These are the following variables:
+
+- `hotel`
+- `arrival_date_month` 
+- `meal` 
+- `country` 
+- `market_segment`
+- `distribution_channel`
+- `reserved_room_type`
+- `assigned_room_type`
+- `deposit_type`
+- `customer_type`
+- `reservation_status`
+
+
+#### Currently **double** but should be **factor**
+
+These are variables that technically only have a yes (1) or no (0) option, but are currently categorized as numerical instead of categorical.
+
+- `is_canceled`
+- `is_repeated_guest`
+
+
+
+#### Currently **double** but should probably be **int**
+
+Storing values as doubles when they can only take on integer and not decimal values can take up more memory. There are quite a few of this type of variable in the data. This sort of modification isn't necessary for data analysis, though:
+
+- `lead_time`
+- `arrival_date_week_number`
+- `arrival_date_day_of_month`
+- `stays_in_weekend_nights`
+- `stays_in_week_nights`
+- `adults`
+- `children`
+- `babies`
+- `previous_cancellations`
+- `previous_bookings_not_canceled`
+- `booking_changes`
+- `required_car_parking_spaces`
+- `total_of_special_requests`
+
+
+#### Not entirely clear, but should probably stay as-is (with a minor modification)
+
+There are two variables, `agent` and `company` that are currently character variables. They seem to store numeric IDs that refer to different agents and companies. 
+
+Looking into these variables further, they both have a LOT of options.
+
+```{r}
+length(unique(hotels$agent))
+length(unique(hotels$company))
+```
+
+It is theoretically possible that these options change regularly. Maybe someone changes ID number or IDs get removed from the data if people quit or contracts end with companies, so it probably does not make sense to store this as a factor.
+
+It also does not make sense to store these as numeric (int), because there is no obvious meaning to an ordering. An agent of number "243" is not necessarily of higher status or importance than agent "5". 
+
+Therefore, these can be left as character. However, one note to improve this encoding is to replace "NULL" with R's `NA` so that we can more easily track null values in the data.
+
+
+#### Already in the optimal format
+
+- `adr` (is a double, and has decimal options so this is correct)
+- `reservation_status_date` (is a date, and currently formatted as one)
+
+
+## Mutate variables
+
+We now conduct the mutations that we described in the previous section:
+
+```{r}
+hotels_mutated <- hotels %>%
+  mutate(
+    # Character -> Factor
+    hotel = as_factor(hotel),
+    arrival_date_month = as_factor(arrival_date_month),
+    meal = as_factor(meal),
+    country = as_factor(country), 
+    market_segment = as_factor(market_segment), 
+    distribution_channel = as_factor(distribution_channel),
+    reserved_room_type = as_factor(reserved_room_type),
+    assigned_room_type = as_factor(assigned_room_type),
+    deposit_type = as_factor(deposit_type),
+    customer_type = as_factor(customer_type),
+    reservation_status = as_factor(reservation_status),
+    # Double -> Factor
+    is_canceled = as_factor(is_canceled),
+    is_repeated_guest = as_factor(is_repeated_guest),
+    # Double -> Int
+    lead_time = as.integer(lead_time),
+    arrival_date_week_number = as.integer(arrival_date_week_number),
+    arrival_date_day_of_month = as.integer(arrival_date_day_of_month),
+    stays_in_weekend_nights = as.integer(stays_in_weekend_nights),
+    stays_in_week_nights = as.integer(stays_in_week_nights),
+    adults = as.integer(adults),
+    children = as.integer(children),
+    babies = as.integer(babies),
+    previous_cancellations = as.integer(previous_cancellations),
+    previous_bookings_not_canceled = as.integer(previous_bookings_not_canceled),
+    booking_changes = as.integer(booking_changes),
+    required_car_parking_spaces = as.integer(required_car_parking_spaces),
+    total_of_special_requests = as.integer(total_of_special_requests)
+    ) %>%
+    # Replace "NULL" values with NA
+    mutate(across(where(is.character), ~na_if(., "NULL")))
+
+```
+
+Looking at the results, we see that all still looks in good order and none of the variables appear to have an obvious bug that was introduced:
+
+```{r}
+glimpse(hotels_mutated)
+```
+
