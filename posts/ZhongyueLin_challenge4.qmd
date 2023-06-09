@@ -1,5 +1,5 @@
 ---
-title: "Challenge4_Solution"
+title: "Challenge_4_Solution"
 author: "Zhongyue Lin"
 description: "More data wrangling: pivoting"
 date: "6/9/2023"
