@@ -1,0 +1,120 @@
+---
+title: "Challenge_4_Solution"
+author: "Zhongyue Lin"
+description: "More data wrangling: pivoting"
+date: "6/9/2023"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_4
+  - abc_poll
+  - eggs
+  - fed_rates
+  - hotel_bookings
+  - debt
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to:
+
+1)  read in a data set, and describe the data set using both words and any supporting information (e.g., tables, etc)
+2)  tidy data (as needed, including sanity checks)
+3)  identify variables that need to be mutated
+4)  mutate variables and sanity check all mutations
+
+## Read in data
+
+Read in one (or more) of the following datasets, using the correct R package and command.
+
+-   hotel_bookings.csv⭐⭐⭐⭐
+
+In challenge 4, I chose hotel_bookings.csv as the original dataset. This dataset is the one I used in challenge 2.
+
+```{r}
+data <- readr::read_csv("_data/hotel_bookings.csv")
+head(data)
+```
+
+### Briefly describe the data
+
+According to the EDA of this dataset in Challenge 2, it is understood that this dataset is about the data records of two hotels, **Resort hotel** and **City hotel**. The dataset contains customer data, business data and other related data. The data structure of this dataset is **119,390** rows **32** columns.
+
+## Tidy Data (as needed)
+
+```{r}
+data %>%
+  summarize_all(function(x) sum(is.na(x)))
+# Find the index of the row containing the missing value
+missing_rows_index <- which(apply(data, 1, function(x) any(is.na(x))))
+
+# Print out lines with missing values
+missing_rows <- data[missing_rows_index, ]
+print(missing_rows)
+```
+
+```{r}
+# Using replace()
+data$children <- replace(data$children, is.na(data$children), 0)
+
+# Using subset assignment
+data$children[is.na(data$children)] <- 0
+
+data %>%
+  summarize_all(function(x) sum(is.na(x)))
+```
+
+As I began working with this dataset, I observed that it was already quite tidy. The dataset follows the principles of tidy data, where each variable forms a column, each observation forms a row, and each cell holds a single value of the corresponding variable for a given observation. To understand the extent of missing data across all columns, I performed an initial check using `summarize_all()` combined with `is.na()`. This gave me an overall snapshot of the missing data.
+
+Next, I employed `apply()` and `is.na()` to identify which rows in the dataset contained missing data, and stored these row indices in the variable `missing_rows_index` for future use. Using these stored indices, I was able to extract and store the rows with missing data in the `missing_rows` variable. By printing out `missing_rows`, I gained a detailed view of the rows with missing data and the extent of missingness.
+
+Then, I addressed the missing values in the "children" column, replacing them with 0 using the `replace()` function or subset assignment. I decided to replace missing values with 0 under the assumption that if the number of children isn't specified, it's likely because no children were involved in the booking. This approach to handling missing data seemed reasonable under this context.
+
+Finally, to confirm that the missing values in the "children" column were indeed replaced with 0, I repeated the missing data check using `summarize_all()`.
+
+## Identify variables that need to be mutated
+
+```{r}
+# Combine year, month, and day of month into a single date column and then remove the original columns related to date
+data <- data %>%
+  mutate(arrival_date = as.Date(paste(arrival_date_year, arrival_date_month, arrival_date_day_of_month, sep = "-"), format = "%Y-%B-%d")) %>%
+  select(-arrival_date_year, -arrival_date_month, -arrival_date_week_number, -arrival_date_day_of_month)
+
+# Convert the variables 'is_canceled' and 'is_repeated_guest' to logical (boolean) values, which are currently coded as integers
+data <- data %>%
+  mutate(is_canceled = as.logical(is_canceled), is_repeated_guest = as.logical(is_repeated_guest))
+
+# Check and print unique values of categorical variables in order to see if there are inconsistencies, spelling mistakes, or unnecessary categories
+unique_values <- data %>%
+  select(hotel, meal, country, market_segment, distribution_channel, reserved_room_type, assigned_room_type, deposit_type, customer_type, reservation_status) %>%
+  sapply(unique)
+print(unique_values)
+
+# Convert categorical variables into factors for easier analysis and visualization. 
+data <- data %>%
+  mutate_at(vars(hotel, meal, country, market_segment, distribution_channel, reserved_room_type, assigned_room_type, deposit_type, customer_type, reservation_status), 
+            factor)
+
+# Print the first few rows of the dataset to verify that the transformations have been applied correctly
+head(data)
+
+
+```
+
+First, I merged the year, month, and day of arrival into a single date column and then removed the original columns. This was done using the mutate function to create a new arrival_date column, which was the combination of arrival_date_year, arrival_date_month, and arrival_date_day_of_month. After that, I used the `select`function to remove the original date columns. I also converted the 'is_canceled' and 'is_repeated_guest' columns into logical values using the `as.logical` function as these were originally in integer format.
+
+Next, I needed to check the unique values of categorical variables to identify any inconsistencies, spelling mistakes, or unnecessary categories. To do this, I selected certain categorical variables and applied the `sapply` and `unique` functions to get unique values for each column. After identifying and rectifying any issues, I converted these categorical variables into factors using the mutate_at function along with the factor function. This step was necessary because many functions in R treat factors differently from character strings, especially in statistical modeling and visualization. Finally, I used the `head`function to output the first few rows of the dataset, allowing me to verify that the transformations were correctly applied.
