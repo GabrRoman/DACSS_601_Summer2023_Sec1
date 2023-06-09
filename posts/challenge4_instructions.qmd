@@ -38,21 +38,19 @@ Today's challenge is to:
 4)  mutate variables and sanity check all mutations
 
 ## Read in data
-
 Read in one (or more) of the following datasets, using the correct R package and command.
 
--   abc_poll.csv ⭐
--   poultry_tidy.xlsx or organiceggpoultry.xls⭐⭐
--   FedFundsRate.csv⭐⭐⭐
 -   hotel_bookings.csv⭐⭐⭐⭐
--   debt_in_trillions.xlsx ⭐⭐⭐⭐⭐
+
+In challenge 4, I chose hotel_bookings.csv as the original dataset. This dataset is the one I used in challenge 2.
 
 ```{r}
-
-
+data <- readr::read_csv("_data/hotel_bookings.csv")
+head(data)
 ```
 
 ### Briefly describe the data
+According to the EDA of this dataset in Challenge 2, it is understood that this dataset is about the data records of two hotels, **Resort hotel** and **City hotel**. The dataset contains customer data, business data and other related data. The data structure of this dataset is `R dim(data)[1]` rows `R dim(data)[2]` columns.
 
 ## Tidy Data (as needed)
 
