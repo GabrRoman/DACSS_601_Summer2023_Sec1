@@ -39,20 +39,19 @@ Today's challenge is to:
 
 ## Read in data
 
-Read in one (or more) of the following datasets, using the correct R package and command.
+The Data Set I chose to read in was the organic poultry data.
 
--   abc_poll.csv ⭐
--   poultry_tidy.xlsx or organiceggpoultry.xls⭐⭐
--   FedFundsRate.csv⭐⭐⭐
--   hotel_bookings.csv⭐⭐⭐⭐
--   debt_in_trillions.xlsx ⭐⭐⭐⭐⭐
+-   poultry_tidy.xls⭐⭐
 
 ```{r}
 
+org_poultry_data <- read_csv("_data/poultry_tidy.xls")
 
 ```
 
 ### Briefly describe the data
+
+This data has various parts of the chicken (ranging from whole, to breast) with their month and price per pound.
 
 ## Tidy Data (as needed)
 
@@ -70,6 +69,8 @@ Any additional comments?
 Are there any variables that require mutation to be usable in your analysis stream? For example, are all time variables correctly coded as dates? Are all string variables reduced and cleaned to sensible categories? Do you need to turn any variables into factors and reorder for ease of graphics and visualization?
 
 Document your work here.
+
+The only variable I looked into mutating was the month, I believe that transforming this into a number instead of label will make it easier to sort chronologically or allow someone to sort by months easier.
 
 ```{r}
 
