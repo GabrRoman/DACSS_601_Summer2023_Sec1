@@ -8,7 +8,7 @@ format:
     toc: true
     code-fold: true
     code-copy: true
-    code-tools: true"
+    code-tools: true
 categories:
   - challenge_1
   - railroads
