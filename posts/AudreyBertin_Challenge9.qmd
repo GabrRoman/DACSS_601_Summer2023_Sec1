@@ -2,7 +2,7 @@
 title: "Challenge 9"
 author: "Audrey Bertin"
 description: "Creating a function"
-date: "5/30/2023"
+date: "6/29/2023"
 format:
   html:
     df-print: paged
@@ -77,27 +77,46 @@ results
 ```
 
 ```{r}
-expected_mean = mean(baseline)
-actual_mean = results$mean
+test_zscore <- function(baseline, value){
+  
+  results = z_score(baseline, value)
 
-expected_sd = sd(baseline)
-actual_sd = results$sd
+  expected_mean = mean(baseline)
+  actual_mean = results$mean
+  
+  expected_sd = sd(baseline)
+  actual_sd = results$sd
+  
+  expected_input = value
+  actual_input = results$input_value
+  
+  expected_z = abs((value -  mean(baseline)) / sd(baseline))
+  actual_z = results$z_score
+  
+  cat("Mean matches: ", expected_mean == actual_mean, "( Actual:", actual_mean, "Expected:", expected_mean, ")\n")
+  cat("SD matches: ", expected_sd == actual_sd, "( Actual:", actual_sd, "Expected:", expected_sd, ")\n")
+  cat("Input matches: ", expected_input == actual_input, "( Actual:", actual_input, "Expected:", expected_input, ")\n")
+  cat("Z Score matches: ", expected_z == actual_z, "( Actual:", actual_z, "Expected:", expected_z, ")")
+}
 
-expected_input = value
-actual_input = results$input_value
+```
 
-expected_z = abs((value -  mean(baseline)) / sd(baseline))
-actual_z = results$z_score
-
-paste0("Mean matches: ", expected_mean == actual_mean)
-paste0("SD matches: ", expected_sd == actual_sd)
-paste0("Input matches: ", expected_input == actual_input)
-paste0("Z Score matches: ", expected_z == actual_z)
+```{r}
+test_zscore(baseline, value)
 ```
 
 
+We can test again with a second set:
 
 
+```{r}
+baseline = c(-12, 4, 7, -3, 1, 1, 0, 8, 23, -3, -8, 12, -14, 2, 16)
+value = -6
+```
+
+```{r}
+test_zscore(baseline, value)
+```
 
 
-
+The function seems to work as expected!
