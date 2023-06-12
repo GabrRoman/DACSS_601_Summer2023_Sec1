@@ -1,0 +1,168 @@
+---
+title: "Challenge 2 Submission"
+author: "Xinpeng Liu"
+description: "Data wrangling: using group() and summarise()"
+date: "5/30/2023"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_2
+  - railroads
+  - faostat
+  - hotel_bookings
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to
+
+1)  read in a data set, and describe the data using both words and any supporting information (e.g., tables, etc)
+2)  provide summary statistics for different interesting groups within the data, and interpret those statistics
+
+## Read in the Data
+
+Read in one (or more) of the following data sets, available in the `posts/_data` folder, using the correct R package and command.
+
+-   railroad\*.csv or StateCounty2012.xls ⭐
+-   FAOstat\*.csv or birds.csv ⭐⭐⭐
+-   hotel_bookings.csv ⭐⭐⭐⭐
+
+```{r}
+data_railroad <- read_csv("_data/railroad_2012_clean_county.csv")
+```
+
+Add any comments or documentation as needed. More challenging data may require additional code chunks and documentation.
+
+## Describe the data
+
+Using a combination of words and results of R commands, can you provide a high level description of the data? Describe as efficiently as possible where/how the data was (likely) gathered, indicate the cases and variables (both the interpretation and any details you deem useful to the reader to fully understand your chosen data).
+
+we choose -   railroad_2012_clean_county.csv ⭐
+```{r}
+#| label: summary
+library(dplyr)
+str(data_railroad)
+summary(data_railroad$total_employees)
+
+```
+This data set contains information about the total number of employees in different counties across states. The dataset consists of three variables: 'state', 'county', and 'total_employees'.
+
+-'state' (chr): This variable is a character type that represents the abbreviation of each state in the United States. This variable does not have missing values and covers all 50 states plus other regions.
+
+-'county' (chr): This variable is a character type that represents the names of the counties in each state. This variable does not have missing values, and there are multiple counties within each state.
+
+-'total_employees' (int): This variable is an integer type that represents the total number of employees in each county. The values range from a minimum of 1 to a maximum of 8207, with a median of 21 and a mean of 87.18. The standard deviation is high, suggesting a wide spread in the number of employees across counties.
+
+The data was likely gathered through employment records or surveys in each county and compiled for the year of interest. Each row represents an observation for a specific county in a specific state.
+
+## Provide Grouped Summary Statistics
+
+Conduct some exploratory data analysis, using dplyr commands such as `group_by()`, `select()`, `filter()`, and `summarise()`. Find the central tendency (mean, median, mode) and dispersion (standard deviation, mix/max/quantile) for different subgroups within the data set.
+
+```{r}
+data_grouped_by_state <- data_railroad %>%
+  select(state,total_employees) %>%
+  group_by(state) %>%
+  summarize(
+    total_employees_by_state = sum(total_employees, na.rm = TRUE),
+    mean_number_of_employee_per_county = round(mean(total_employees, na.rm = TRUE), 2),
+    median_number_of_employee_per_county = round(median(total_employees, na.rm = TRUE), 2),
+    sd_employees_per_county = round(sd(total_employees, na.rm = TRUE), 2),
+    IQR_employees_per_county = round(IQR(total_employees, na.rm = TRUE),2),
+    min = min(total_employees, na.rm = TRUE),
+    max = max(total_employees, na.rm = TRUE)
+  )
+
+# convert to standard data frame
+data_grouped_by_state_df <- as.data.frame(data_grouped_by_state)
+
+# print full data frame
+print(data_grouped_by_state_df)
+
+```
+```{r}
+data <- read.csv("_data/railroad_2012_clean_county.csv")
+library(dplyr)
+library(ggplot2)
+# Calculate the mean
+mean_total_employees <- mean(data$total_employees, na.rm = TRUE)
+print(paste("The mean of total employees is", mean_total_employees))
+
+# Calculate the median
+median_total_employees <- median(data$total_employees, na.rm = TRUE)
+print(paste("The median of total employees is", median_total_employees))
+
+# Define a function to calculate the mode
+getmode <- function(v) {
+  uniqv <- unique(v)
+  uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+
+# Calculate the mode
+mode_total_employees <- getmode(data$total_employees)
+print(paste("The mode of total employees is", mode_total_employees))
+```
+
+```{r}
+library(dplyr)
+
+# Calculate the standard deviation
+sd_total_employees <- sd(data$total_employees, na.rm = TRUE)
+print(paste("The standard deviation of total employees is", sd_total_employees))
+
+# Calculate the minimum
+min_total_employees <- min(data$total_employees, na.rm = TRUE)
+print(paste("The minimum of total employees is", min_total_employees))
+
+# Calculate the maximum
+max_total_employees <- max(data$total_employees, na.rm = TRUE)
+print(paste("The maximum of total employees is", max_total_employees))
+
+# Calculate the 1st quartile
+first_quartile <- quantile(data$total_employees, 0.25, na.rm = TRUE)
+print(paste("The first quartile of total employees is", first_quartile))
+
+# Calculate the 3rd quartile
+third_quartile <- quantile(data$total_employees, 0.75, na.rm = TRUE)
+print(paste("The third quartile of total employees is", third_quartile))
+
+
+```
+### Explain and Interpret
+
+Be sure to explain why you choose a specific group. Comment on the interpretation of any interesting differences between groups that you uncover. This section can be integrated with the exploratory data analysis, just be sure it is included.
+
+```{r}
+# Filter for Alabama (AL) and California (CA)
+alabama_data <- data_railroad[data_railroad$state == "AL",]
+california_data <- data_railroad[data_railroad$state == "CA",]
+# Display basic statistics for Alabama
+print(paste("The summary of alabama"))
+summary(alabama_data)
+
+# Display basic statistics for California
+print(paste("The summary of California"))
+summary(california_data)
+
+```
+Analyzing data from different states - Alabama and California - reveals insightful patterns about the distribution of railroad employees across counties. I chose these states to compare given their distinct geographical sizes, population densities, and overall distinct regional characteristics.
+
+Alabama, known as "The Heart of Dixie," has 4257 railroad employees. On average, there are about 63.54 employees in each county. This average might seem small at first, but considering the smaller size and lower population density of Alabama's counties, it makes sense. Interestingly, the median value is 26, suggesting that the number of employees is less evenly distributed, and there are outliers with significantly more employees. The broad standard deviation of 130.17 supports this idea, revealing a wide spread of values around the mean.
+
+On the other side of the country, California, the "Golden State," has a total of 13137 railroad employees, which is significantly higher than Alabama's. It's no surprise as California is the most populous U.S. state with larger and more urbanized counties. The mean number of employees per county is approximately 238.85, showing a higher overall density of railroad employment. The median is 61, higher than in Alabama, demonstrating that even the counties with fewer employees in California have a larger workforce than most in Alabama. The considerable standard deviation of 549.47 and the wide IQR of 188 tell us about the great variability in California's counties' employment numbers.
+
+The comparison between these two states brings to light how geographical and demographic factors may impact the distribution and concentration of employment in the railroad industry. Understanding these patterns could be a stepping stone for further research into factors influencing the job market and economic conditions in these states.
