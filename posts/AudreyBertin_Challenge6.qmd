@@ -2,7 +2,7 @@
 title: "Challenge 6"
 author: "Audrey Bertin"
 description: "Visualizing Time and Relationships"
-date: "6/4/2023"
+date: "6/15/2023"
 format:
   html:
     df-print: paged
@@ -13,6 +13,7 @@ categories:
   - challenge_6
   - air_bnb
   - ggplot2
+  - audrey_bertin
 ---
 
 ```{r}
@@ -21,7 +22,6 @@ categories:
 #| message: false
 
 library(tidyverse)
-library(ggplot2)
 
 knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
 ```
@@ -123,7 +123,7 @@ Below, we create this variable:
 ```{r}
 airbnb_tidy <- airbnb_tidy %>%
   rowwise() %>%
-  mutate(year_last_review = as.numeric(str_split(last_review, pattern="-")[[1]][1]))
+  mutate(year_last_review = year(last_review))
 ```
 
 ```{r}
