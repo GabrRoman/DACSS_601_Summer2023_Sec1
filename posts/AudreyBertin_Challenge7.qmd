@@ -2,7 +2,7 @@
 title: "Challenge 7"
 author: "Audrey Bertin"
 description: "Visualizing Multiple Dimensions"
-date: "6/5/2023"
+date: "6/20/2023"
 format:
   html:
     df-print: paged
@@ -13,6 +13,7 @@ categories:
   - challenge_7
   - air_bnb
   - ggplot2
+  - audrey_bertin
 ---
 
 ```{r}
@@ -113,7 +114,7 @@ In challenge 6, we created a new column representing the *year* of last review d
 ```{r}
 airbnb_tidy <- airbnb_tidy %>%
   rowwise() %>%
-  mutate(year_last_review = as.numeric(str_split(last_review, pattern="-")[[1]][1]))
+  mutate(year_last_review = year(last_review))
 ```
 
 
