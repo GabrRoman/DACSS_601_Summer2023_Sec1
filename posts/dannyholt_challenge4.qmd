@@ -1,0 +1,72 @@
+---
+title: "Challenge 4"
+author: "Danny Holt"
+description: "More data wrangling: pivoting"
+date: "6/12/2023"
+format:
+  html:
+    df-print: paged
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_4
+  - poultry_tidy
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(readxl)
+library(lubridate, warn.conflicts = FALSE)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to:
+
+3)  identify variables that need to be mutated
+4)  mutate variables and sanity check all mutations
+
+## Read in data
+First, we'll read in poultry_tidy.xlsx.
+```{r}
+  poultry <- read_excel("_data/poultry_tidy.xlsx")
+  poultry
+```
+
+### Briefly describe the data
+The data tells prices for different poultry cuts in months from 2004 to 2013. The prices appear to be per unit of weight (unit not specified).
+
+### Tidy Data (as needed)
+The data is already tidy. Each variable forms a column and each observation forms a row. All values have their own cells.
+
+## Identify variables that need to be mutated
+We can use `mutate()` and `lubridate` to create one properly coded date variable.
+
+First, let's combine `Month` and `Year` into one `Date` variable
+```{r}
+poultry <- poultry %>%
+  # combine month and year
+  mutate(date_prelim=str_c(`Month`," ",`Year`))
+```
+
+Next, we'll use lubridate to create a properly coded `Date` variable.
+```{r}
+# create month year stamp
+my_st<-stamp("02-2019", orders = "my")
+
+poultry <- poultry %>%
+  # recode string to date
+  mutate(Date=my_st(my(date_prelim))) %>%
+  # remove unnecessary variables
+  select(Product,Date,Price_Dollar)
+poultry
+```
+
