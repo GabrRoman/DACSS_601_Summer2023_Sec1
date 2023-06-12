@@ -1,0 +1,84 @@
+---
+title: "Challenge 4 Solutions"
+author: "Moira Chiong"
+description: "More data wrangling: pivoting"
+date: "6/11/2023"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_4
+  - abc_poll
+  - eggs
+  - fed_rates
+  - hotel_bookings
+  - debt
+---
+
+## Challenge Overview
+
+Today's challenge is to:
+
+1)  read in a data set, and describe the data set using both words and any supporting information (e.g., tables, etc)
+2)  tidy data (as needed, including sanity checks)
+3)  identify variables that need to be mutated
+4)  mutate variables and sanity check all mutations
+
+## Read in data
+
+Read in one (or more) of the following datasets, using the correct R package and command.
+
+-   abc_poll.csv ⭐
+-   poultry_tidy.xlsx or organiceggpoultry.xls⭐⭐
+-   FedFundsRate.csv⭐⭐⭐
+-   hotel_bookings.csv⭐⭐⭐⭐
+-   debt_in_trillions.xlsx ⭐⭐⭐⭐⭐
+
+```{r}
+getwd()
+ setwd("C:/Users/chion/OneDrive/Desktop/DACSS 601/DACSS_601_Summer2023_Sec1/posts/_data")
+ library(readxl)
+poultry_tidy <- read_excel("C:/Users/chion/OneDrive/Desktop/DACSS 601/DACSS_601_Summer2023_Sec1/posts/_data/poultry_tidy.xlsx")
+poultry_tidy
+
+```
+
+### Briefly describe the data
+
+The data is for prices of poultry over the 2004-2013 period. There are 4 columns with 600 observations. There are five distinct cuts of poultry: "Whole", "B/S Breast", "Bone-in Breast", "Whole Legs", "Thighs"  . The lowest price of cuts of poultry is 1.94 while the maximum price is 7.04.  The average price for a cut of poultry is 3.39.
+```{r}
+nrow(poultry_tidy)
+ncol(poultry_tidy)
+unique(poultry_tidy$product)
+unique(poultry_tidy$Year)
+min(poultry_tidy$Price_Dollar, na.rm=TRUE)
+max(poultry_tidy$Price_Dollar, na.rm=TRUE)
+mean(poultry_tidy$Price_Dollar, na.rm=TRUE)
+```
+
+
+## Tidy Data (as needed)
+
+Is your data already tidy, or is there work to be done? Be sure to anticipate your end result to provide a sanity check, and document your work here.
+
+```{r}
+
+
+```
+
+Any additional comments?
+
+## Identify variables that need to be mutated
+
+Are there any variables that require mutation to be usable in your analysis stream? For example, are all time variables correctly coded as dates? Are all string variables reduced and cleaned to sensible categories? Do you need to turn any variables into factors and reorder for ease of graphics and visualization?
+
+Document your work here.
+
+```{r}
+round(poultry_tidy$Price_Dollar, digits = 2)
+```
+
+Any additional comments?

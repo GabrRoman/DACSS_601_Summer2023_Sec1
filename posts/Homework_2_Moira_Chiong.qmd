@@ -1,0 +1,118 @@
+---
+title: "Homework 2"
+author: "Moira Chiong"
+description: "Summary Statistics"
+date: "6/12/2023"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+---
+
+# Homework Two: Reading in Data
+
+Sean Conway
+
+•
+
+Jun 6
+
+**100 points**
+
+For this homework, your goal is to read in a more complicated dataset. Please use the category tag "hw2" as well as a tag for the dataset you choose to use.
+
+-   Read in a dataset. **It's strongly recommended that you choose a dataset you're considering using for the final project.** If you decide to use one of the datasets we have provided, please use a challenging dataset - check with us if you are not sure.
+
+    ```{r}
+    getwd()
+    library(readxl)
+    pseo_ma_SANDBOX <- read_excel("pseo_ma_SANDBOX.xlsx")
+    pseo_ma_SANDBOX
+    ```
+
+-   
+
+-   Clean the data as needed using dplyr and related tidyverse packages.
+
+-   Provide a narrative about the data set (look it up if you aren't sure what you have got) and the variables in your dataset, including what type of data each variable is. The goal of this step is to communicate in a visually appealing way to non-experts - not to replicate r-code.
+
+-   Identify potential research questions that your dataset can help answer.
+
+##Commentary
+
+For Homework 2, I used the Census Bureau Post-Secondary Employment Outcomes (PSEO) database filtered for Massachusetts. This database cites the employment outcomes (earnings 1, 5 and 10 years after graduation) for all public Massachusetts higher education institutions. The data set provides postsecondary employment outcomes for graduates at all credential levels, from certificate to doctorate.
+
+##Potential Research Questions:
+
+What is the relationship between credential level and earnings? Do earnings grow over time?
+
+Questions for further research: What is the relationship between race/ethnicity, age, Pell status and earnings?
+
+##Notes on Code
+
+The mean for all graduates for 1 year after graduation was 41256, with the median lower at 36197, demonstrating a skewed left distribution. The mean for all graduates five years after graduation 57654, while the median was 53678, again skewed left distribution. The mean of the 1st year after graduation data for Baccalaureates was 39966, while the median was 36050. This reveals to me that the data were skewed to the left with more observations towards the beginning of the number line. For the mean of the 5th year after graduation for Baccalaureates, mean at 58696 again was higher than the median 54870, again representing a left skew of the data. The minimum of the Baccalaureate earnings the first year after graduation was low at 19825, while the Baccalaureate maximum was at 110317. The minimum of the Baccalaureate earnings the fifth year after graduation were much higher at 29649 and the maximum at 120707. The minimum and maximum for the entire sample the first year after graduation were 19766 and 147728 respectively. Conversely, the minimum and maximum for fifth year earnings were 28528 and 189604 respectively. This represents that earnings increased the longer the time elapsed since graduation as well as by credential level.
+
+There were 12639 rows and 48 columns in the dataset.
+
+```         
+y1a_num  %>% summary(y1_p50_earnings, na.rm=TRUE)    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's    19825   31970   36050   39966   43117  110317    2714 
+```
+
+##Code
+
+```{r}
+#list the unique degree levels
+unique(pseo_ma_SANDBOX$label_degree_level)
+#convert to numeric
+y1_num<- as.numeric(pseo_ma_SANDBOX$y1_p50_earnings) 
+
+#find summary statistics on whole data set, 1 year after graduation
+mean(y1_num, na.rm=TRUE)
+median(y1_num, na.rm=TRUE)
+min(y1_num, na.rm=TRUE)
+max(y1_num, na.rm=TRUE)
+IQR(y1_num, na.rm=TRUE)
+
+#find summary statistics on whole data set, 5 years after graduation
+y5_num<-as.numeric(pseo_ma_SANDBOX$y5_p50_earnings)
+mean(y5_num, na.rm=TRUE)
+median(y5_num, na.rm=TRUE)
+min(y5_num, na.rm=TRUE)
+max(y5_num, na.rm=TRUE)
+IQR(y5_num, na.rm=TRUE)
+
+summary(pseo_ma_SANDBOX_num)
+
+print(typeof(pseo_ma_SANDBOX$y1_p50_earnings))
+ 
+sapply(pseo_ma_SANDBOX_num, max,na.rm=TRUE)
+sapply(pseo_ma_SANDBOX_num, min, na.rm=TRUE)
+
+install.packages("dplyr")
+library(dplyr)
+summary(y1_num)
+summary(y5_num)
+
+#find the number of rows and columns in the dataset
+nrow(pseo_ma_SANDBOX)
+ncol(pseo_ma_SANDBOX)
+
+#filter for Baccalaureate degrees
+pseo_filtered <-filter(pseo_ma_SANDBOX, pseo_ma_SANDBOX$label_degree_level=="Baccalaureate")
+View(pseo_filtered)
+
+#find summary statistics of filtered data-- just BA degrees
+y1a_num<- as.numeric(pseo_filtered$y1_p50_earnings) 
+y1a_num  %>% summary(y1_p50_earnings, na.rm=TRUE)
+
+y5a_num <- as.numeric(pseo_filtered$y5_p50_earnings)
+y5a_num %>% summary(y5_p50_earnings, na.rm=TRUE)
+
+
+
+```
+
+```         
+```
