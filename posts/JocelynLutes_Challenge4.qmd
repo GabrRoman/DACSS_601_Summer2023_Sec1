@@ -1,0 +1,101 @@
+---
+title: "Challenge 4: Mutating Data"
+author: "Jocelyn Lutes"
+description: ""
+date: "06/08/2023"
+format:
+  html:
+    df-print: paged
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge4
+  - jocelyn_lutes
+  - tidyverse
+  - here
+  - glue
+  - stringr
+  - lubridate
+---
+```{r}
+#| label: setup
+#| warning: false
+
+library(tidyverse)
+library(readxl)
+library(here)
+library(glue)
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Import Data
+For this challenge, we will use the `debt_in_trillions.xlsx ` dataset. To begin, we use `read_excel` to import the raw data. A sample of the data is shown below.
+```{r}
+data_path <- here('posts', '_data', 'debt_in_trillions.xlsx')
+df <- read_excel(data_path)
+head(df)
+```
+## Describe Data
+In its raw form, the data is composed of `r nrow(df)` rows and `r ncol(df)` columns. Each row provides debt data for one quarter of a given year. The time period included in the data is Q1 of 2003 to Q2 of 2021. There are seven columns, each of which represents the debt in trillions of dollars for a specific category of debt. The categories are `Mortgage`, `HE Revolving`, `Auto Loan`, `Credit Card`, `Student Loan`, `Other`, and `Total`. 
+
+## Data Cleaning
+
+### Tidy Data
+The raw data is not in its "tidy" form. To be considered "tidy", every column must represent a single variable and each row must be a single observation. Currently the debt amount is spread across multiple columns and each row contains an observation for multiple categories of debt. To tidy the data, we should use `pivot_longer` to move the debt category names to a `debt_type` column and the values from the category columns to a `debt_amount` column.
+
+After pivoting we should have 3 columns (`year_and_quarter`, `debt_type`, and `debt_amount`) and `r 74*7` rows (74 dates * 7 categories).
+
+``` {r}
+cols_to_pivot <- df %>% 
+  select(-`Year and Quarter`) %>%
+  colnames()
+
+df <- df %>%
+  pivot_longer(all_of(cols_to_pivot), names_to = 'debt_type', values_to = 'debt_amount') %>%
+  rename('year_and_quarter' = `Year and Quarter`)
+
+df
+```
+
+### Mutate Variables
+
+Now, that the data is in "tidy" form, we can clean the data to ensure that it is ready for any modeling or visualization. 
+
+Because it contains date data, we should mutate the `year_and_quarter` column. From the `lubridate` [cheat sheet](https://evoldyn.gitlab.io/evomics-2018/ref-sheets/R_lubridate.pdf), we see that the data is in the proper format to use the `yq()` function, which converts the year and quarter into a date (the start date of the quarter).
+
+``` {r}
+df <- df %>%
+  mutate(
+    year_with_quarter = yq(year_and_quarter)
+  ) %>%
+  select(-year_and_quarter)
+
+df
+```
+
+Representing the `year_with_quarter` as a date is handy because it will allow us to use other `lubridate` functions such as `year()` and `quarter()` to extract just the year or the quarter from the date. This could be helpful if we want to visualize the data in aggregate, such as by year (e.g. combining all quarters of a year) or by quarter (e.g. all years combined). 
+
+Some examples of features that can be created are shown below:
+
+``` {r}
+df %>%
+  mutate(
+    year = year(year_with_quarter),
+    quarter = quarter(year_with_quarter),
+    year_with_quarter_alt = quarter(year_with_quarter, with_year=T)
+  )
+```
+
+## Final Data
+Our final, "tidy" data frame contains `r nrow(df)` rows and `r ncol(df)` columns:
+
+1. `debt_type`: The category of debt
+2. `debt_amount`: The amount of debt in trillions of dollars
+3. `year_with_quarter`: The starting date of the quarter of the corresponding debt.
+
+```{r}
+df
+```
