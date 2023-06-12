@@ -2,7 +2,7 @@
 title: "Challenge 4"
 author: "Audrey Bertin"
 description: "Data wrangling with mutate"
-date: "5/30/2023"
+date: "6/9/2023"
 format:
   html:
     df-print: paged
@@ -15,6 +15,7 @@ categories:
   - hotel_bookings
   - dplyr
   - mutate
+  - audrey_bertin
 ---
 
 ```{r}
