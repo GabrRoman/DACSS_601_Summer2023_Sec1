@@ -2,7 +2,7 @@
 title: "Challenge 5"
 author: "Audrey Bertin"
 description: "Basic visualization with ggplot"
-date: "5/30/2023"
+date: "6/13/2023"
 format:
   html:
     df-print: paged
@@ -13,6 +13,7 @@ categories:
   - challenge_5
   - air_bnb
   - ggplot2
+  - audrey_bertin
 ---
 
 ```{r}
