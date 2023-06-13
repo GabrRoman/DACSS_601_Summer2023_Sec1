@@ -1,0 +1,155 @@
+---
+title: "Homework 2: Diving into Data on Atlantic Hurricanes from 1920-2020"
+author: "Hunter Major"
+editor: source
+description: Homework 2 Assignment on Atlantic Hurricanes Data
+date: "6/12/2023"
+format: 
+ html:
+    df-print: paged
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - hw2
+  - atlantic_hurricanes
+  - hunter_major
+---
+
+```{r}
+# loading packages into R Studio
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(dplyr)
+library(readr)
+library(readxl)
+library(tidyr)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+
+```
+
+## Homework 2 Overview
+For this homework, your goal is to read in a more complicated dataset. Please use the category tag "hw2" as well as a tag for the dataset you choose to use.
+
+Read in a dataset. It's strongly recommended that you choose a dataset you're considering using for the final project. If you decide to use one of the datasets we have provided, please use a challenging dataset - check with us if you are not sure. 
+
+Clean the data as needed using dplyr and related tidyverse packages.
+Provide a narrative about the data set (look it up if you aren't sure what you have got) and the variables in your dataset, including what type of data each variable is. The goal of this step is to communicate in a visually appealing way to non-experts - not to replicate r-code.
+Identify potential research questions that your dataset can help answer.
+
+```{r}
+# reading in the dataset
+
+atlantic_hurricanes <- 
+read.csv("_mysampledatasets/atlantic_hurricanes.csv")
+
+
+atlantic_hurricanes
+```
+
+## Narrative About The Data
+```{r}
+summary(atlantic_hurricanes)
+
+dim(atlantic_hurricanes)
+```
+
+This dataset provides insights into Atlantic hurricanes, hurricanes that developed in the Atlantic Ocean area, across a 100 year time period, from 1920 to 2020. This dataset lists hurricanes that fall under the Category 1, Category 2, Category 3, and Category 5 classifications; therefore, it doesn't include Category 4 hurricanes nor does it include (storms that didn't develop beyond) tropical storms and tropical depressions. 458 hurricanes or observations/rows are included in this dataset. There are 10 variables. Variables in the original version of the data are: 
+
+- X (or the list number/ID of the hurricane as entered into the dataset, mostly used for organizational, data entry purposes)
+
+- the name of the hurricane (character value), 
+
+- the duration of the hurricane/the dates that it occurred (numeric/character value?),
+
+- the wind speed of the hurricane (in miles per hour and kilometers per hour) (numeric value),
+
+- the pressure of the hurricane (in atmospheric pressure-hPa and in inch of mercury-inHg) (numeric value),
+
+- the number of deaths caused by the hurricane (numeric value),
+
+- the amount of damage in US dollars caused by the hurricane (numeric value),
+
+- the category of the hurricane (Cat 1, 2, 3, or 5) (number representing a character value?),
+
+- the numerically assigned references/footnotes that provide further information about the hurricane (number representing a character value?.
+
+**Using the summary () function, most of the values for each variable are listed as character values because they do include words, abbreviations, units of measurement, other symbols/punctuation in them currently, in/after the process of tidying the dataset, I hope to make sure that all of the variables that I've listed as having numeric values in paratheses above will be then 'understood'/interpreted by R as having numeric values. However, because I am a beginner in R--I don't know if I'll be able to accomplish all of what I perceive has to be cleaned within the suite of Homework 2 alone--as I will likely be working with this dataset (outside of the challenge assignments) all the way through to the final project, but I'll try my best:)
+
+## Data Cleaning
+#### 1. Removing REf Column
+I am removing the REf column because I am unclear on what it represents, and I do not believe it will be useful for my purposes in tidying and working towards analyzing the snapshot this dataset provides into Atlantic hurricanes more broadly. I believe REf is potentially referring to listed/numbered footnote references in the original study. I sourced this dataset from Kaggle, https://www.kaggle.com/datasets/valery2042/hurricanes, and do not currently have access to the original study. The only information provided about sources on the dataset's Kaggle page is, "I scraped Wikipedia pages of Atlantic hurricanes of Categoris 1,2,3 and 5 using pandas/html" (Liamtsau, 2022).
+```{r}
+# remove column named REf
+
+atlantic_hurricanes2 <- atlantic_hurricanes 
+  
+
+atlantic_hurricanes2 %>% select(-REf)
+```
+Looks like the REf column was successfully removed! There are now 9 columns/variables.
+
+#### 2. Removing the X Column
+I am removing the X column as well because this is simply the list/ID number of each hurricane as it is entered into the dataset, and since R Studio maintains its own list/ID number on the far left of the table I believe the X variable is no longer necessary. Also, since the first number in the X column is 0 for the first hurricane listed instead of 1, this can be confusing for some readers whose numbering convention starts with 1. Scrolling all the way to the end of the table (page 46 for me), we can see that the last value listed in the X column is 457, which is a slight mismatch from the 458 rows/observation values, which represented the total number of hurricanes included in the study, that R computed the dataset to have.
+ 
+```{r}
+atlantic_hurricanes2 %>% select(-REf, -X)
+```
+Looks like the X column is now removed! There should now be 8 columns.
+
+#### 3. Separate Wind.speed into Wind.speed.mph and Wind.speed.kmh and Pressure into Pressure.hPa and Pressure.inHg
+In the current version of the dataset, within the Wind.speed column, values for each hurricane's wind speed are provided in miles per hour (mph) and kilometers per hour (km/h) in the same cell. Likewise, values for each hurricane's pressure are provided in hPa (atmospheric pressure) and inHg (inch of Mercury). I would like to separate those values, so each unit of measurement for the wind speed and pressure, respectively has their own distinct columns.
+
+```{r}
+# separate the Wind.speed column into Wind.speed.mph and Wind.speed.kmh
+
+atlantic_hurricanes2 %>% select(-REf, -X)
+  
+wind_speed2 <- atlantic_hurricanes2
+
+wind_speed2 <- separate(atlantic_hurricanes2, Wind.speed, into = c("Wind.speed.mph", "Wind.speed.kmh"), sep = "(")
+
+wind_speed2
+
+```
+
+```{r}
+wind_speed2 %>% select(-REf, -X)
+```
+
+```{r}
+wind_speed2 %>% select(-REf, -X)
+
+pressure_2 <- wind_speed2
+
+pressure_2 <- separate(wind_speed2, Pressure, into = c("Pressure.hPa", "Pressure.inHg"), sep = " ")
+
+pressure_2
+
+```
+
+```{r}
+pressure_2 %>% select(-REf, -X)
+```
+
+## What Remains to Be Cleaned
+While I did remove the REf and X variables and separated the Wind.speed and Pressure columns into columns with distinct units of measurement (note: while all of this appears in R Studio, the code that I created to separate the wind speed units of measurements into separate columns is not being picked up in the course blog format when I attempt rendering this), I'm aware that there are additional items to be cleaned. 
+
+Going forward, I want to keep the information within the Duration column but potentially rename it to Date and create a separate Duration column that transforms the date timeline/range for each hurricane into a number of days. I know some of the datasets we've used in class for the challenges have dealt with aspects of tidying date-related data (like separating or grouping months and years), but I'm not exactly sure yet on how to go about transforming a date range into number of days within R Studio without going through and making manual changes to each row myself. In addition, I still have to remove the phrase "mph" from the values in the Wind.speed.mph column, remove the parantheses and "km/h" from the Wind.speed.kmh values, remove the "hPa" phrase from the Pressure.hPa column, remove the parentheses and "inHg" from the Pressure.inHg column--so that R can classify those variables as numeric values that I can then use to compute summary statistics with. 
+
+The Areas.affected column is comprehensive but not consistent...sometimes global regions are listed, sometimes countries, sometimes island clusters, sometimes U.S. states, sometimes U.S. regions, sometimes parts within U.S. states (i.e., South Texas), parts of a global region (i.e., Northeastern Caribbean), then there's also the category of "No land areas" (which I intuitively understand as a hurricane that remained in open water and did not make landfall), etc. I can try my best more neatly organize this by creating separate columns with different area classifications, but this will make the dataset much wider and as hinted at previously, there are overlaps and inconsistencies between the types of Areas.affected listed. I like the succinct-ness of one Areas.affected column, but at the same time, I recognize that how it currently exists is not as tidy as it can be. 
+
+Similarly, the Damage column also provides values that can be made more tidy (i.e., $1.3 billion can be changed to 1,300,000,000) but there are also inconsistencies between in the ways Damage is characterized throughout the column. Sometimes it's in dollars (sometimes with million, billion, or thousand written out, sometimes it's listed as $450,000), assumingly USD, sometimes the cells contain the words "Minimal" "None" "Extensive" "Heavy" "Minor" "Unknown" "Millions" "Moderate", sometimes the cells are left blank altogether, sometimes a range/modified by a logical operator (i.e., > $100 thousand), etc. 
+
+I'm open to advice and assistance on how to best approach further tidying the Areas.affected column and Damage column in particular. I suppose I could filter the Areas.affected column to just list countries or just list U.S. states, for example--but then that means deleting area phrases like "Gulf Coast United States" which is within the country of the United States and is comprised of states like Texas, Louisiana, Mississippi, Alabama, Florida. Likewise, I could filter the Damage column so that it just lists dollar amounts and lists them with zeroes at the end vs words like "million" "thousand," to make the variable have numeric values but then that also takes out all of the more qualitative descriptors of Damage, which do serve their own purpose/provide their own insights or summary.
+
+## Potential Research Questions This Dataset Could Help Answer
+Do duration, wind speed, pressure, and hurricane category classification have any correlation with deaths and damage costs caused by hurricanes? If so, how so? Which areas are most susceptible to the most severe and devastating hurricanes in the century this dataset covers? On the other hand, there are some limitations to this dataset. Something I noticed this dataset doesn't answer is, at what point in the duration of the hurricane were these measures of wind speed and pressure taken? While I'm assuming it is a listing of the highest intensity recorded wind speed and pressure throughout the course of the storm, this isn't clear. Moreover, for the hurricanes that impacted multiple areas, the windspeed and pressure was likely not the exact same measure in each successive location the hurricane made landfall in. While insights can be deduced from this dataset, especially after additional, forthcoming stages of cleaning the data, studying each storm and each area individually will provide additional, more full and nuanced context(s) of systems, resources, lived experiences, etc that influenced and/or were influenced by the hurricane(s).
+
+## References
+Liamtsau, V. (2022, August 5). Atlantic hurricanes (data cleaning challenge). Kaggle. https://www.kaggle.com/datasets/valery2042/hurricanes
