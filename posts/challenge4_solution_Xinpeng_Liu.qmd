@@ -1,0 +1,121 @@
+---
+title: "Challenge 4 Submission"
+author: "Xinpeng Liu"
+description: "More data wrangling: pivoting"
+date: 6/13/2023"
+format:
+  html:
+    df-print: paged
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_4
+  - abc_poll
+  - eggs
+  - fed_rates
+  - hotel_bookings
+  - debt
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to:
+
+1)  read in a data set, and describe the data set using both words and any supporting information (e.g., tables, etc)
+2)  tidy data (as needed, including sanity checks)
+3)  identify variables that need to be mutated
+4)  mutate variables and sanity check all mutations
+
+## Read in data
+
+Read in one (or more) of the following datasets, using the correct R package and command.
+
+-   abc_poll.csv ⭐
+-   poultry_tidy.xlsx or organiceggpoultry.xls⭐⭐
+-   FedFundsRate.csv⭐⭐⭐
+-   hotel_bookings.csv⭐⭐⭐⭐
+-   debt_in_trillions.xlsx ⭐⭐⭐⭐⭐
+
+```{r}
+library(lubridate)
+library(readxl)
+library(tidyr)
+library(dplyr)
+```
+
+### Briefly describe the data
+
+we choose - poultry_tidy.xlsx⭐⭐
+
+```{r}
+data <- read_excel("_data/poultry_tidy.xlsx")
+data
+summary(data)
+```
+Here's what each column tells us:
+
+-   Product: This is a character type of data, which basically means it's text. It tells us the type of chicken product. We don't know exactly what types of chicken products are in the data set from this summary alone, so we would need to check the unique values or look at the original data documentation to get that info.
+
+-   Year: This is a numeric variable and it's pretty straightforward - it's the year of the observation. The years in this data set run from 2004 to 2013.
+
+-   Month: This is also a character type of data, and it tells us the month of the observation.
+
+-   Price_Dollar: This is a numeric variable that tells us the price of the chicken, in dollars. The price ranges from $1.935 to $7.037. Note that there are 7 prices missing in the data set, so we'd have to keep that in mind if we were analyzing the data.
+
+## Tidy Data (as needed)
+
+Is your data already tidy, or is there work to be done? Be sure to anticipate your end result to provide a sanity check, and document your work here.
+
+```{r}
+# Removing rows with missing Price_Dollar
+data_clean <- data %>%
+  filter(!is.na(Price_Dollar))
+
+# View the cleaned data
+data_clean
+
+```
+Looking at the summary of our data. It seems that our data alreaady be in a tidy format. Howere, we have some missing valuees in the "price_Dollar" column that we want to handle. we use code: $!is.na$ to remove the missing data, now we only have 593 more rows.
+
+
+## Identify variables that need to be mutated
+
+Are there any variables that require mutation to be usable in your analysis stream? For example, are all time variables correctly coded as dates? Are all string variables reduced and cleaned to sensible categories? Do you need to turn any variables into factors and reorder for ease of graphics and visualization?
+
+Document your work here.
+
+## Mutate variable
+
+First off, we've got two time-related columns: Year and Month. Right now, Year is a number and Month is a string (basically text). But if we're gonna do some cool stuff like look at trends over time, it might be easier if we can smush these two together into one handy "date" type of variable.
+
+Second, we've got this Product column. Now, this one is also text right now, but depending on what we wanna do, we might want to change this to what R calls a "factor." Factors are pretty neat because they let R know that this is a categorical variable. This can make creating plots or doing stats stuff a bit smoother.
+
+So, let's do this! Let's make these changes to our data!
+```{r}
+# Combine Year and Month into a single Date variable
+# Note: we assume the day of each observation to be the 1st
+data <- data %>% mutate(Date = ymd(paste(Year, Month, "01", sep = "-")))
+
+# Convert Product to a factor
+data$Product <- as.factor(data$Product)
+
+#drop the original Year and Month columns
+data <- data %>% select(-Year, -Month)
+
+# Display the data
+data
+```
+
+
