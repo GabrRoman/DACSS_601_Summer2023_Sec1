@@ -24,6 +24,7 @@ categories:
 #| message: false
 
 library(tidyverse)
+library(readxl)
 
 knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
 ```
@@ -41,39 +42,94 @@ Today's challenge is to:
 
 The Data Set I chose to read in was the organic poultry data.
 
--   poultry_tidy.xls⭐⭐
+-   organiceggpoultry.xls⭐⭐
 
 ```{r}
 
-org_poultry_data <- read_csv("_data/poultry_tidy.xls")
+org_poultry_data <- read_excel("_data/organiceggpoultry.xls")
+
+head(org_poultry_data)
 
 ```
 
 ### Briefly describe the data
 
-This data has various parts of the chicken (ranging from whole, to breast) with their month and price per pound.
+This data has various parts of the chicken (ranging from whole, to breast) with their month, year and price.
 
 ## Tidy Data (as needed)
 
-Is your data already tidy, or is there work to be done? Be sure to anticipate your end result to provide a sanity check, and document your work here.
+We needed to do a few things to tidy the data. The first was removing the first three rows, these all contained data that was not necessary. 
+
+The second was adding the column headers. Interestingly enough, these were actually in the fourth row, so we moved it up. In addition, some of the names had an extra newline character, so we removed those with gsub.
+
+Finally, the "Extra Large 1/2 Dozen" has some weird formatting so we manually edited this column name.
+
 
 ```{r}
 
+org_poultry_data <- org_poultry_data[-c(1,2,3),]
+
+# Changing the column names
+colnames(org_poultry_data) <- 
+  gsub('\n','',org_poultry_data[1,])
+
+colnames(org_poultry_data)[1] = 'Month'
+
+org_poultry_data <- org_poultry_data[-c(1),]
+
+# This one is weird
+colnames(org_poultry_data)[3] <- "Extra Large 1/2 Dozen"
+
+head(org_poultry_data)
 
 ```
 
-Any additional comments?
 
 ## Identify variables that need to be mutated
 
-Are there any variables that require mutation to be usable in your analysis stream? For example, are all time variables correctly coded as dates? Are all string variables reduced and cleaned to sensible categories? Do you need to turn any variables into factors and reorder for ease of graphics and visualization?
+The first set of variables that need to be mutated are the dates. The issue here is that only January of every year has a year attached to it. So the issue is expanding the year to a new column so every month is paired with a year.
 
-Document your work here.
+Secondly, in the "Bone-in Breast" column, there were some string values that were labeled "too few", so we had to replace those with the value 0.
 
-The only variable I looked into mutating was the month, I believe that transforming this into a number instead of label will make it easier to sort chronologically or allow someone to sort by months easier.
+Finally, all the columns aside from the month, needed to be converted into ints from chrs, which we were able to do as seen below.
+
 
 ```{r}
 
+# Add the year
+org_poultry_data <- add_column(org_poultry_data, year = 0, .before=1)
+
+year <- 2003
+for (idx in 1:120) {
+  if (idx %% 12 == 1) {
+    year <- year + 1
+    org_poultry_data[idx, 2] <- "January"
+  }
+  org_poultry_data[idx, 1] <- year
+}
+
+# Replacing non-numbers to 0
+org_poultry_data[9] <- replace(org_poultry_data$`Bone-in Breast`, 
+                            org_poultry_data$`Bone-in Breast`=='too few','0')
+
+# Change chr to int
+
+org_poultry_data$'Extra Large Dozen' <- as.numeric(org_poultry_data$'Extra Large Dozen')
+org_poultry_data$'Extra Large 1/2 Dozen' <- as.numeric(org_poultry_data$'Extra Large 1/2 Dozen')
+org_poultry_data$'Large 1/2 Doz.' <- as.numeric(org_poultry_data$'Large 1/2 Doz.')
+org_poultry_data$'Whole' <- as.numeric(org_poultry_data$'Whole')
+org_poultry_data$'B/S Breast' <- as.numeric(org_poultry_data$'B/S Breast')
+org_poultry_data$'Large Dozen' <- as.numeric(org_poultry_data$'Large Dozen')
+org_poultry_data$'Bone-in Breast' <- as.numeric(org_poultry_data$'Bone-in Breast')
+org_poultry_data$'Whole Legs' <- as.numeric(org_poultry_data$'Whole Legs')
+org_poultry_data$'Thighs' <- as.numeric(org_poultry_data$'Thighs')
+
+# Removing column 7 (NA)
+org_poultry_data <- org_poultry_data[-c(7)]
+
+
+# Printing the final data
+org_poultry_data
+
 ```
 
-Any additional comments?
