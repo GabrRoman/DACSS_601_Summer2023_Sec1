@@ -23,6 +23,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 The data that I am using is the McDonalds menu data. The first few entries can be seen below.
 
+I got the data at: (https://www.kaggle.com/datasets/deepcontractor/mcdonalds-india-menu-nutrition-facts)
+
 ```{r}
 
 mcdonalds_tidy <- read_csv("_data/mcdonaldata.csv")
