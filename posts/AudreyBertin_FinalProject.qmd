@@ -221,6 +221,28 @@ qualifying %>%
 
 #### Lap Times
 
+We have information on lap times for each lap of the races that we can use to track whether cars are faster/slower over time. Looking at lap times across a handful of different Grands Prix from 2016-present, we can see they vary significantly across tracks:
+
+```{r, message=FALSE}
+lap_times %>%
+  inner_join(races, by = 'raceId') %>%
+  filter(laptime_seconds < 300, raceId >= 968, gp_name %in% c("Abu Dhabi Grand Prix", "Belgian Grand Prix", "Hungarian Grand Prix", "Monaco Grand Prix")) %>%
+  ggplot(aes(x=laptime_seconds, fill = gp_name)) + geom_histogram(alpha = 0.3) + xlab("Lap Time in Seconds") + ylab("Count") + ggtitle("Distribution of Lap Times, 2016-present for several GPs") + theme_minimal() + scale_fill_brewer(palette = "Set1")
+```
+
+We can also use this data to view trends over time:
+
+```{r}
+lap_times %>%
+  inner_join(races, by = 'raceId') %>%
+  filter(laptime_seconds < 300, raceId >= 968, gp_name %in% c("Abu Dhabi Grand Prix", "Belgian Grand Prix", "Hungarian Grand Prix", "Monaco Grand Prix")) %>%
+  group_by(raceId, gp_name) %>%
+  summarize(avg_lap = mean(laptime_seconds)) %>%
+  ggplot(aes(x= raceId, y=avg_lap, color=gp_name)) + geom_line() + xlab("Race ID") + ylab("Avg Lap Time in Seconds") + ggtitle("Avg Lap Times From 2016-present for several GPs") + theme_minimal()
+```
+
+Note the crazy spike we see here for the Belgian GP. This spike corresponds to the race in 2021 where there was a *huge* rain issue which slowed all the cars and resulted in such dangerous conditions that they could not complete a full race. See: https://www.formula1.com/en/racing/2021/Belgium.html.
+
 #### Status
 
 In the results data, there is some basic information on driver status that we can use to track how many drivers are completing races over time. We have information on how many drivers were disqualified, retired, or finished successfully, and we can use this to view trends over time (including over the time period we are interested in).
@@ -258,14 +280,15 @@ top_statuses %>%
   ggtitle("Most Common Race Statuses by Count Since 2016") + theme_minimal() + xlab("Status") + ylab("Count") + coord_flip()
 ```
 
-
 ## Research Questions
 
-In 2022, there was a big regulations change that shifted how F1 cars look and perform. Just by watching (and not looking at any data) this change seems to have shaken things up considerably, finally ending the Mercedes' team's dominant win streak in the Constructors championship and seeing Red Bull take first place instead.
+Using this data, I'd like to investigate how Formula 1 has shifted before and after the most recent regulation change in 2022.
 
-I'm interested in using this dataset to take a deeper look into how things have changed since the regulations shift -- comparing the previous era (called the "Turbo Hybrid" era, which started in 2014 and went through 2021) to the new era, which started in 2022.
+This change shifted how F1 cars look and perform, with new engine requirements, weight requirements, and aerodynamic guidelines. Just by watching (and not looking at any data) this change seems to have shaken things up considerably, finally ending the Mercedes' team's dominant win streak in the Constructors championship and seeing Red Bull take first place instead.
 
-There are a few different aspects within this comparison that would be interesting to look into:
+I'm interested in using this dataset to take a deeper look into how things have changed since the regulations shift -- comparing the previous era to the new era, which started in 2022. 
+
+There are a few different aspects of this this comparison that are of interest:
 
 1. The new regulations were designed to make it easier for cars to follow one another, theoretically making passing easier. How has this translated in reality? Is it easier now than before for "top" cars that start out of position to make up positions? Being "out of position" here means starting the race from a position worse than would be expected based on their car's performance due to a qualifying mistake, mechanical failure, etc.
 
@@ -276,5 +299,60 @@ There are a few different aspects within this comparison that would be interesti
 4. Which drivers did the best job adapting to the regulations? We could look into how lap times changed overall on average, and then compare how close each driver's lap time changes were to the mean. 
 
 5. How did the regulations shake up the order in the Drivers and Constructors championships? Did anyone suddenly shoot up out of nowhere? Did any teams go from dominant to mediocre? etc.
+
+We will look at these questions one by one.
+
+Note: The previous era prior to the regulation change, called the Turbo Hybrid era, technically started in 2014. However, due to a shift in qualifying formats in 2016, we will ignore 2014/15 and just look at 2016-2021 ("Before") and 2022 ("After") as our two comparison periods. We will also exclude the 2023 season as it is still not complete and data is not properly updated yet.
+
+
+#### Is it easier to follow?
+
+#### How have lap times changed?
+
+#### How has reliability changed?
+
+#### Which drivers adapted best to the regulations?
+
+#### How did the regulation change shake up the championship?
+
+## References
+
+
+#### Datasets
+
+Rao, R. (2023). Formula 1 World Championship Data: 1950-2023. *Kaggle*.
+<https://www.kaggle.com/datasets/rohanrao/formula-1-world-championship-1950-2020>
+
+Formula 1 (2023). Formula 1 Race Result Archive. *Formula 1*.
+<https://www.formula1.com/en/results.html>
+
+
+#### Overview of F1
+
+Federation International de l'Automobile (FIA). (2023). Regulations: FIA Formula One World Championship. 
+<https://www.fia.com/regulation/category/110>
+
+Tippett, B. (2021). The Complete Guide To Understanding Formula 1. *Defector*.
+<https://defector.com/the-complete-guide-to-understanding-formula-1>
+
+Kanal, S. (2023). The beginner's guide to...the Formula 1 Grand Prix Weekend. *Formula 1*.
+<https://www.formula1.com/en/latest/article.the-beginners-guide-to-the-formula-1-grand-prix-weekend.20OGbgZCWKj9ML79gBzfoX.html>
+
+F1 Chronicle Media Team (2020). The Complete Beginners Guide to Formula 1. *F1 Chronicle*.
+<https://f1chronicle.com/a-beginners-guide-to-formula-1/>
+
+#### Techincal / Software
+
+Wickham, H., & Grolemund, G. (2016). R for data science: Visualize, model, transform, tidy, and import data. 
+<https://r4ds.had.co.nz> 
+
+R Core Team (2023). _R: A Language and Environment for Statistical Computing_. R Foundation for Statistical Computing, Vienna,
+  Austria. <https://www.R-project.org/>.
+
+
+#### Other
+
+Formula 1. (2021). 2021 Belgian Grand Prix. *Formula 1*.
+<https://www.formula1.com/en/racing/2021/Belgium.html>
 
 
