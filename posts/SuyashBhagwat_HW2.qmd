@@ -1,0 +1,119 @@
+---
+title: "HW 2 Submission"
+author: "Suyash Bhagwat"
+description: "Homework 2: Reading in Data"
+date: "6/13/2023"
+format:
+  html:
+    df-print: paged
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - hw2
+  - hotel_bookings.csv
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Homework Overview
+
+For this homework, your goal is to read in a more complicated data set. Please use the category tag "hw2" as well as a tag for the data set you choose to use
+
+1)  Read in a data set. It's strongly recommended that you choose a data set you're considering using for the final project. If you decide to use one of the data sets we have provided, please use a challenging data set - check with us if you are not sure.
+2)  Clean the data as needed using dplyr and related tidyverse packages.
+3)  Provide a narrative about the data set (look it up if you aren't sure what you have got) and the variables in your data set, including what type of data each variable is. The goal of this step is to communicate in a visually appealing way to non-experts - not to replicate r-code.
+4)  Identify potential research questions that your data set can help answer.
+
+## Read in data
+
+Read in one (or more) of the following datasets, using the correct R package and command.
+
+-   hotel_bookings.csv
+
+**Ans:** For HW2 and for my Final Project I am going to use the hotel_bookings.csv data set that is already provided to us in the _data folder. This data set is challenging since it is a large data set with 119390 rows and 32 columns and has difficulty rating of 4-star. 
+```{r}
+data_hotels <- read_csv("_data/hotel_bookings.csv")
+data_hotels
+glimpse(data_hotels)
+```
+
+## Clean the data
+**Ans:** The code for cleaning the hotel_booking data set is given below:
+```{r}
+colSums(is.na(data_hotels))
+```
+
+Also there are a few rows in the data set where no adult or there are children with no adults that have checked in. Now babies and children can't check-in on their own so we will remove those entries from the data set.
+
+```{r}
+data_hotels <- data_hotels %>% filter(data_hotels$adults != 0)
+
+```
+
+This covers most of the preliminary data cleaning for HW2 and Final Project. As I start working on the Final Project, I'm sure I'll run into more issues and will need to do some further data cleaning.
+
+## Narrative about the data
+
+**Ans:** After cleaning the data set above we can now see that it has 118,987 rows and 32 columns.
+```{r}
+glimpse(data_hotels)
+```
+We can also see that there are two different types of hotels; Resort hotels and City hotels.
+```{r}
+table(data_hotels$hotel)
+```
+
+We can get an idea of the nationality of the different guest by looking at the list of countries below:
+
+```{r}
+data_hotels %>%
+  group_by(country)%>%
+  summarise(num=n())%>%
+  arrange(desc(num))
+```
+Based on the data above of the top 15 countries, the top 3  countries are Portugal(PRT), Great Britain(GBR) and France (FRA).
+
+This is visualized in the plot given below:
+```{r}
+data_country <- data_hotels %>% group_by(country) %>%  summarise(booking_count = n()) %>% arrange(desc(booking_count))
+top_n(data_country,15,booking_count) %>% 
+  ggplot(aes(x = reorder(country,booking_count), y = booking_count)) +
+  geom_bar(stat = "identity", width = 0.25)+
+ coord_flip()+
+   ylab('Number of Guests')+
+  xlab('Nationality')+
+  ggtitle('Guests by country') +
+  labs(fill='Hotel type')
+```
+
+We can also get an idea of the number of reservations that are successfully checked-out vs canceled vs No-show. Looking at the data we can say that a significant chunk of the reservations are canceled.
+```{r}
+table(data_hotels$reservation_status)
+```
+
+## Identify potential research questions
+
+**Ans:** Looking at the hotel_bookings data set we can try to answer many of the exploratory research questions. They are:
+
+1) What is the preferred hotel type for guests (City hotel vs Resort hotel)?
+
+2) Hotel bookings are usually seasonal in nature. Which month has the highest booking rate/revenue?
+
+3) Which countries have the highest number of incoming guests? 
+
+4) What is the average length of stay per booking? Average number of guests per booking?
+
+5) Which months have the highest rate of cancellations?
+
+6) Finding correlation between the numerical data columns (e.g. ADR vs number of guests) to get useful insights.
+
+This is just a preliminary list of the exploratory questions. As I start working on the Final Project, I'll discover more research questions that I can add to this list.
