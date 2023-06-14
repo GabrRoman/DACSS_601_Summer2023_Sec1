@@ -1,15 +1,15 @@
 ---
 title: "Shreya Varma"
-image: images/YourName.jpeg
+image: images/Shre.jpeg
 about:
   template: solana
   image-width: 15em
   image-shape: round
-  image: images/YourName.jpeg
+  image: images/Shre.jpeg
   links:
     - icon: github
       text: Github
-      href: https://github.com/github_user
+      href: https://github.com/shreya-1306
 ---
 
 ##Instructions
@@ -23,18 +23,20 @@ about:
   - commit to github and submit pull request
 
 ## Education/Work Background
+MS CS Grad student at UMass, Amherst
 
 
 ## R experience
-
+None
 
 ## Research interests
-
+Data Science
 
 ## Hometown
-
+Mumbai, India
 
 ## Hobbies
-
+Dancing, Travelling
 
 ## Fun fact
+I do counselling
