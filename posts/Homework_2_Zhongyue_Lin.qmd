@@ -277,7 +277,7 @@ In conclusion, by standardizing the format of the datasets from 2015 to 2022, I 
 
 ### Data Integration
 ```{r}
-# 对每个数据框进行操作
+
 Happy_2015 <- Happy_2015 %>% mutate(Government_Corruption = as.numeric(Government_Corruption))
 Happy_2016 <- Happy_2016 %>% mutate(Government_Corruption = as.numeric(Government_Corruption))
 Happy_2017 <- Happy_2017 %>% mutate(Government_Corruption = as.numeric(Government_Corruption))
