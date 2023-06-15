@@ -42,8 +42,8 @@ Read in one (or more) of the following data sets, available in the `posts/_data`
 -   hotel_bookings.csv ⭐⭐⭐⭐
 
 ```{r}
-read_csv("_data/railroad_2012_clean_county.csv")
-railroad_data <- "railroad_2012_clean_county.csv"
+railroad_data <- read_csv("_data/railroad_2012_clean_county.csv")
+
 ```
 
 Add any comments or documentation as needed. More challenging data may require additional code chunks and documentation.
@@ -52,10 +52,8 @@ Add any comments or documentation as needed. More challenging data may require a
 
 Using a combination of words and results of R commands, can you provide a high level description of the data? Describe as efficiently as possible where/how the data was (likely) gathered, indicate the cases and variables (both the interpretation and any details you deem useful to the reader to fully understand your chosen data).
 
-```{r}
-#| label: summary
 The data contains 2,930 rows and 3 columns. The data is a count of number of employees in different counties and their respective states. 
-```
+
 
 ## Provide Grouped Summary Statistics
 
@@ -66,7 +64,7 @@ railroad_data%>%
   group_by(state)%>%
   summarise('average total employees' = mean(total_employees))
 
-
+  
 
 ```
 
@@ -74,4 +72,4 @@ railroad_data%>%
 
 Be sure to explain why you choose a specific group. Comment on the interpretation of any interesting differences between groups that you uncover. This section can be integrated with the exploratory data analysis, just be sure it is included.
 
-# I'm having an issue with my code where any use of the group_by, summarise, or related dplyr functions leads to R insisting my variable has a class of "character" and can't be analyzed with that function. My intent was to group by unique state (with no repetitions) the average number of employees. It would be a total employees mean of all rows with the same state initials.
+# I grouped by state in order to collect an average number of employees per state. The result returned 53 rows, indicating that some territories are not states but districts, etc.
