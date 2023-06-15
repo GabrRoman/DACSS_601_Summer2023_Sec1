@@ -1,0 +1,195 @@
+---
+title: "Homework 2"
+author: "Noah Dixon"
+description: "Reading in Data"
+date: "6/13/2023"
+format:
+ html:
+    df-print: paged
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - hw2
+---
+
+## Setup
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(readxl)
+library(lubridate)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Introduction
+
+For the final project I have chosen to use a data set containing information about TV series listed on IMDb (Internet Movie Database) to examine TV series popularity. The data I will be using are comprised of three files. The title.basics.tsv file contains data about all the titles on IMDb including movies, TV series, individual TV episodes, shorts, etc. The title.episode.tsv file maps TV episode titles to their parent TV series title, and also includes the season and episode number. The title.ratings.tsv file contains the rating for each title.
+
+## Read Data
+
+Let's read in the title.basics.tsv data and examine the rows
+
+```{r}
+#| label: read title_basics data
+title_basics <- read_tsv("noah_data/title.basics.tsv")
+title_basics
+```
+
+
+As we can see the data frame is very large (over 9 million rows). However, the data we will actually use for analysis will be much less after cleaning. Each row in the data frame represents one "title" (could be a movie, TV series, individual TV episode, short, etc.). A description of each of the data columns is as follows:<br>
+<br>
+- tconst: alphanumeric unique identifier of the title<br>
+- titleType: the type/format of the title (e.g. movie, short, TV series, TV episode, video, etc.)<br>
+- primaryTitle: the more popular title / the title used by the filmmakers on promotional materials at the point of release<br>
+- originalTitle: original title, in the original language<br>
+- isAdult: 0: non-adult title; 1: adult title<br>
+- startYear: represents the release year of a title. In the case of TV Series, it is the series start year<br>
+- endYear: TV Series end year. ‘\N’ for all other title types<br>
+- runtimeMinutes: primary runtime of the title, in minutes<br>
+- genres: includes up to three genres associated with the title<br>
+<br>
+The code below reveals the data types of the data columns.
+
+```{r}
+#| label: describe title_basics columns
+spec(title_basics)
+```
+
+Similarly, lets read in and describe the title.episode.tsv file.
+
+```{r}
+#| label: read title_episode data
+title_episode <- read_tsv("noah_data/title.episode.tsv")
+title_episode
+```
+
+A description of each of the data columns in this data frame is as follows:<br>
+<br>
+- tconst: alphanumeric identifier of episode<br>
+- parentTconst: alphanumeric identifier of the parent TV Series<br>
+- seasonNumber: season number the episode belongs to<br>
+- episodeNumber: episode number of the tconst in the TV series<br>
+<br>
+The code below reveals the data types of the data columns.
+
+```{r}
+#| label: describe title_episode columns
+spec(title_episode)
+```
+
+Finally, lets read in and describe the title.ratings.tsv file.
+
+```{r}
+#| label: read title_ratings data
+title_ratings <- read_tsv("noah_data/title.ratings.tsv")
+title_ratings
+```
+
+A description of each of the data columns in this data frame is as follows:<br>
+<br>
+- tconst: alphanumeric identifier of episode<br>
+- averageRating: weighted average of all the individual user ratings<br>
+- numVotes: number of rating votes the title has received<br>
+<br>
+The code below reveals the data types of the data columns.
+
+```{r}
+#| label: describe title_ratings columns
+spec(title_ratings)
+```
+
+## Tidy Data
+
+The goal of the data tidying will be to consolidate the information from the three data files into a single data frame that can be used for analysis. Each case in the data frame should represent an episode of a TV series. It will have columns that include the episodes rating, number of rated votes, the name and identifier of the series the episode belongs to, and the season and episode numbers.
+
+First, we will drop all non TV Episodes from the title_basics data frame to get a data frame of all titles that are TV episodes. We will also remove adult TV episodes. 
+
+```{r}
+#| label: drop non TV episodes
+episodes <- subset(title_basics, titleType == "tvEpisode" & isAdult == 0)
+episodes
+```
+
+Now, we will perform a left outer join between the episodes data frame and the title_ratings data frame, to add the rating and the number of votes to the episodes data frame.
+
+```{r}
+#| label: Join scores
+episodes <- merge(x = episodes, y = title_ratings, by = "tconst", all.x=TRUE)
+episodes
+```
+
+Now, we will perform another left outer join between the episodes data frame and the title_episode data frame, to add the parent TV series title, the season number, and episode number to the episode data frame.
+
+```{r}
+#| label: Join parent series
+episodes <- merge(x = episodes, y = title_episode, by = "tconst", all.x=TRUE)
+episodes
+```
+
+Next, we will make a set of all the series identifiers (parentTconst) that have at least one episode with no ratings. We want to remove all episodes that belong to these series from the data frame, as it would be difficult to perform analysis on a series with unrated episodes. Also, it is likely that these series are less popular and less important to examine.
+
+```{r}
+#| label: Create unrated set
+unrated_series <- unique(episodes$parentTconst[is.na(episodes$averageRating)])
+length(unrated_series)
+```
+
+There are 171,479 series with at least one episode that is unrated. Now, we will remove all episodes of these series from the episode data frame.
+
+```{r}
+#| label: Drop unrated set episodes
+episodes <- subset(episodes, !(parentTconst %in% unrated_series))
+episodes
+```
+
+We now have a data frame with all of the episode cases that we want. Now, lets add the series title to each episode case.
+
+```{r}
+#| label: Join parent series name
+episodes <- merge(x = episodes, y = title_basics[, c("tconst", "primaryTitle")], by.x = "parentTconst", by.y = "tconst", all.x = TRUE)
+episodes
+```
+
+Lets now clean up the data by renaming columns and removing columns we don't need. In particular we will remove the titleType column since it is always "tvEpisode", the originalTitle column since the primaryTitle column is sufficient, the isAdult column since it is always 0, and the endYear column since we are not concerned with when a show ended. We will use the number of episodes, seasons, and run times to compare shows by length. 
+
+```{r}
+#| label: Clean columns
+episodes <- select(episodes, seriesID = parentTconst, seriesName = primaryTitle.y, episodeID = tconst, episodeName = primaryTitle.x, startYear, runtimeMinutes, genres, averageRating, numVotes, seasonNumber, episodeNumber)
+episodes
+```
+
+Finally, lets change the numerical columns to integers rather than chars. 
+
+```{r}
+#| label: Change data types
+episodes <- mutate(episodes, startYear = as.integer(startYear), runtimeMinutes = as.integer(runtimeMinutes), seasonNumber = as.integer(seasonNumber), episodeNumber = as.integer(episodeNumber))
+episodes
+```
+
+The data frame is now tidied, with each case representing an episode of a TV series. All of the episodes have a rating and belong to a TV series with each episode rated. Each column is labeled appropriately with a descriptive name and the data types make sense for this data set. A final description of the data in each column is:<br>
+<br>
+- seriesID: a unique identifier for the TV series<br>
+- seriesName: the name of the series<br>
+- episodeID: a unique identifier for the series episode<br>
+- episodeName: the name of the episode<br>
+- startYear: the year the series started<br>
+- runtimeMinutesv: the runtime of the series in minutes<br>
+- averageRating: the average viewer rating of the episode<br>
+- numVotes: the number of rating votes the episode received<br>
+- seasonNumber: the number of the season<br>
+- episodeNumber: the number of the episode<br>
+
+## Research Questions
+
+A few high level research questions that can be answered with this data set are:<br>
+<br>
+1. Have TV series improved over time?<br>
+2. Are earlier seasons of TV series usually better than later seasons?<br>
+3. Does a longer TV series indicate a higher quality series?<br>
