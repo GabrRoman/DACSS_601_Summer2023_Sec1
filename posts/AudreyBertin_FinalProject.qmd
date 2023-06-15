@@ -298,7 +298,7 @@ There are a few different aspects of this this comparison that are of interest:
 
 4. Which drivers did the best job adapting to the regulations? We could look into how lap times changed overall on average, and then compare how close each driver's lap time changes were to the mean. 
 
-5. How did the regulations shake up the order in the Drivers and Constructors championships? Did anyone suddenly shoot up out of nowhere? Did any teams go from dominant to mediocre? etc.
+5. How did the regulations shake up the order in the Constructors championships? Did any teams go from dominant to mediocre? Did anyone suddenly shoot up?
 
 We will look at these questions one by one.
 
@@ -314,6 +314,76 @@ Note: The previous era prior to the regulation change, called the Turbo Hybrid e
 #### Which drivers adapted best to the regulations?
 
 #### How did the regulation change shake up the championship?
+
+For this question, we'll separately look at the Constructors Standings and Drivers Standings. 
+
+Let's start with the Constructors. Do we see a significant change in the lineup of teams before and after the change? To determine this, we can create a timeseries plot showing how team placings changed season by season from 2016-2022.
+
+We start by joining the constructors and races tables together:
+
+```{r}
+# Join constructor results table to more information on constructors and races
+constructor_results <- constructor_standings %>% 
+  inner_join(constructors, by = 'constructorId') %>%
+  inner_join(races, by = 'raceId')
+
+head(constructor_results)
+```
+
+We can then filter this to the years and columns relevant to us, and group by/summarize to find the total number of points each team got each season:
+
+```{r, message = FALSE}
+constructors_ranked <- constructor_results %>%
+  filter(year >= 2016 & year < 2023)  %>%
+  select(year, raceId, position, points, constructor_name) %>%
+  group_by(year, constructor_name) %>%
+  summarize(final_points = max(points))
+```
+
+
+```{r}
+constructors_ranked %>%
+  ggplot(aes(x = year, y = final_points, color = constructor_name)) + 
+  geom_line() + 
+  theme_minimal() + 
+  xlab("Season") +
+  ylab("Constructors' Championship Points") +
+  ggtitle("Points Earned In The Constructors' Championship, 2016-2022", subtitle = "Using Historic Team Names")
+  
+```
+
+Although these teams all have separate names and designations, some of them are actually the *same* team, just in different years. For example, the current "Alpha Tauri" team used to be called "Toro Rosso". In order to keep the teams joined together through name changes, we can recategorize the team names as just their current name and also remove the teams that no longer existed in the 2022 season. This helps make our graph easier to follow so we can better trace the changes over time.
+
+In this iteration, we'll also add a vertical line to indicate the transition year. 
+
+```{r}
+constructors_ranked %>%
+  filter(constructor_name != "Manor Marussia") %>%
+  mutate(constructor_recat = 
+           case_when(
+             constructor_name %in% c("AlphaTauri", "Toro Rosso") ~ "Alpha Tauri",
+             constructor_name %in% c("Alfa Romeo", "Sauber") ~ "Alfa Romeo",
+             constructor_name %in% c("Alpine F1 Team", "Renault") ~ "Alpine",
+             constructor_name %in% c("Aston Martin", "Racing Point", "Force India") ~ "Aston Martin",
+             TRUE ~ constructor_name
+             
+         )) %>%
+  ggplot(aes(x = year, y = final_points, color = constructor_recat)) + 
+  geom_line() + 
+  geom_vline(xintercept = 2021) + 
+  theme_minimal() +
+  xlab("Season") +
+  ylab("Constructors' Championship Points") +
+  ggtitle("Points Earned In The Constructors' Championship, 2016-2022", subtitle = "Using Current Team Names")
+```
+
+As we can see here, relative rankings in the championship remained pretty steady for a good part of the old regulations, with Mercedes dominant, Ferrari having a few good years, and Red Bull close behind. 
+
+After the regulations change, Mercedes dropped from 1st to 3rd place and Red Bull and Ferrari had massive spikes in points. However, note that they were on the up-swing before the change was put in place (in 2021) so it could be unrelated. McLaren did not seem to take the change well. They were previously on an upward points scoring trend and shot down in 2022. We see the same trend with Alpha Tauri. Meanwhile, Hass and Alfa Romeo, who in previous years had struggled to score any points did see a small jump in points and a positive shift in their overall rankings.
+
+It is hard to tell fully, without a few more years worth of data, but it does appear that the regulation change did switch the team rankings up and some teams (Red Bull/Ferrari) adapted better than others (Alpha Tauri, McLaren).
+
+
 
 ## References
 
