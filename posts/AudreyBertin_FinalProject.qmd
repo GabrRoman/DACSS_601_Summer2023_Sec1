@@ -99,7 +99,15 @@ There are 14 separate files within this dataset that store different types of in
 - `sprint_results.csv` same as results.csv but for sprint races, which we'll be excluding as they are currently just a new feature that F1 is testing (a row here is a single sprint race). There are 120 recorded observations, a very small number since there have only been a handful of these.s
 - `status.csv` contains the encodings of a `status` variable that is referenced in the results files (a row here is a status). There are 139 unique statuses.
 
-We complete a cleaning of these datasets below (see homework 1 for more details on these modifications):
+We complete a cleaning of these datasets below. See the [associated homework 2 blog post](https://dacss.github.io/DACSS_601_Summer2023_Sec1/posts/AudreyBertin_Homework2.html) for more details on these modifications and what each dataset looked like before and after.
+
+The main goals of these data cleaning steps are to:
+
+1. Remove any unclear variables
+2. Get any time related variables into an easily usable format (seconds) and convert any other variables that are not in a correct format
+3. Rename variables to avoid duplicates when joining tables and to make each variable's meaning more clear
+
+There is no pivoting involved in this step. Instead, this will be done as needed during the analysis of each research question (based on the question at hand and whether such reshaping is appropriate).
 
 
 ```{r message=FALSE, warning=FALSE}
@@ -176,7 +184,7 @@ status <- readr::read_csv("_data/formula1/status.csv")
 
 A few key notes that are important to share about the datasets above include:
 
-#### Qualifying
+### Interpreting Qualifying Times
 
 The qualifying dataset is hard to interpret for early races, but should work well for recent races. This is because it uses the current qualifying format to store data:
 
@@ -219,7 +227,7 @@ qualifying %>%
   summarize(mean_time = mean(time_s, na.rm=TRUE), sd_time = sd(time_s, na.rm=TRUE))
 ```
 
-#### Lap Times
+### Interpreting Lap Times
 
 We have information on lap times for each lap of the races that we can use to track whether cars are faster/slower over time. Looking at lap times across a handful of different Grands Prix from 2016-present, we can see they vary significantly across tracks:
 
@@ -243,7 +251,7 @@ lap_times %>%
 
 Note the crazy spike we see here for the Belgian GP. This spike corresponds to the race in 2021 where there was a *huge* rain issue which slowed all the cars and resulted in such dangerous conditions that they could not complete a full race. See: https://www.formula1.com/en/racing/2021/Belgium.html.
 
-#### Status
+### Interpreting Results Status
 
 In the results data, there is some basic information on driver status that we can use to track how many drivers are completing races over time. We have information on how many drivers were disqualified, retired, or finished successfully, and we can use this to view trends over time (including over the time period we are interested in).
 
@@ -279,7 +287,7 @@ top_statuses %>%
   ggplot(aes(x=reorder(status,n), y=n)) + geom_col() +
   ggtitle("Most Common Race Statuses by Count Since 2016") + theme_minimal() + xlab("Status") + ylab("Count") + coord_flip()
 ```
-#### Team Names
+### Dealing With Changing Team Names
 
 In order to look at details by team, we will need to take another consideration into account: team names. From 2016 - 2022, there are quite a few different team names recorded in the data:
 
