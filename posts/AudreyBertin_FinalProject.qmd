@@ -305,15 +305,113 @@ We will look at these questions one by one.
 Note: The previous era prior to the regulation change, called the Turbo Hybrid era, technically started in 2014. However, due to a shift in qualifying formats in 2016, we will ignore 2014/15 and just look at 2016-2021 ("Before") and 2022 ("After") as our two comparison periods. We will also exclude the 2023 season as it is still not complete and data is not properly updated yet.
 
 
-#### Is it easier to follow?
+### **Is it easier to pass?**
 
-#### How have lap times changed?
+For this data, we need to look at the `results` dataset and capture start position, finish position, and overall positions changed for the time period in question. 
 
-#### How has reliability changed?
+```{r}
+positions_gained <- results %>%
+  filter(raceId >= 968) %>%
+  select(raceId, driverId, constructorId, statusId, start_position, finish_position) %>%
+  mutate(positions_gained = start_position - finish_position)
+```
 
-#### Which drivers adapted best to the regulations?
+We then join this information to the race info, as well as driver and constructor names:
 
-#### How did the regulation change shake up the championship?
+```{r}
+positions_clean <- positions_gained %>%
+  inner_join(drivers %>% select(driverId, code, surname), by = 'driverId') %>%
+  inner_join(constructors %>% select(constructorId, constructor_name), by = 'constructorId') %>%
+  inner_join(races %>% select(raceId, year, gp_name), by = 'raceId') %>%
+  select(code, surname, constructor_name, year, gp_name, start_position, finish_position, positions_gained, statusId)
+  
+positions_clean %>% head(5)
+```
+In order to see if it is easier to pass, we can look into how much the average # of positions gained per race has changed over time (specifically for those who finished the race):
+
+```{r}
+positions_clean %>%
+  filter(statusId == 1) %>%
+  group_by(year) %>%
+  summarize(avg_gain = mean(positions_gained)) %>%
+  mutate(post_rules_change = ifelse(year == 2022, TRUE, FALSE)) %>%
+  ggplot(aes(x = year, y = avg_gain, fill = post_rules_change)) + 
+  geom_col() +
+  ylab("Average Positions Gained") +
+  xlab("Season") + 
+  ggtitle("Avg Positions Gained For Drivers Who Finished, 2016-2022") + 
+  scale_fill_manual(values = c("gray", "orange")) +
+  theme_minimal()
+```
+Overall, we see a jump from 2021 (before the rules change) to 2022 (after), but it is very small and doesn't seem to be part of a larger trend.
+
+What if we just look at cars that started out of position? For this analysis, we will define this as a car that **started at least 2 places behind the average starting position of their team that year**. 
+
+In order to look at details by team, we'll need to do some additional modification to our data. From 2016 - 2022, there are quite a few different team names recorded in the data:
+
+```{r}
+positions_clean %>%
+  select(constructor_name) %>%
+  unique()
+```
+
+
+Although these teams all have separate names and designations, some of them are actually the *same* team, just in different years. For example, the current "Alpha Tauri" team used to be called "Toro Rosso". In order to keep the teams joined together through name changes, we can recategorize the team names as just their current name and also remove the teams that no longer existed in the 2022 season. This helps make our graphs easier to follow so we can better trace the changes over time.
+
+
+```{r}
+positions_clean <- positions_clean %>%
+  filter(constructor_name != "Manor Marussia") %>%
+  mutate(constructor_name = 
+           case_when(
+             constructor_name %in% c("AlphaTauri", "Toro Rosso") ~ "Alpha Tauri",
+             constructor_name %in% c("Alfa Romeo", "Sauber") ~ "Alfa Romeo",
+             constructor_name %in% c("Alpine F1 Team", "Renault") ~ "Alpine",
+             constructor_name %in% c("Aston Martin", "Racing Point", "Force India") ~ "Aston Martin",
+             TRUE ~ constructor_name #everyone else has remained the same name
+             
+         )) 
+```
+
+We can then calculate average start position for each team and use that to calculate who is starting out of position:
+
+```{r}
+avg_start <- positions_clean %>%
+  group_by(year, constructor_name) %>%
+  summarize(avg_start = mean(start_position))
+
+out_of_position <- positions_clean %>%
+  inner_join(avg_start, by = c('year', 'constructor_name')) %>%
+  mutate(out_of_position = ifelse((start_position - avg_start >= 2), TRUE, FALSE))
+
+out_of_position %>%
+  group_by(year, out_of_position) %>%
+  summarise(avg_gain = mean(positions_gained)) %>%
+  mutate(post_rules_change = ifelse(year == 2022, TRUE, FALSE)) %>%
+  ggplot(aes(x = year, y = avg_gain, fill = out_of_position, color = post_rules_change)) + 
+  geom_col(position = "dodge") +
+  geom_hline(yintercept = 0) + 
+  ylab("Average Positions Gained") +
+  xlab("Season") + 
+  ggtitle("Avg Positions Gained Based on Out Of Position Start, 2016-2022") + 
+  scale_fill_manual(values = c("gray", "lightblue")) +
+  scale_color_manual(values = c("white", "orange")) +
+  theme_minimal()
+```
+We see now that drivers who started in position on average *lost* positions (but typically fewer) while drivers who started out of position on average *gained* positions (typically more). This makes sense logically. When a fast car starts the race behind where they should, they can more easily pass. If a car starts at its average position or even higher, then it is surrounded by other cars that are at least as good, and so it's much easier to be passed and much harder to pass.
+
+Looking at the trend overall, there does not seem to be a clear change with the 2022 rule change. In 2022, the average number of positions gained for cars starting out of position was higher than 2021, but is more so part of a continuing upward trend than an outlier, particularly as we note that both 2017 and 2018 have higher average positions gained.
+
+For cars starting in position, we see a similar trend of changing times. However, we do note that 2022 is the largest number of positions lost on average across all years in our time frame, so it is possible that starting in position (or ahead of expectations) left drivers more vulnerable than in past years. In other words, just because they started at the front does not mean that a faster car behind could not pass.
+
+
+### **How have lap times changed?**
+
+### **How has reliability changed?**
+
+### **Which drivers adapted best to the regulations?**
+
+### **How did the regulation change shake up the championship?**
 
 For this question, we'll separately look at the Constructors Standings and Drivers Standings. 
 
@@ -340,21 +438,10 @@ constructors_ranked <- constructor_results %>%
   summarize(final_points = max(points))
 ```
 
-
-```{r}
-constructors_ranked %>%
-  ggplot(aes(x = year, y = final_points, color = constructor_name)) + 
-  geom_line() + 
-  theme_minimal() + 
-  xlab("Season") +
-  ylab("Constructors' Championship Points") +
-  ggtitle("Points Earned In The Constructors' Championship, 2016-2022", subtitle = "Using Historic Team Names")
-  
-```
+Using the same historic team name update as we have done previously, we will use reconfigured team names (which use the most recent name to reference all iterations of the team) to make it easier to compare each team's performance over time. We also include a vertical line to show the point where the transition occurred. The line and to the left are before the transition. To the right is after.
 
 Although these teams all have separate names and designations, some of them are actually the *same* team, just in different years. For example, the current "Alpha Tauri" team used to be called "Toro Rosso". In order to keep the teams joined together through name changes, we can recategorize the team names as just their current name and also remove the teams that no longer existed in the 2022 season. This helps make our graph easier to follow so we can better trace the changes over time.
 
-In this iteration, we'll also add a vertical line to indicate the transition year. 
 
 ```{r}
 constructors_ranked %>%
