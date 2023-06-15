@@ -447,7 +447,7 @@ races_list <- sample(tracks_2022$gp_name,5)
 
 selected_laps %>%
   filter(gp_name %in% races_list, laptime_seconds < 150) %>%
-  ggplot(aes(x = laptime_seconds, fill = post_rules_change)) + geom_density() + 
+  ggplot(aes(x = laptime_seconds, fill = post_rules_change)) + geom_density(alpha = 0.5) + 
   facet_wrap(~gp_name) +
   scale_fill_manual(values = c("white", "orange"))
 ```
