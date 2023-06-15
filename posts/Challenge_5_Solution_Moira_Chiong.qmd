@@ -68,7 +68,7 @@ Read in one (or more) of the following datasets, using the correct R package and
 ```
 ```{r}
 library(readr)
-AB_NYC_2019 <-read_csv("posts/_data/AB_NYC_2019.csv")
+AB_NYC_2019 <-read_csv("_data/AB_NYC_2019.csv")
 View(AB_NYC_2019)
 ```
 
