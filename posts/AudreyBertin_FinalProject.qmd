@@ -201,7 +201,7 @@ This dataset also has a lot of missing data. Looking just at data from after 201
 
 ```{r}
 qualifying %>%
-  filter(raceId >= 968) %>%
+  filter(raceId >= 948) %>%
   select(contains("_time_s")) %>%
   summarize_all(~sum(is.na(.x))/n())
 ```
@@ -219,7 +219,7 @@ Lap times typically get faster (smaller) from Q1 to Q3 as the intensity ramps up
 
 ```{r}
 qualifying %>%
-  filter(raceId >= 968) %>%
+  filter(raceId >= 948) %>%
   select(contains("time_s")) %>%
   rename(q1 = q1_time_s, q2 = q2_time_s, q3 = q3_time_s) %>%
   pivot_longer(everything(), names_to = "session", values_to = "time_s") %>%
@@ -234,7 +234,7 @@ We have information on lap times for each lap of the races that we can use to tr
 ```{r, message=FALSE}
 lap_times %>%
   inner_join(races, by = 'raceId') %>%
-  filter(laptime_seconds < 300, raceId >= 968, gp_name %in% c("Abu Dhabi Grand Prix", "Belgian Grand Prix", "Hungarian Grand Prix", "Monaco Grand Prix")) %>%
+  filter(laptime_seconds < 300, raceId >= 948, gp_name %in% c("Abu Dhabi Grand Prix", "Belgian Grand Prix", "Hungarian Grand Prix", "Monaco Grand Prix")) %>%
   ggplot(aes(x=laptime_seconds, fill = gp_name)) + geom_histogram(alpha = 0.3) + xlab("Lap Time in Seconds") + ylab("Count") + ggtitle("Distribution of Lap Times, 2016-present for several GPs") + theme_minimal() + scale_fill_brewer(palette = "Set1")
 ```
 
@@ -243,7 +243,7 @@ We can also use this data to view trends over time:
 ```{r}
 lap_times %>%
   inner_join(races, by = 'raceId') %>%
-  filter(laptime_seconds < 300, raceId >= 968, gp_name %in% c("Abu Dhabi Grand Prix", "Belgian Grand Prix", "Hungarian Grand Prix", "Monaco Grand Prix")) %>%
+  filter(laptime_seconds < 300, raceId >= 948, gp_name %in% c("Abu Dhabi Grand Prix", "Belgian Grand Prix", "Hungarian Grand Prix", "Monaco Grand Prix")) %>%
   group_by(raceId, gp_name) %>%
   summarize(avg_lap = mean(laptime_seconds)) %>%
   ggplot(aes(x= raceId, y=avg_lap, color=gp_name)) + geom_line() + xlab("Race ID") + ylab("Avg Lap Time in Seconds") + ggtitle("Avg Lap Times From 2016-present for several GPs") + theme_minimal()
@@ -277,7 +277,7 @@ These can tell us more information about what happened to a driver in a particul
 ```{r message = FALSE}
 top_statuses <- results %>%
   inner_join(status,by="statusId") %>%
-  filter(raceId >= 968) %>%
+  filter(raceId >= 948) %>%
   group_by(statusId, status) %>%
   summarize(n = n()) %>%
   arrange(desc(n)) 
@@ -294,7 +294,7 @@ In order to look at details by team, we will need to take another consideration 
 ```{r}
 constructor_standings %>%
   inner_join(constructors, by = 'constructorId') %>%
-  filter(raceId >= 968) %>%
+  filter(raceId >= 948) %>%
   select(constructor_name) %>%
   unique()
 ```
@@ -353,7 +353,7 @@ For this data, we need to look at the `results` dataset and capture start positi
 
 ```{r}
 positions_gained <- results %>%
-  filter(raceId >= 968) %>%
+  filter(raceId >= 948) %>%
   select(raceId, driverId, constructorId, statusId, start_position, finish_position) %>%
   mutate(positions_gained = start_position - finish_position)
 ```
@@ -422,6 +422,56 @@ For cars starting in position, we see a similar trend of changing times. However
 
 
 ### **How have lap times changed?**
+
+Next, we'll look at lap times, both in qualifying and in races, to see if there were any noticeable changes. To look at how lap times changed before and after the rules change, we need to consider the shifting calendar. The races that happen each year are not always the same. For example, 2021 had a Grand Prix in Russia, but this race was cancelled in 2022 due to the war in Ukraine and a ban on Russian participation in motorsport racing.
+
+In order to look at changes over time, we will just look at the races that happened in 2022 and look at how those specific tracks changed, ignoring races in the previous years on tracks that were not used in 2022.
+
+Let's start with race lap times. Since there are so many tracks, we'll just select a random set of 5 to look at, and we'll also remove outlier laps  over 150 seconds.
+
+```{r}
+tracks_2022 <- races %>%
+  filter(year == 2022) %>%
+  select(gp_name)
+
+selected_laps <- lap_times %>%
+  inner_join(drivers %>% select(driverId, code, surname), by = 'driverId') %>%
+  inner_join(races %>% select(raceId, year, gp_name), by = 'raceId') %>%
+  filter(raceId >= 948, gp_name %in% c(tracks_2022$gp_name)) %>%
+  mutate(post_rules_change = ifelse(year == 2022, TRUE, FALSE))
+```
+
+```{r}
+set.seed(4)
+races_list <- sample(tracks_2022$gp_name,5)
+
+selected_laps %>%
+  filter(gp_name %in% races_list, laptime_seconds < 150) %>%
+  ggplot(aes(x = laptime_seconds, fill = post_rules_change)) + geom_density() + 
+  facet_wrap(~gp_name) +
+  scale_fill_manual(values = c("white", "orange"))
+```
+There is again no clear pattern here.
+
+For the Australian GP, lap times appear to be significantly slower after the rules change than prior. The French GP seems to be slightly faster, as does the Austrian GP. The US Grand Prix times seem pretty much the same. So it is possible that the regulations may have made lap times change differently on different tracks.  
+
+We can conduct a quick T-test to see if, controlling for track, we see a difference in track times before and after the rules change:
+
+```{r}
+model <- lm(laptime_seconds ~ post_rules_change + gp_name, data = selected_laps)
+summary(model)
+```
+
+Here, controlling for the race name, we see the following information for the rules change variable:
+
+> post_rules_changeTRUE  ||  Estimate: 1.2066  ||  P-value: 0.0437 *  
+
+The p-value of < 0.05 indicates the presence of a potential relationship between lap times and the rules change. Since the estimate is positive, this means that statistically, the lap times seem to be *slightly longer* after the rules change than before, controlling for the track.
+
+Next, we can look at qualifying times to see if we see the same pattern.
+
+
+# QUALIFYING TIMES TO-DO
 
 ### **How has reliability changed?**
 
