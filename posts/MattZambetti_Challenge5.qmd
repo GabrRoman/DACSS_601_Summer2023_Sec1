@@ -1,0 +1,112 @@
+---
+title: "Challenge 5 Submission"
+author: "Matt Zambetti"
+description: "Introduction to Visualization"
+date: "6/14/2023"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-tools: true
+categories:
+  - air_bnb
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(ggplot2)
+library(naniar)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+[R Graph Gallery](https://r-graph-gallery.com/) is a good starting point for thinking about what information is conveyed in standard graph types, and includes example R code.
+
+(be sure to only include the category tags for the data you use!)
+
+## Read in data
+
+The dataset I chose to read in was the AB_NYC_2019 one.
+
+-   AB_NYC_2019.csv ⭐⭐⭐
+
+As we can see it provides some various information such as the neighborhood it is in, the price per night, and the type of room.
+
+People looking at this data will also be able to see information about the lister, like their name and the number of listings that host has.
+
+
+```{r}
+ab_nyc_2019 <- read_csv("_data/AB_NYC_2019.csv")
+
+ab_nyc_2019
+```
+
+### Briefly describe the data
+
+## Tidy Data (as needed)
+
+After reading over the data, I did not see anything that needed to be tidied. It looks that the variable types and entries were good.
+
+One set of calculations I will look to do is minimum stay cost. This involves taking the price per night (`price`) and multiplying it by the minimum number of nights (`minimum nights`). This is a good metric to see what the base cost of these places are.
+
+```{r}
+
+ab_nyc_2019 <- ab_nyc_2019 %>%
+  mutate(`minimum_cost`= `price`*`minimum_nights`)
+
+ab_nyc_2019
+
+```
+
+## Univariate Visualizations
+
+Here we're doing a simple visualization just to see what the distribution of minimum stay cost is. As expected it seems that most are well under 1000, but there are still plenty of options over 2000. 
+
+I chose the histogram, as it is a good representation of distributions and easy to understand.
+
+
+```{r}
+ggplot(ab_nyc_2019, aes(x=`minimum_cost`)) +
+  geom_histogram(bins=60) +
+  scale_x_continuous(limits = c(0, 7000)) +
+  ggtitle("Minimum Cost") +
+  labs(y = "Number of Apartments", x = "Minimum Cost Per Listing")
+```
+
+## Bivariate Visualization(s)
+
+Next, to compare two variables we will look at another histogram that compares the average cost per night with which neighborhood group the place is listed in.
+
+This allows use to observer a few things. One, we can see a majority of all listings are in Brooklyn and Manhattan. Also, we can see that most of the listings are right around 125-150 per night. Another observation is that Queens apartments seem to be on the cheaper side with Staten Island, whereas Brooklyn and Manhattan ae on the pricer side. Continuing with this we can see that even though most of the listings for Manhattan are around that $150 mark, there are plenty that creep into that more expensive range.
+
+I chose a geom_bar for similar reasons to the first univariate graph, it is easy to read and allows easy coloring based on a group which allows for easy analysis.
+
+
+```{r}
+
+ggplot(ab_nyc_2019, aes(x=`price`, fill=`neighbourhood_group`)) +
+  geom_bar(width=25) +
+  scale_x_continuous(limits = c(0, 1000)) +
+  ggtitle("Price per Night Divided by Each Neighborhood Group") +
+  labs(y = "Number of Apartments", x = "Cost per Night", fill = "Neighborhood Group")
+```
+
+The second plot I chose was Minimum Nights versus Cost per Night
+
+As we cab see below, there are no correlations (or at least none that I can pick out). The only generalization I can make is that it seems most of the data has mimimum nights less than 100 and they each cost less than $2500 per night.
+
+I chose a point plot because I wanted to see if there was correlation between the two variables. I through in neighborhood group to allow for more advanced observations to be made.
+
+```{r}
+ggplot(ab_nyc_2019, aes(x=`minimum_nights`, y=`price`, color=`neighbourhood_group`)) +
+  geom_point() +
+  scale_x_continuous(limits = c(0, 500)) +
+  ggtitle("Price per Night Divided by Each Neighborhood Group") +
+  labs(y = "Cost Per Night", x = "Mimimum Nights", color = "Neighborhood Group")
+```
