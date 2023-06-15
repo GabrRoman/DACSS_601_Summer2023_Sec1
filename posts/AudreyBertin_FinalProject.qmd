@@ -279,6 +279,40 @@ top_statuses %>%
   ggplot(aes(x=reorder(status,n), y=n)) + geom_col() +
   ggtitle("Most Common Race Statuses by Count Since 2016") + theme_minimal() + xlab("Status") + ylab("Count") + coord_flip()
 ```
+#### Team Names
+
+In order to look at details by team, we will need to take another consideration into account: team names. From 2016 - 2022, there are quite a few different team names recorded in the data:
+
+```{r}
+constructor_standings %>%
+  inner_join(constructors, by = 'constructorId') %>%
+  filter(raceId >= 968) %>%
+  select(constructor_name) %>%
+  unique()
+```
+
+
+Although these teams all have separate names and designations, some of them are actually the *same* team, just in different years. For example, the current "Alpha Tauri" team used to be called "Toro Rosso". In order to keep the teams joined together through name changes, we can recategorize the team names as just their current name. 
+
+Additionally, we are interested in comparing things before and after the rules change in 2022. This is impossible for teams that no longer existed in any form in 2022. The only team fitting in this category is "Manor Marussia". We can simply remove this one from our data 
+
+
+```{r}
+constructors <- constructors %>%
+  filter(constructor_name != "Manor Marussia") %>%
+  mutate(constructor_name = 
+           case_when(
+             constructor_name %in% c("AlphaTauri", "Toro Rosso") ~ "Alpha Tauri",
+             constructor_name %in% c("Alfa Romeo", "Sauber") ~ "Alfa Romeo",
+             constructor_name %in% c("Alpine F1 Team", "Renault") ~ "Alpine",
+             constructor_name %in% c("Aston Martin", "Racing Point", "Force India") ~ "Aston Martin",
+             constructor_name == "Haas F1 Team" ~ "Haas",
+             TRUE ~ constructor_name #everyone else has remained the same name
+             
+         )) 
+```
+
+
 
 ## Research Questions
 
@@ -347,33 +381,7 @@ Overall, we see a jump from 2021 (before the rules change) to 2022 (after), but 
 
 What if we just look at cars that started out of position? For this analysis, we will define this as a car that **started at least 2 places behind the average starting position of their team that year**. 
 
-In order to look at details by team, we'll need to do some additional modification to our data. From 2016 - 2022, there are quite a few different team names recorded in the data:
-
-```{r}
-positions_clean %>%
-  select(constructor_name) %>%
-  unique()
-```
-
-
-Although these teams all have separate names and designations, some of them are actually the *same* team, just in different years. For example, the current "Alpha Tauri" team used to be called "Toro Rosso". In order to keep the teams joined together through name changes, we can recategorize the team names as just their current name and also remove the teams that no longer existed in the 2022 season. This helps make our graphs easier to follow so we can better trace the changes over time.
-
-
-```{r}
-positions_clean <- positions_clean %>%
-  filter(constructor_name != "Manor Marussia") %>%
-  mutate(constructor_name = 
-           case_when(
-             constructor_name %in% c("AlphaTauri", "Toro Rosso") ~ "Alpha Tauri",
-             constructor_name %in% c("Alfa Romeo", "Sauber") ~ "Alfa Romeo",
-             constructor_name %in% c("Alpine F1 Team", "Renault") ~ "Alpine",
-             constructor_name %in% c("Aston Martin", "Racing Point", "Force India") ~ "Aston Martin",
-             TRUE ~ constructor_name #everyone else has remained the same name
-             
-         )) 
-```
-
-We can then calculate average start position for each team and use that to calculate who is starting out of position:
+We can calculate average start position for each team each year and use that to identify who is starting out of position:
 
 ```{r}
 avg_start <- positions_clean %>%
@@ -445,17 +453,7 @@ Although these teams all have separate names and designations, some of them are 
 
 ```{r}
 constructors_ranked %>%
-  filter(constructor_name != "Manor Marussia") %>%
-  mutate(constructor_recat = 
-           case_when(
-             constructor_name %in% c("AlphaTauri", "Toro Rosso") ~ "Alpha Tauri",
-             constructor_name %in% c("Alfa Romeo", "Sauber") ~ "Alfa Romeo",
-             constructor_name %in% c("Alpine F1 Team", "Renault") ~ "Alpine",
-             constructor_name %in% c("Aston Martin", "Racing Point", "Force India") ~ "Aston Martin",
-             TRUE ~ constructor_name
-             
-         )) %>%
-  ggplot(aes(x = year, y = final_points, color = constructor_recat)) + 
+  ggplot(aes(x = year, y = final_points, color = constructor_name)) + 
   geom_line() + 
   geom_vline(xintercept = 2021) + 
   theme_minimal() +
