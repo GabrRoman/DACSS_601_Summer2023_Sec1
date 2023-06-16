@@ -233,9 +233,10 @@ There are a few different aspects of this this comparison that are of interest:
 
 3. How has car reliability changed? Are mechanical failures in races more common or less common than before? Are certain types of failures popping up that we didn't see much of before (or the opposite)?
 
-4. Which drivers did the best job adapting to the regulations? We could look into how lap times changed overall on average, and then compare how close each driver's lap time changes were to the mean. 
-
 5. How did the regulations shake up the order in the Constructors championships? Did any teams go from dominant to mediocre? Did anyone suddenly shoot up?
+
+4. Which drivers did the best job adapting to the regulations? 
+
 
 We will look at these questions one by one.
 
@@ -324,7 +325,7 @@ Looking at the trend overall, there does not seem to be a clear change with the 
 
 For cars starting in position, we see a similar trend of changing times. However, we do note that 2022 is the largest number of positions lost on average across all years in our time frame, so it is possible that starting in position (or ahead of expectations) left drivers more vulnerable than in past years. In other words, just because they started at the front does not mean that a faster car behind could not pass.
 
-> == COMMENTARY == : 
+> == COMMENTARY / LIMITATIONS == : 
 > I think that the second graph definitely helps provide context that the first one is missing (by adding in whether a driver started out of position). It might be slightly confusing though that in a sense, a driver could also be "out of position" by starting AHEAD of where they would be expected, so at the moment we are more so comparing starting behind expectation to starting at or above expectation. Not sure if this makes sense, or if it would make more sense to categorize as below expecation / at expectation / above expectation.
 
 
@@ -411,7 +412,7 @@ laptime_changes %>%
 ```
 Here we can see that more tracks had *slower* lap times than had *faster*. We can also see that in the "Faster" direction, the Abu Dhabi GP is an outlier, and most tracks only got *slightly* faster if they did at all. In the "Slower" drection, there were 3 tracks (Japan, Singapore, Monaco) that were > 5 seconds slower. 
 
-> == COMMENTARY == : 
+> == COMMENTARY / LIMITATIONS == : 
 > For our first graph with the 5 random density plots, it is hard to get a sense of the actual pattern so I'm not sure really how helpful this visualization is. I tried doing a version with all the tracks but it was just far too chaotic. Not sure if it is worth keeping some version of this, but potentially having more reasoning behind which tracks were selected, versus just a random draw? But not sure how to define the selection criteria.
 > The statistical model definitely helps make this trend more clear though!
 > I really like the graph with the red and green lap time changes. One thing that could maybe be added to make this more interesting though would be to classify each track further by track type in some way. For example, street track vs purpose built track. These tend to have very different characteristics that could provide further insight
@@ -420,7 +421,127 @@ Here we can see that more tracks had *slower* lap times than had *faster*. We ca
 
 ### **How has reliability changed?**
 
-### **Which drivers adapted best to the regulations?**
+Next, we can look at reliability. Within our results data, we have some basic status information built in that shows us who finished, retired, and was disqualified.
+
+By calculating the proportion of each of these per year, we can get a sense of overall trends in terms of how many cars are falling into each condition.
+
+```{r}
+percent_status <- results %>%
+  inner_join(races, by='raceId') %>%
+  mutate(finished = as_factor(ifelse(statusId == 1, 1, 0))) %>%
+  select(raceId, year, disqualified, retired, finished) %>%
+  pivot_longer(disqualified:finished, names_to = "status", values_to = "status_met") %>%
+  filter(status_met == 1, raceId >= 948) %>%
+  group_by(year, status) %>%
+  summarize(count = n()) %>%
+  mutate(status= factor(status, levels = c("disqualified", "retired", "finished"))) 
+
+
+percent_status
+```
+
+```{r}
+percent_status%>%
+  ggplot(aes(x=year, y=count, fill=status)) + geom_area(position = "fill", color = "black") + scale_fill_brewer(palette = "Set1") +
+  xlab("Season") + ylab("Proportion of Cars") + ggtitle("Proportion of Cars Finished vs Retired vs DSQ, 2016-2022") +
+  geom_vline(xintercept = 2021) +
+  theme_minimal()
+```
+
+
+We can see that disqualifications are very rare in modern Formula 1. We also see that on average, around 75% of cars have finished each race since 2016. There seems to be a slow overall trend of more cars finishing per year. However, we see no change from 2021 to 2022 when the rule change was implemented. 
+
+However, this graph doesn't give us information about *why* cars are retiring. Just because the number of retirements has not changed dramatically does not necessarily mean that the cars have not become more reliable. This is because there are many different potential reasons for retirement. They *could* retire due to a car reliability issue (e.g. an engine failure) but they could *also* retire due to an incident that involved driver area (e.g. a crash with another driver, spinning off the road, etc.). 
+
+The `races` data has another variable that can help with this: status ID:
+
+```{r}
+results %>%
+  select(resultId, raceId, driverId, constructorId, start_position, finish_position, statusId)
+```
+
+The `status` table contains the encodings for this table. For example, the first 5 status IDs in the table above are all 1, which indicates "Finished", while the two people with status 5 had "Engine" issues.
+
+We can quickly see how common each status is in our time period, specifically for drivers who retired:
+
+```{r message = FALSE}
+results_status <- results %>%
+  filter(raceId >= 948) %>%
+  inner_join(races, by = "raceId") %>%
+  inner_join(status,by="statusId") %>%
+  select(raceId, year, driverId, disqualified, retired, status)
+  
+
+retirements <- results_status %>%
+  filter(retired ==1)
+
+table(retirements$status)
+```
+
+There are a ton of different statuses here. To help with our analysis, we can define which ones are obviously associated with a mechanical car failure. There are a few that are ambiguous (e.g. rear wing/front wing often have to do with damage versus failure), so we'll ignore those:
+
+```{r}
+mechanical_failures <- c("Battery", "Brakes", "Cooling system", "Differential", "Driveshaft", "Electrical", "Electronics", "Engine", "Exhaust", "Fuel leak", "Fuel pressure", "Fuel pump", "Gearbox", "Hydraulics", "Mechanical", "Oil leak", "Oil pressure", "Overheating", "Power loss", "Power Unit", "Radiator", "Spark plugs", "Steering", "Suspension", "Transmission", "Turbo", "Undertray", "Water leak", "Water pressure", "Water pump", "Wheel", "Wheel nut")
+```
+
+```{r}
+retirements <- retirements %>%
+  mutate(mechanical_failure = ifelse(status %in% mechanical_failures, TRUE, FALSE))
+```
+
+We can now create a similar graph to last time, but just looking at mechanical vs non-mechanical retirements:
+
+```{r}
+retirements %>%
+  group_by(year, mechanical_failure) %>%
+  summarize(count = n()) %>%
+  ggplot(aes(x=year, y=count, fill=mechanical_failure)) + geom_area(position = "fill", color = "black") + scale_fill_brewer(palette = "Set1") +
+  xlab("Season") + ylab("Proportion of Cars") + ggtitle("Proportion of Cars Retiring For Mechanical vs Other Failure, 2016-2022") +
+  geom_vline(xintercept = 2021) +
+  theme_minimal()
+```
+
+We can see here that there was a strong change in direction in terms of increased mechanical failures after the rule change. In 2021, less than half of retirements were related to mechanical issues, but in 2022, it was over 50%. It seems like cars were previously getting more and more reliable in the years prior to the rule change, but this changed with the institution of the change. 
+
+Given this jump from 2021 to 2022, it would be interesing to look into whether this was universal across all types of mechanical failures or if the new regulations caused some types of failures to increase while others decreased.
+
+```{r}
+mechanical_failures <- retirements %>%
+  filter(year %in% c(2021, 2022), mechanical_failure == TRUE) %>%
+  group_by(year, status) %>%
+  summarize(count = n()) 
+
+mechanical_failures
+```
+
+```{r}
+mechanical_failures %>%
+  pivot_wider(names_from = year, values_from = count) %>%
+  mutate_all(~replace(., is.na(.), 0)) %>%
+  mutate(change = `2022` - `2021`) %>%
+  ggplot() +
+  geom_segment( aes(x=reorder(status, change), xend=status, y=`2021`, yend=`2022`), color="black")  +
+  geom_point( aes(x=status, y=`2021`), color="skyblue", size=3 ) +
+  geom_point( aes(x=status, y=`2022`), color="orange1", size=3 ) +
+  coord_flip() +
+  theme_minimal() +
+  xlab(NULL) +
+  ylab("# of Retirements") +
+  ggtitle("# of Retirements For Different Mechanical Related Issues", subtitle = "2021 (Blue) vs 2022, post rules-change (Orange)") +
+  theme_minimal()
+```
+
+This plot gives us a lot more information than we had previously. We can now see that patterns vary significantly across different types of mechanical issues. Engines, for example, had a HUGE increase in number of related retirements. 2021 had only 1 engine related retirement while 2022 had 6! This makes sense as a big part of 2022 was a change in engine design, and often a new year of engine design means that there are still some kinks to be worked out.
+
+We also see a big increase in power unit related failures, as well as water related issues. 
+
+There are a few areas where we saw fewer incidents in 2022 than 2021. These are: wheel nuts, suspension, electrical, and brake issues.
+
+> == COMMENTARY / LIMITATIONS == : 
+> The lollipop chart here is super useful for helping explain what we saw in the earlier analysis and I think that would be interesting to readers. It might be useful to see if there is a way to add a legend for the colors though. Because of the way I had to draw the plot, this legend did not show up, which cna make it harder to read.
+> Another thing that is potentially worth looking into here is which teams were the ones facing the mechanical issues. Were these issues universal (all teams having them), or were they just focused on one specific team (e.g. there was a lot of commentary throughout the season on Ferrari's reliability issues). We are missing that information in this analysis so far, and it could just mean that rather than the regulations instituting overall reliability challenges, what really happened is that one team was just terrible at designing a reliable car compared with the others.
+
+
 
 ### **How did the regulation change shake up the championship?**
 
@@ -514,12 +635,14 @@ wins_podiums %>%
 
 Looking at podiums, we see a similar trend.
 
-> == COMMENTARY == : 
+> == COMMENTARY / LIMITATIONS == : 
 > It is kind of difficult to tell all of these team colors apart. Would it make sense to use an official color palette that is representative of the actual team names? Might be worth adding for a final version.
 > Not sure if it would be interesting or not to look at average finish position as well versus just points (from our first graph). If we look at points, we are missing all the information happening between 11th-20th place since no points are awarded. Technically a team could be finishing middle of the road in 11th all season and they'd look just as bad on the points time table as a team finishing 20th every time, so we definitely lose some info if we don't look at finish position. 
 
-## References
+### **Which drivers adapted best to the regulations?**
 
+
+## References
 
 #### Datasets
 
