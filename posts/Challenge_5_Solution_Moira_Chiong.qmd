@@ -1,0 +1,145 @@
+---
+title: "Challenge 5 Solutions"
+author: "Moira Chiong"
+description: "Introduction to Visualization"
+date: "6/15/2023"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_5
+  - railroads
+  - cereal
+  - air_bnb
+  - pathogen_cost
+  - australian_marriage
+  - public_schools
+  - usa_households
+---
+
+```{r}
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(ggplot2)
+
+
+```
+
+## Challenge Overview
+
+Today's challenge is to:
+
+1)  read in a data set, and describe the data set using both words and any supporting information (e.g., tables, etc)
+2)  tidy data (as needed, including sanity checks)
+3)  mutate variables as needed (including sanity checks)
+4)  create at least two univariate visualizations
+   - try to make them "publication" ready
+   - Explain why you choose the specific graph type
+5)  Create at least one bivariate visualization
+   - try to make them "publication" ready
+   - Explain why you choose the specific graph type
+
+[R Graph Gallery](https://r-graph-gallery.com/) is a good starting point for thinking about what information is conveyed in standard graph types, and includes example R code.
+
+(be sure to only include the category tags for the data you use!)
+
+## Read in data
+
+Read in one (or more) of the following datasets, using the correct R package and command.
+
+-   cereal.csv ⭐
+-   Total_cost_for_top_15_pathogens_2018.xlsx ⭐
+-   Australian Marriage ⭐⭐ 
+-   AB_NYC_2019.csv ⭐⭐⭐
+-   StateCounty2012.xls ⭐⭐⭐
+-   Public School Characteristics ⭐⭐⭐⭐ 
+-   USA Households ⭐⭐⭐⭐⭐
+
+
+```
+```{r}
+library(readr)
+AB_NYC_2019 <-read_csv("_data/AB_NYC_2019.csv")
+View(AB_NYC_2019)
+```
+
+
+```
+```{r}
+install.packages("rmarkdown")
+library(rmarkdown)
+```
+
+### Briefly describe the data
+
+The data pertains to key indicators for AirBnB homes. There are short descriptions including type of home, location, and price per evening. There is also data about the number of customer reviews the unit has had, as well data about availability (365 days a year or less) and host name. The mean minimum cost is around $1284 while the average stay length required is 7 or a week. The homes are most frequently located in Manhattan, followed by Brooklyn , Queens, Bronx and Staten Island. The most common type of home being rented is an entire home/apartment, followed by private rooms and shared rooms.
+
+## Tidy Data (as needed)
+
+Is your data already tidy, or is there work to be done? Be sure to anticipate your end result to provide a sanity check, and document your work here.
+
+#Answer
+The data is already tidy, but for practical accounting ease, I will calculate the total minimum cost per stay using the mutate variable.
+
+Are there any variables that require mutation to be usable in your analysis stream? For example, do you need to calculate new values in order to graph them? Can string values be represented numerically? Do you need to turn any variables into factors and reorder for ease of graphics and visualization?
+
+See above
+
+Document your work here.
+
+```{r}
+install.packages("dplyr")    # alternative installation of the %>
+library(dplyr)    # alternatively, this also loads %>%
+```
+```{r}
+airbnb_NYC <-AB_NYC_2019%>%
+  mutate(`minimum_cost`= `price`*`minimum_nights`)
+
+airbnb_NYC
+
+#next I'll find the mean minimum cost
+mean(airbnb_NYC$minimum_cost,na.rm=TRUE)
+mean(airbnb_NYC$minimum_nights, na.rm=TRUE)
+table(airbnb_NYC$neighbourhood_group)
+table(airbnb_NYC$room_type)
+
+## Univariate Visualizations
+
+install.packages("tidyverse")
+library(tidyverse)
+library(ggplot2)
+
+ggplot(airbnb_NYC, aes(x=`minimum_cost`)) +
+  geom_histogram(bins=60) +
+  scale_x_continuous(limits = c(0, 7000)) +
+  ggtitle("Minimum Cost") +
+  labs(y = "Number of Apartments", x = "Minimum Cost Per Listing")
+print(vis1)
+
+vis2 <- ggplot(airbnb_NYC, aes(x=`price`, fill=`room_type`)) +
+  geom_bar(width=25) +
+  scale_x_continuous(limits = c(0, 1000)) +
+  ggtitle("Price per Night by Room Type") +
+  labs(y = "Number of Apartments", x = "Cost per Night", fill = "Room Type")
+print(vis2)
+
+
+## Bivariate Visualization(s)
+
+vis3 <- ggplot(airbnb_NYC, aes(x=`minimum_nights`, y=`price`, color=`room_type`)) +
+  geom_point() +
+  scale_x_continuous(limits = c(0, 500)) +
+  ggtitle("Price per Night Divided by Room Type") +
+  labs(y = "Cost Per Night", x = "Mimimum Nights", color = "Room Type")
+print(vis3)
+```
+
