@@ -182,114 +182,9 @@ status <- readr::read_csv("_data/formula1/status.csv")
 ```
 
 
-A few key notes that are important to share about the datasets above include:
-
-### Interpreting Qualifying Times
-
-The qualifying dataset is hard to interpret for early races, but should work well for recent races. This is because it uses the current qualifying format to store data:
-
-```{r}
-qualifying %>% head(3)
-```
-
-
-Q1, Q2, and Q3 are three different segments of the current qualifying format, which was not introduced into 2016. Q1/2/3 did not exist prior to this in Formula 1, where qualifying took a lot of different formats. For a quick look at alternative historical formats, see [here](https://www.formula1.com/en/latest/features/2016/3/deciding-the-grid-a-history-of-f1-qualifying-formats.html).
-
-Due in part to this, and the interest specifically in the most recent rule change, for this analysis, we'll focus just on data from 2016 onward!
-
-This dataset also has a lot of missing data. Looking just at data from after 2016 or later, the fraction of missing values for each of the qualifying time columns is shown below: 
-
-```{r}
-qualifying %>%
-  filter(raceId >= 948) %>%
-  select(contains("_time_s")) %>%
-  summarize_all(~sum(is.na(.x))/n())
-```
-51% of Q3 data is missing, 26% of Q2, and very little for Q1. This is not actually a missing data error, but rather what we would expect based on the qualifying format. Qualifying works as follows:
-
-- In Q1, all drivers participate (unless there is some sort of mechanical issue preventing them from doing so). Drivers are ranked based on their fastest last time. The fastest 15 move on to Q2, while the slowest 5 are eliminated and take positions 20-16 on the starting lineup for the race based on time.
-- In Q2, the top 15 again race for fastest single lap. This time, the fastest 10 move on and the bottom 5 are eliminated, again in race order of lap time, filling in positions 15-11.
-- In Q3, the fastest 10 from Q2 race again for fastest single lap. No one is eliminated, but fastest lap times determine which position each of the top half of drivers will start, filling in positions 10-1.
-
-If a driver does not race in one of the sessions, they won't have a time recorded.
-
-Given this, the missing data values indicate that we actually have essentially all of the data. Very few drivers are missing from Q1. About 25% are missing from Q2, which is exactly what we would expect since the bottom 5 do not participate. Same with Q3, where we are missing half the records. 
-
-Lap times typically get faster (smaller) from Q1 to Q3 as the intensity ramps up. We see this reflected in the data when we look at averages and standard deviations for each session:
-
-```{r}
-qualifying %>%
-  filter(raceId >= 948) %>%
-  select(contains("time_s")) %>%
-  rename(q1 = q1_time_s, q2 = q2_time_s, q3 = q3_time_s) %>%
-  pivot_longer(everything(), names_to = "session", values_to = "time_s") %>%
-  group_by(session) %>%
-  summarize(mean_time = mean(time_s, na.rm=TRUE), sd_time = sd(time_s, na.rm=TRUE))
-```
-
-### Interpreting Lap Times
-
-We have information on lap times for each lap of the races that we can use to track whether cars are faster/slower over time. Looking at lap times across a handful of different Grands Prix from 2016-present, we can see they vary significantly across tracks:
-
-```{r, message=FALSE}
-lap_times %>%
-  inner_join(races, by = 'raceId') %>%
-  filter(laptime_seconds < 300, raceId >= 948, gp_name %in% c("Abu Dhabi Grand Prix", "Belgian Grand Prix", "Hungarian Grand Prix", "Monaco Grand Prix")) %>%
-  ggplot(aes(x=laptime_seconds, fill = gp_name)) + geom_histogram(alpha = 0.3) + xlab("Lap Time in Seconds") + ylab("Count") + ggtitle("Distribution of Lap Times, 2016-present for several GPs") + theme_minimal() + scale_fill_brewer(palette = "Set1")
-```
-
-We can also use this data to view trends over time:
-
-```{r}
-lap_times %>%
-  inner_join(races, by = 'raceId') %>%
-  filter(laptime_seconds < 300, raceId >= 948, gp_name %in% c("Abu Dhabi Grand Prix", "Belgian Grand Prix", "Hungarian Grand Prix", "Monaco Grand Prix")) %>%
-  group_by(raceId, gp_name) %>%
-  summarize(avg_lap = mean(laptime_seconds)) %>%
-  ggplot(aes(x= raceId, y=avg_lap, color=gp_name)) + geom_line() + xlab("Race ID") + ylab("Avg Lap Time in Seconds") + ggtitle("Avg Lap Times From 2016-present for several GPs") + theme_minimal()
-```
-
-Note the crazy spike we see here for the Belgian GP. This spike corresponds to the race in 2021 where there was a *huge* rain issue which slowed all the cars and resulted in such dangerous conditions that they could not complete a full race. See: https://www.formula1.com/en/racing/2021/Belgium.html.
-
-### Interpreting Results Status
-
-In the results data, there is some basic information on driver status that we can use to track how many drivers are completing races over time. We have information on how many drivers were disqualified, retired, or finished successfully, and we can use this to view trends over time (including over the time period we are interested in).
-
-```{r}
-results %>%
-  mutate(finished = as_factor(ifelse(statusId == 1, 1, 0))) %>%
-  select(raceId, disqualified, retired, finished) %>%
-  pivot_longer(disqualified:finished, names_to = "status", values_to = "status_met") %>%
-  filter(status_met == 1) %>%
-  group_by(raceId, status) %>%
-  summarize(count = n()) %>%
-  ggplot(aes(x=raceId, y=count, color=status)) + geom_smooth()
-```
-
-In addition to these basic statuses, we have another column called `statusId` that can be used to find patterns about driver performance and car reliability. This column is linked to the `status` dataset, which stores the encodings for these statuses:
-
-```{r}
-head(status)
-```
-These can tell us more information about what happened to a driver in a particular race. We can see who loses races for a driver related reasons (e.g. "Accident"/"Collision") versus car failure (e.g. "Engine", "Gearbox"). We can see the most common statuses since 2016 below:
-
-
-```{r message = FALSE}
-top_statuses <- results %>%
-  inner_join(status,by="statusId") %>%
-  filter(raceId >= 948) %>%
-  group_by(statusId, status) %>%
-  summarize(n = n()) %>%
-  arrange(desc(n)) 
-
-top_statuses %>%
-  head(15) %>%
-  ggplot(aes(x=reorder(status,n), y=n)) + geom_col() +
-  ggtitle("Most Common Race Statuses by Count Since 2016") + theme_minimal() + xlab("Status") + ylab("Count") + coord_flip()
-```
 ### Dealing With Changing Team Names
 
-In order to look at details by team, we will need to take another consideration into account: team names. From 2016 - 2022, there are quite a few different team names recorded in the data:
+An important note that was not considered in the previous homework is that in order to look at details by team, we will need to take another consideration into account: team names. From 2016 - 2022, there are quite a few different team names recorded in the data:
 
 ```{r}
 constructor_standings %>%
@@ -302,12 +197,12 @@ constructor_standings %>%
 
 Although these teams all have separate names and designations, some of them are actually the *same* team, just in different years. For example, the current "Alpha Tauri" team used to be called "Toro Rosso". In order to keep the teams joined together through name changes, we can recategorize the team names as just their current name. 
 
-Additionally, we are interested in comparing things before and after the rules change in 2022. This is impossible for teams that no longer existed in any form in 2022. The only team fitting in this category is "Manor Marussia". We can simply remove this one from our data 
+Additionally, we are interested in comparing things before and after the rules change in 2022. This is impossible for teams that no longer existed in any form in 2022. The only team fitting in this category is "Manor Marussia". We can simply remove this one from our data. 
 
 
 ```{r}
-constructors <- constructors %>%
-  filter(constructor_name != "Manor Marussia") %>%
+constructors_renamed <- constructors %>%
+  filter(constructor_name %in% c("AlphaTauri", "Toro Rosso", "Alfa Romeo", "Sauber", "Alpine F1 Team", "Renault", "Aston Martin", "Racing Point", "Force India", "Haas F1 Team", "Ferrari", "McLaren", "Mercedes", "Red Bull", "Williams")) %>%
   mutate(constructor_name = 
            case_when(
              constructor_name %in% c("AlphaTauri", "Toro Rosso") ~ "Alpha Tauri",
@@ -363,12 +258,21 @@ We then join this information to the race info, as well as driver and constructo
 ```{r}
 positions_clean <- positions_gained %>%
   inner_join(drivers %>% select(driverId, code, surname), by = 'driverId') %>%
-  inner_join(constructors %>% select(constructorId, constructor_name), by = 'constructorId') %>%
+  inner_join(constructors_renamed %>% select(constructorId, constructor_name), by = 'constructorId') %>%
   inner_join(races %>% select(raceId, year, gp_name), by = 'raceId') %>%
   select(code, surname, constructor_name, year, gp_name, start_position, finish_position, positions_gained, statusId)
   
 positions_clean %>% head(5)
 ```
+
+Taking a quick look at our new positions gained variable, we can get some basic descriptive statistics:
+
+```{r}
+summary(positions_clean$positions_gained)
+```
+
+The max number of positions lost is 22 (not sure how that is possible as there are only 20 spots on the grid?). Max gained is 18, which is very impressive. On average, people lose 0.3 places.
+
 In order to see if it is easier to pass, we can look into how much the average # of positions gained per race has changed over time (specifically for those who finished the race):
 
 ```{r}
@@ -420,14 +324,18 @@ Looking at the trend overall, there does not seem to be a clear change with the 
 
 For cars starting in position, we see a similar trend of changing times. However, we do note that 2022 is the largest number of positions lost on average across all years in our time frame, so it is possible that starting in position (or ahead of expectations) left drivers more vulnerable than in past years. In other words, just because they started at the front does not mean that a faster car behind could not pass.
 
+> == COMMENTARY == : 
+> I think that the second graph definitely helps provide context that the first one is missing (by adding in whether a driver started out of position). It might be slightly confusing though that in a sense, a driver could also be "out of position" by starting AHEAD of where they would be expected, so at the moment we are more so comparing starting behind expectation to starting at or above expectation. Not sure if this makes sense, or if it would make more sense to categorize as below expecation / at expectation / above expectation.
+
+
 
 ### **How have lap times changed?**
 
-Next, we'll look at lap times, both in qualifying and in races, to see if there were any noticeable changes. To look at how lap times changed before and after the rules change, we need to consider the shifting calendar. The races that happen each year are not always the same. For example, 2021 had a Grand Prix in Russia, but this race was cancelled in 2022 due to the war in Ukraine and a ban on Russian participation in motorsport racing.
+Next, we'll look at lap times to see if there were any noticeable changes. To look at how lap times changed before and after the rules change, we need to consider the shifting calendar. The races that happen each year are not always the same. For example, 2021 had a Grand Prix in Russia, but this race was cancelled in 2022 due to the war in Ukraine and a ban on Russian participation in motorsport racing.
 
 In order to look at changes over time, we will just look at the races that happened in 2022 and look at how those specific tracks changed, ignoring races in the previous years on tracks that were not used in 2022.
 
-Let's start with race lap times. Since there are so many tracks, we'll just select a random set of 5 to look at, and we'll also remove outlier laps  over 150 seconds.
+Since there are so many tracks, we'll just select a random set of 5 to look at, and we'll also remove outlier laps over 150 seconds.
 
 ```{r}
 tracks_2022 <- races %>%
@@ -449,9 +357,10 @@ selected_laps %>%
   filter(gp_name %in% races_list, laptime_seconds < 150) %>%
   ggplot(aes(x = laptime_seconds, fill = post_rules_change)) + geom_density(alpha = 0.5) + 
   facet_wrap(~gp_name) +
-  scale_fill_manual(values = c("white", "orange"))
+  scale_fill_manual(values = c("white", "orange")) + theme_minimal() +
+  xlab("Lap Time (s)") + ggtitle("Lap Time Distributions For Select GPs, Pre and Post 2022 Rule Change")
 ```
-There is again no clear pattern here.
+There is no clear pattern here.
 
 For the Australian GP, lap times appear to be significantly slower after the rules change than prior. The French GP seems to be slightly faster, as does the Austrian GP. The US Grand Prix times seem pretty much the same. So it is possible that the regulations may have made lap times change differently on different tracks.  
 
@@ -468,10 +377,46 @@ Here, controlling for the race name, we see the following information for the ru
 
 The p-value of < 0.05 indicates the presence of a potential relationship between lap times and the rules change. Since the estimate is positive, this means that statistically, the lap times seem to be *slightly longer* after the rules change than before, controlling for the track.
 
-Next, we can look at qualifying times to see if we see the same pattern.
+We can also do some further analysis to determine which tracks had the greatest change in lap time by looking at their average lap time before the change and comparing to 2022 times. We display the 5 tracks with the greatest **increase** in lap times, followed by the 5 with the greatest **decrease**, again removing outlier laps over 150 seconds which would indicate some sort of car or weather related issue:
+
+```{r}
+laptime_changes <- selected_laps %>%
+  filter(laptime_seconds < 150) %>%
+  group_by(gp_name, post_rules_change) %>%
+  summarize(avg_lap = mean(laptime_seconds)) %>%
+  mutate(post_rules_change = ifelse(post_rules_change == TRUE, "after_change", "before_change")) %>%
+  pivot_wider(names_from = post_rules_change, values_from = avg_lap) %>%
+  mutate(difference = after_change-before_change, direction = ifelse(difference < 0, "Faster", "Slower"))
 
 
-# QUALIFYING TIMES TO-DO
+laptime_changes %>%
+  filter(direction == "Faster") %>%
+  arrange(difference) %>%
+  head(5)
+
+laptime_changes %>%
+  filter(direction == "Slower") %>%
+  arrange(desc(difference)) %>%
+  head(5)
+```
+
+We can also plot this on ggplot to get a sense overall:
+
+```{r}
+laptime_changes %>%
+  filter(!is.na(difference)) %>%
+  ggplot(aes(x= reorder(gp_name, difference), y = difference, fill = direction)) + geom_col() + coord_flip() + scale_fill_manual(values = c( 'lightgreen', 'tomato')) +
+  xlab("GP Name") + ylab("Avg Lap Time Difference") + ggtitle("Difference in Avg Lap Time, Pre- and Post- 2022 Rules Change") +
+  theme_minimal()
+```
+Here we can see that more tracks had *slower* lap times than had *faster*. We can also see that in the "Faster" direction, the Abu Dhabi GP is an outlier, and most tracks only got *slightly* faster if they did at all. In the "Slower" drection, there were 3 tracks (Japan, Singapore, Monaco) that were > 5 seconds slower. 
+
+> == COMMENTARY == : 
+> For our first graph with the 5 random density plots, it is hard to get a sense of the actual pattern so I'm not sure really how helpful this visualization is. I tried doing a version with all the tracks but it was just far too chaotic. Not sure if it is worth keeping some version of this, but potentially having more reasoning behind which tracks were selected, versus just a random draw? But not sure how to define the selection criteria.
+> The statistical model definitely helps make this trend more clear though!
+> I really like the graph with the red and green lap time changes. One thing that could maybe be added to make this more interesting though would be to classify each track further by track type in some way. For example, street track vs purpose built track. These tend to have very different characteristics that could provide further insight
+> It might also make sense to look at this data by constructor to see which constructors had the biggest jump in lap times
+
 
 ### **How has reliability changed?**
 
@@ -479,16 +424,16 @@ Next, we can look at qualifying times to see if we see the same pattern.
 
 ### **How did the regulation change shake up the championship?**
 
-For this question, we'll separately look at the Constructors Standings and Drivers Standings. 
+For this question, we will look at the Constructors Standings.
 
-Let's start with the Constructors. Do we see a significant change in the lineup of teams before and after the change? To determine this, we can create a timeseries plot showing how team placings changed season by season from 2016-2022.
+Do we see a significant change in the lineup of teams before and after the change? To determine this, we can create a timeseries plot showing how team placings changed season by season from 2016-2022.
 
 We start by joining the constructors and races tables together:
 
 ```{r}
 # Join constructor results table to more information on constructors and races
 constructor_results <- constructor_standings %>% 
-  inner_join(constructors, by = 'constructorId') %>%
+  inner_join(constructors_renamed, by = 'constructorId') %>%
   inner_join(races, by = 'raceId')
 
 head(constructor_results)
@@ -525,6 +470,13 @@ As we can see here, relative rankings in the championship remained pretty steady
 After the regulations change, Mercedes dropped from 1st to 3rd place and Red Bull and Ferrari had massive spikes in points. However, note that they were on the up-swing before the change was put in place (in 2021) so it could be unrelated. McLaren did not seem to take the change well. They were previously on an upward points scoring trend and shot down in 2022. We see the same trend with Alpha Tauri. Meanwhile, Hass and Alfa Romeo, who in previous years had struggled to score any points did see a small jump in points and a positive shift in their overall rankings.
 
 It is hard to tell fully, without a few more years worth of data, but it does appear that the regulation change did switch the team rankings up and some teams (Red Bull/Ferrari) adapted better than others (Alpha Tauri, McLaren).
+
+We can also look at the number of wins and podiums by each team:
+
+```{r}
+
+```
+
 
 
 
