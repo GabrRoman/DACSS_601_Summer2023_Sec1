@@ -471,14 +471,52 @@ After the regulations change, Mercedes dropped from 1st to 3rd place and Red Bul
 
 It is hard to tell fully, without a few more years worth of data, but it does appear that the regulation change did switch the team rankings up and some teams (Red Bull/Ferrari) adapted better than others (Alpha Tauri, McLaren).
 
-We can also look at the number of wins and podiums by each team:
+We can also look at the number of wins and podiums by each team, where here we define podiums as a 1st, 2nd or 3rd place finish (which includes the 1st place finishes from the wins column).
 
-```{r}
+```{r message=FALSE}
+wins_podiums <- constructor_standings %>% 
+  inner_join(constructors_renamed, by = 'constructorId') %>%
+  inner_join(races, by = 'raceId') %>%
+  inner_join(results, by = c('raceId', 'constructorId')) %>%
+  select(constructor_name, year, gp_name, rank) %>%
+  filter(year >= 2016 & year < 2023) %>%
+  group_by(constructor_name, year) %>%
+  summarize(wins = sum(rank == 1), podiums = sum(rank %in% c(1, 2, 3)))
 
+wins_podiums %>%
+  arrange(desc(podiums))
 ```
 
+Looking at a summary of each of these new variables we see that for wins, the most we had recorded was 10 in a season. The average was 2 wins per team.
 
+```{r}
+summary(wins_podiums$wins)
+```
 
+For podiums, the max was 29 across both drivers, with an average of 6 per team.
+
+```{r}
+summary(wins_podiums$podiums)
+```
+
+```{r}
+wins_podiums %>%
+  ggplot(aes(x = year, y = wins, col = constructor_name)) + geom_line() + theme_minimal() + ggtitle("Wins Per Season, 2016-2022") + geom_vline(xintercept = 2021) 
+```
+
+We see that looking at Wins, Mercedes took a big dip and Ferrari took a big jump, while Red Bull remained pretty steady after the rule change.
+
+```{r}
+wins_podiums %>%
+  ggplot(aes(x = year, y = podiums, col = constructor_name)) + geom_line() + theme_minimal() + ggtitle("Podiums Per Season, 2016-2022", subtitle = "Where a Podium Here Only Includes 2nd/3rd") + 
+  geom_vline(xintercept = 2021) 
+```
+
+Looking at podiums, we see a similar trend.
+
+> == COMMENTARY == : 
+> It is kind of difficult to tell all of these team colors apart. Would it make sense to use an official color palette that is representative of the actual team names? Might be worth adding for a final version.
+> Not sure if it would be interesting or not to look at average finish position as well versus just points (from our first graph). If we look at points, we are missing all the information happening between 11th-20th place since no points are awarded. Technically a team could be finishing middle of the road in 11th all season and they'd look just as bad on the points time table as a team finishing 20th every time, so we definitely lose some info if we don't look at finish position. 
 
 ## References
 
@@ -515,9 +553,5 @@ R Core Team (2023). _R: A Language and Environment for Statistical Computing_. R
   Austria. <https://www.R-project.org/>.
 
 
-#### Other
-
-Formula 1. (2021). 2021 Belgian Grand Prix. *Formula 1*.
-<https://www.formula1.com/en/racing/2021/Belgium.html>
 
 
