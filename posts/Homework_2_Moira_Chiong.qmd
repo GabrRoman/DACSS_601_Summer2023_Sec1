@@ -26,7 +26,7 @@ For this homework, your goal is to read in a more complicated dataset. Please us
 -   Read in a dataset. **It's strongly recommended that you choose a dataset you're considering using for the final project.** If you decide to use one of the datasets we have provided, please use a challenging dataset - check with us if you are not sure.
 
     ```{r}
-    getwd()
+    setwd("C:/Users/chion/OneDrive/Desktop/DACSS 601/DACSS_601_Summer2023_Sec1/posts")
     library(readxl)
     pseo_ma_SANDBOX <- read_excel("pseo_ma_SANDBOX.xlsx")
     pseo_ma_SANDBOX
@@ -86,9 +86,6 @@ IQR(y5_num, na.rm=TRUE)
 summary(pseo_ma_SANDBOX_num)
 
 print(typeof(pseo_ma_SANDBOX$y1_p50_earnings))
- 
-sapply(pseo_ma_SANDBOX_num, max,na.rm=TRUE)
-sapply(pseo_ma_SANDBOX_num, min, na.rm=TRUE)
 
 install.packages("dplyr")
 library(dplyr)
@@ -109,9 +106,6 @@ y1a_num  %>% summary(y1_p50_earnings, na.rm=TRUE)
 
 y5a_num <- as.numeric(pseo_filtered$y5_p50_earnings)
 y5a_num %>% summary(y5_p50_earnings, na.rm=TRUE)
-
-
-
 ```
 
 ```         
