@@ -1,8 +1,8 @@
 ---
-title: "Final Project -- Formula 1 Rule Change Analysis"
+title: "HW3 -- Formula 1 Rule Change Analysis"
 author: "Audrey Bertin"
 description: "How did the 2022 F1 Rule Change Affect the Sport?"
-date: "7/10/2023"
+date: "6/30/2023"
 format:
   html:
     df-print: paged
@@ -11,7 +11,7 @@ format:
     code-copy: true
     code-tools: true
 categories:
-  - final_project
+  - hw3
   - formula_1
   - audrey_bertin
 
@@ -27,7 +27,7 @@ library(tidyverse)
 knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
 ```
 
-I have been regularly watching Formula 1 for the last few years. In that time, there was a significant rule change that--purely observationally--appears to have changed the sport. It is not clear entirely how much or in what ways, so in this project, I want to dig into the data to see if I can come to some evidence-based conclusions.
+I have been regularly watching Formula 1 for the last few years. In that time, there was a significant rule change that--purely observationally--appears to have changed the sport. It is not clear entirely how much or in what ways, so for my final project, I want to dig into the data to see if I can come to some evidence-based conclusions.
 
 ## F1: A Primer
 
@@ -233,9 +233,9 @@ There are a few different aspects of this this comparison that are of interest:
 
 3. How has car reliability changed? Are mechanical failures in races more common or less common than before? Are certain types of failures popping up that we didn't see much of before (or the opposite)?
 
-5. How did the regulations shake up the order in the Constructors championships? Did any teams go from dominant to mediocre? Did anyone suddenly shoot up?
+4. How did the regulations shake up the order in the Constructors championships? Did any teams go from dominant to mediocre? Did anyone suddenly shoot up?
 
-4. Which drivers did the best job adapting to the regulations? 
+5. Which drivers did the best job adapting to the regulations? 
 
 
 We will look at these questions one by one.
@@ -640,6 +640,67 @@ Looking at podiums, we see a similar trend.
 > Not sure if it would be interesting or not to look at average finish position as well versus just points (from our first graph). If we look at points, we are missing all the information happening between 11th-20th place since no points are awarded. Technically a team could be finishing middle of the road in 11th all season and they'd look just as bad on the points time table as a team finishing 20th every time, so we definitely lose some info if we don't look at finish position. 
 
 ### **Which drivers adapted best to the regulations?**
+
+Next, we'll look at drivers to see who did the best job adapting to the regulations. To do so, we'll look at how drivers performed relative to their teammates, rather than overall, since differences across teams could easily be attributed to differences in cars.
+
+Since which drivers are in the sport changes all the time, let's just look at the driver pairings that stayed the same in both 2021 and 2022 (same team/same drivers in both years) . Those drivers pairings are:
+
+- Max Verstappen / Sergio Perez: Red Bull 
+- Charles Leclerc / Carlos Sainz: Ferrari
+- Daniel Ricciardo / Lando Norris: McLaren
+- Fernando Alonso / Esteban Ocon: Alpine 
+- Yuki Tsunoda / Pierre Gasly: Alpha Tauri 
+- Sebastian Vettel / Lance Stroll: Aston Martin 
+
+
+All other drivers that only drove one of these two seasons are excluded from this analysis.
+
+We pull these drivers below and their relevant results and qualifying data:
+
+```{r}
+drivers_21_22 <- drivers %>%
+  filter(driverRef %in% c("max_verstappen", "perez", "sainz", "leclerc","ricciardo", "norris", "alonso", "ocon", "tsunoda", "gasly", "vettel", "stroll"))
+
+
+race_results <- results %>%
+  inner_join(races, by = "raceId") %>%
+  filter(driverId %in% drivers_21_22$driverId, year %in% c(2021, 2022)) %>%
+  inner_join(drivers_21_22, by = "driverId") %>%
+  inner_join(constructors_renamed, by = "constructorId") %>%
+  mutate(fastest_lap = ifelse(rank == 1, TRUE, FALSE)) %>%
+  inner_join(status, by = 'statusId') %>%
+  select(code, surname, constructor_name, year, gp_name, start_position, finish_position, status, retired, points)
+
+qualifying_results <- qualifying %>%
+  inner_join(races, by = "raceId") %>%
+  filter(driverId %in% drivers_21_22$driverId, year %in% c(2021, 2022)) %>%
+  inner_join(drivers_21_22, by = "driverId") %>%
+  inner_join(constructors_renamed, by = "constructorId") %>%
+  select(code, surname, constructor_name, year, gp_name, position, q1_time_s, q2_time_s, q3_time_s) %>%
+  rename(qualifying_position = position)
+  
+
+overall_results <- race_results %>%
+  inner_join(qualifying_results, by = c("code", "surname", "constructor_name", "year", "gp_name"))
+
+overall_results %>% head(5)
+```
+Let's start by looking at retirements:
+
+```{r}
+overall_results %>%
+  group_by(code, surname, constructor_name, year) %>%
+  summarize(retirements = sum(retired == 1)) %>%
+  mutate(year = factor(year)) %>%
+  ggplot(aes(x = surname, y = retirements, fill =year)) + geom_col() + facet_wrap(~constructor_name, scales = "free_x") + xlab(NULL) + ylab("# of Retirements") + ggtitle("# of Retirements By Driver and Year", subtitle = "For Driver Pairings That Raced in both 2021 and 2022")
+```
+From this graph, we can see a few patterns:
+- Drivers that did better (fewer retirements) than their teammates in 2022 were:  Verstappen (vs Perez), Norris (vs Ricciardo), Leclerc (vs Sainz), Ocon (vs Alonso), and Gasly (vs Tsunoda). 
+- Stroll and Vettel did similarly in 2022.
+- In terms of change from 2021 to 2022, Verstappen and Ocon are the only two drivers that improved in terms of retiring *less* than the year before. Vettel, Perez, and Gasly retired the same amount. Tsunoda, Alonso, Leclerc, Sainz, Norris, and Ricciardo all retired more in 2022 than 2021.
+
+> == COMMENTARY / LIMITATIONS == : 
+> Would it make sense to again filter these retirements to those that exclude car related failures? This might leave us with very little data depending on driver, but it could help us be more accurate in avoiding issues of bad luck. For example, Alonso looks really bad here, but the reality was that he kept having terrible luck with his car breaking down.
 
 
 ## References
