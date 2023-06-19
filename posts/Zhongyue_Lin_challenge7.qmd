@@ -1,5 +1,5 @@
 ---
-title: "Challenge 7_Soulution "
+title: "Challenge 7 "
 author: "Zhongyue Lin"
 description: "Visualizing Multiple Dimensions"
 date: "6/16/2023"
