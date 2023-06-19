@@ -751,17 +751,41 @@ team_plot <- function(team_name, color1, color2) {
 }
 ```
 
+Looking at Red Bull, the overall gap between Verstappen and Perez got closer in 2022, though Verstappen was still very dominant overall.
 
 ```{r}
 team_plot("Red Bull", "#E30118", "#000B8D")
+
+```
+Looking at McLaren, Lando Norris significantly increased his gap over Daniel Ricciardo from 2021 to 2022. Ricciardo seemed to really struggle with the new cars and lost to Norris almost every race, as we can see by the nearly always increasing points gap. This is not surprising to see, as 2022 was the year that Ricciardo was not offered a new contrac and lost his spot in the sport.
+
+```{r}
 team_plot("McLaren", "#47C7FC", "#FF8000")
-team_plot("Ferrari", "#ED1C24", "#FFF200")
-team_plot("Aston Martin", "#00594F", "#CEDC00")
-team_plot("Alpha Tauri", "#00293F", "#F1F3F4")
-team_plot("Alpine", "#0078C1", "#FD4BC7")
 ```
 
+Looking at Ferrari, Leclerc and Sainz were extremely back in forth in 2021. Essentially, equally matched. This is very different from 2022, where Leclerc had a points lead over Sainz across the entirety of the season. However, this was not as dominant a performance as Verstappen over Perez, since Leclerc's points lead only peaked at just over 60, compared to > 100 for Perez. Leclerc, though, seemed to transition better to the new cars.
 
+```{r}
+team_plot("Ferrari", "#ED1C24", "#FFF200")
+```
+Looking at Aston Martin, Vettel seemed to have the lead over Stroll in both years, though his biggest points gap was achieved in 2022.
+
+```{r}
+team_plot("Aston Martin", "#00594F", "#CEDC00")
+```
+For Alpha Tauri, Gasly clearly outperformed Tsunoda in 2021, but the story was very different in 2022. Tsunoda and Gasly were very evenly matched. This huge decrease in gap indicates either that Tsunoda made a big step forward, Gaslly a step back, or both, with the new regulations.
+
+```{r}
+team_plot("Alpha Tauri", "#00293F", "#F1F3F4")
+
+```
+
+2021 was a very back and forth year for Alpine, with Alonso and Ocon swapping spots in the championship several times. In 2022, however, Ocon maintained a lead over Alonso for the entire season, though the points gap was never super large. Ocon's dominance in 2022 may be in part due to the large number of retirements and mechanical issues that Alonso had throughout the season, since each DNF in a race means 0 points.
+
+```{r}
+team_plot("Alpine", "#0078C1", "#FD4BC7")
+```
+Finally, we look at qualifying.
 
 ## References
 
