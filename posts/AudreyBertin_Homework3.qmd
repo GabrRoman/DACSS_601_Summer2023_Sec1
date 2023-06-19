@@ -704,7 +704,63 @@ From this graph, we can see a few patterns:
 > == COMMENTARY / LIMITATIONS == : 
 > Would it make sense to again filter these retirements to those that exclude car related failures? This might leave us with very little data depending on driver, but it could help us be more accurate in avoiding issues of bad luck. For example, Alonso looks really bad here in 2022, but the reality was that he kept having terrible luck with his car breaking down.
 
-Next, we can look at the *proportion* of points each driver earned for their team. 
+Next, we can look at the *proportion* of points each driver earned for their team. We take the total constructors championship points and cumulative drivers championship points for each driver to calculate the gap between each of our driver pairs.
+
+```{r}
+team_gaps <- overall_results %>%
+  select(surname, constructor_name, year, round, drivers_points, constructors_points) %>%
+  mutate(teammate_points = constructors_points - drivers_points, gap = drivers_points - teammate_points, percentage_points = drivers_points/constructors_points * 100)
+
+team_gaps
+```
+
+We can then find the maximum gap to see which pair was the most unevenly matched:
+
+```{r}
+team_gaps %>%
+  arrange(desc(abs(gap))) %>%
+  head(2)
+```
+The largest recorded gap in our data was in 2021, of Verstappen over Perez. Perez earned only 190 (34%) of Red Bull's 585.5 points, for a gap of 205.5, which is huge! 
+
+**Note:** Half points were awarded for a race this year that was cut short due to rain and flooding, which is why the points don't match up with the standard expected values.
+
+We can also calculate the average gap:
+
+```{r}
+single_gap_per_team <- team_gaps %>%
+  mutate(abs_gap = abs(gap)) %>%
+  distinct(abs_gap, .keep_all = TRUE) %>%
+  arrange(desc(abs_gap))
+
+mean(single_gap_per_team$abs_gap)
+```
+
+The average gap between teammates was ~55.
+
+We can also plot the gap between each pair of teammates over time:
+
+```{r}
+team_plot <- function(team_name, color1, color2) {
+  team_gaps %>%
+  filter(constructor_name == team_name) %>%
+  ggplot(aes(x=round, y = gap, fill = surname)) + geom_area(color = "black") + facet_wrap(~year) +
+  scale_fill_manual(values = c(color1, color2)) +
+  ggtitle(paste0("Championship Points Gap Between ", team_name, " Drivers, 2021-2022")) +
+  xlab("Race # In Season") + ylab("Points Gap") + theme_minimal()
+}
+```
+
+
+```{r}
+team_plot("Red Bull", "#E30118", "#000B8D")
+team_plot("McLaren", "#47C7FC", "#FF8000")
+team_plot("Ferrari", "#ED1C24", "#FFF200")
+team_plot("Aston Martin", "#00594F", "#CEDC00")
+team_plot("Alpha Tauri", "#00293F", "#F1F3F4")
+team_plot("Alpine", "#0078C1", "#FD4BC7")
+```
+
 
 
 ## References
