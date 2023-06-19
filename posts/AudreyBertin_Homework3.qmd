@@ -785,6 +785,11 @@ team_plot("Alpha Tauri", "#00293F", "#F1F3F4")
 ```{r}
 team_plot("Alpine", "#0078C1", "#FD4BC7")
 ```
+
+> == COMMENTARY / LIMITATIONS == : 
+> I really like these graphs and find them really useful for comparing driver pairings across the season. My only note would be that having both the positive and negative points gaps at the same time makes the gaps look larger than they really are, but at least this is consistent across all the drivers, so it does not misrepresent trends over time. And, I like the way it makes the graphs symmetrical, which I am not sure how we could achieve otherwise. 
+> Not sure if it would also make sense to look at percentage gaps (in terms of % of overall points) as well, since the number of points achieved by different teams is quite different, so a 10 points gap for Red Bull is extremely small, while for Aston Martin this may be a huge gap.
+
 Finally, we look at qualifying.
 
 ## References
