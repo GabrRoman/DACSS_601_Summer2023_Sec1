@@ -1,5 +1,5 @@
 ---
-title: "Challenge 7 "
+title: "Challenge 7_Soulution "
 author: "Zhongyue Lin"
 description: "Visualizing Multiple Dimensions"
 date: "6/16/2023"
@@ -116,6 +116,7 @@ Then, the code checks the unique values of all categorical variables to identify
 Finally, it transforms the categorical variables into factor type for easier analysis and visualization. This is because R generally handles categorical variables more efficiently as factors.
 
 These transformation and checking steps are integral parts of data preprocessing, ensuring the data is clean, consistent, and well-suited for subsequent analysis.
+
 ## Visualization with Multiple Dimensions
 
 `Facets`
@@ -133,6 +134,7 @@ In this segment of code, I'm employing ggplot2 to craft a boxplot, illustrating 
 Following that, I create a faceted plot using `facet_grid(is_canceled ~ .)`, allowing us to observe how the relationship between customer type and the total number of special requests varies with cancellation status.
 
 Lastly, I utilize `labs()` to append a title and labels to the axes, improving chart readability. The intention behind this visualization is to gain insights into how special requests differ among various customer types. For instance, group customers may have more special requests than transient customers, potentially because they need more rooms or amenities. Additionally, the quantity of special requests might be linked to booking cancellations; those who cancel may have more requests, possibly influencing their decision to cancel. The chart offers a visual avenue for understanding these potential patterns and trends.
+
 `Color`
 ```{r}
 ggplot(data, aes(x=lead_time, y=previous_cancellations, color=is_repeated_guest)) +
