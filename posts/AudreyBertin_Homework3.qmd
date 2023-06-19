@@ -668,8 +668,10 @@ race_results <- results %>%
   inner_join(drivers_21_22, by = "driverId") %>%
   inner_join(constructors_renamed, by = "constructorId") %>%
   mutate(fastest_lap = ifelse(rank == 1, TRUE, FALSE)) %>%
-  inner_join(status, by = 'statusId') %>%
-  select(code, surname, constructor_name, year, gp_name, start_position, finish_position, status, retired, points)
+  inner_join(status, by = 'statusId') %>% 
+  inner_join(driver_standings %>% select(driverId, raceId, points) %>% rename(drivers_points=points), by = c("driverId", "raceId")) %>%
+  inner_join(constructor_standings %>% select(constructorId, raceId, points) %>% rename(constructors_points=points)) %>%
+  select(code, surname, constructor_name, year, gp_name, round, start_position, finish_position, status, retired, points, drivers_points, constructors_points)
 
 qualifying_results <- qualifying %>%
   inner_join(races, by = "raceId") %>%
@@ -692,7 +694,7 @@ overall_results %>%
   group_by(code, surname, constructor_name, year) %>%
   summarize(retirements = sum(retired == 1)) %>%
   mutate(year = factor(year)) %>%
-  ggplot(aes(x = surname, y = retirements, fill =year)) + geom_col() + facet_wrap(~constructor_name, scales = "free_x") + xlab(NULL) + ylab("# of Retirements") + ggtitle("# of Retirements By Driver and Year", subtitle = "For Driver Pairings That Raced in both 2021 and 2022")
+  ggplot(aes(x = surname, y = retirements, fill =year)) + geom_col() + facet_wrap(~constructor_name, scales = "free_x") + xlab(NULL) + ylab("# of Retirements") + ggtitle("# of Retirements By Driver and Year", subtitle = "For Driver Pairings That Raced in both 2021 and 2022") + scale_fill_manual(values = c("skyblue", "orange1"))
 ```
 From this graph, we can see a few patterns:
 - Drivers that did better (fewer retirements) than their teammates in 2022 were:  Verstappen (vs Perez), Norris (vs Ricciardo), Leclerc (vs Sainz), Ocon (vs Alonso), and Gasly (vs Tsunoda). 
@@ -700,7 +702,9 @@ From this graph, we can see a few patterns:
 - In terms of change from 2021 to 2022, Verstappen and Ocon are the only two drivers that improved in terms of retiring *less* than the year before. Vettel, Perez, and Gasly retired the same amount. Tsunoda, Alonso, Leclerc, Sainz, Norris, and Ricciardo all retired more in 2022 than 2021.
 
 > == COMMENTARY / LIMITATIONS == : 
-> Would it make sense to again filter these retirements to those that exclude car related failures? This might leave us with very little data depending on driver, but it could help us be more accurate in avoiding issues of bad luck. For example, Alonso looks really bad here, but the reality was that he kept having terrible luck with his car breaking down.
+> Would it make sense to again filter these retirements to those that exclude car related failures? This might leave us with very little data depending on driver, but it could help us be more accurate in avoiding issues of bad luck. For example, Alonso looks really bad here in 2022, but the reality was that he kept having terrible luck with his car breaking down.
+
+Next, we can look at the *proportion* of points each driver earned for their team. 
 
 
 ## References
