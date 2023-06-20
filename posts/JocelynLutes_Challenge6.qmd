@@ -2,7 +2,7 @@
 title: "Challenge 6: Visualizing Time and Relationships"
 author: "Jocelyn Lutes"
 description: "Time and Relationship Visualizations for the Airbnb dataset"
-date: "6/19/2023"
+date: "6/20/2023"
 format:
   html:
     df-print: paged
