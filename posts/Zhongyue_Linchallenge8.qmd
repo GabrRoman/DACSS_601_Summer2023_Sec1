@@ -43,8 +43,6 @@ Today's challenge is to:
 
 Read in one (or more) of the following datasets, using the correct R package and command.
   - railroads  ⭐⭐⭐
-  
-
 ```{r}
 # Read the file, skipping the first 3 rows and specifying column names, then remove all columns that are completely empty, then replace NA values in the "COUNTY" column with "/" when "STATE" contains "Total"
 data_clean <- read_excel("_data/StateCounty2012.xls", skip = 3) %>%
@@ -80,10 +78,6 @@ This dataset, which consists of 2,985 rows and 3 columns, captures the following
 
 From my understanding, the dataset provides information on employment numbers distributed across various counties in multiple US states.
 
-Are there any variables that require mutation to be usable in your analysis stream? For example, do you need to calculate new values in order to graph them? Can string values be represented numerically? Do you need to turn any variables into factors and reorder for ease of graphics and visualization?
-
-Document your work here.
-
 ```{r}
 # Calculate total employment by state
 data_clean <- data_clean %>% 
@@ -102,7 +96,6 @@ head(data_clean)
 
 ## Join Data
 
-Be sure to include a sanity check, and double-check that case count is correct!
 ```{r}
 # Create a dataset for total state employment
 state_totals <- data_clean %>%
@@ -118,11 +111,6 @@ joined_data <- left_join(county_counts, state_totals, by = "STATE")
 
 # Print the first few rows of the joined data
 head(joined_data)
-
-# Check the structure of the joined data
-str(joined_data)
-
-
 ```
 In this code, I create two datasets, `state_totals` and `county_counts`, from the original `data_clean`. `state_totals` contains total employment by state and `county_counts` provides employee counts by county. I then join these datasets on the `STATE` column to form `joined_data`, and check the output using `head` and `str` functions.
 
