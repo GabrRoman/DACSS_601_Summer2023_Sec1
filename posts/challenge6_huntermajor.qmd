@@ -1,0 +1,165 @@
+---
+title: "Challenge 6 Post"
+author: "Hunter Major"
+description: "Visualizing Time and Relationships"
+date: "6/19/2023"
+format:
+  html:
+    df-print: paged
+    toc: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_6
+  - debt
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(ggplot2)
+library(readr)
+library(readxl)
+library(dplyr)
+library(lubridate)
+
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to:
+
+1)  read in a data set, and describe the data set using both words and any supporting information (e.g., tables, etc)
+2)  tidy data (as needed, including sanity checks)
+3)  mutate variables as needed (including sanity checks)
+4)  create at least one graph including time (evolution)
+   - try to make them "publication" ready (optional)
+   - Explain why you choose the specific graph type
+5)  Create at least one graph depicting part-whole or flow relationships
+   - try to make them "publication" ready (optional)
+   - Explain why you choose the specific graph type
+
+[R Graph Gallery](https://r-graph-gallery.com/) is a good starting point for thinking about what information is conveyed in standard graph types, and includes example R code.
+
+(be sure to only include the category tags for the data you use!)
+
+## Read in data
+
+Read in one (or more) of the following datasets, using the correct R package and command.
+
+  - Today, I'll be reading in the debt dataset  ⭐
+
+  
+
+```{r}
+debt <- read_excel("_data/debt_in_trillions.xlsx")
+debt
+
+```
+
+```{r}
+summary(debt)
+dim(debt)
+```
+
+### Briefly describe the data
+In the debt dataset, there are 74 observations and 8 variables. As it currently is, Year and Quarter is a character variable whereas the remaining variables all have numeric value(s). From the Year and Quarter variable, we can infer that this dataset collects information from the first quarter of 2003 through the second quarter of 2021. Organized by year and quarter, this dataset seems to provide measurements of different types of debt linked to different types of loans (Mortgage debt, HE Revolving debt, Auto Loan debt, Credit Card debt, Student Loan debt, 'Other' debt, and Total debt).
+
+## Tidying Data & Mutating Variables
+
+Is your data already tidy, or is there work to be done? Are there any variables that require mutation to be usable in your analysis stream? For example, do you need to calculate new values in order to graph them? Can string values be represented numerically? Do you need to turn any variables into factors and reorder for ease of graphics and visualization? Be sure to anticipate your end result to provide a sanity check, and document your work here.
+
+Technically, year values and quarter values share a cell within the Year and Quarter column; this should be tidied. We'll go with transforming the Year and Quarter column into more succinct date values, which will be helpful for visualization and further analysis; we can do this by using the parse_date_time () function within the mutate () function. After this, I'll separate the 'old' Year and Quarter column using separate, with the intention to delete the year and keep Quarter as its own column.
+
+```{r}
+#transforming Year and Quarter column into Date using parse_date_time () and mutate ()
+
+debt2 <- debt %>%
+  mutate(Date=parse_date_time(`Year and Quarter`, orders="yq"))
+debt2
+
+# separate 'old' Year and Quarter column
+debt3 <- debt2 %>%
+  separate(`Year and Quarter`, into = c("Year", "Quarter"), sep = ":Q")
+debt3
+
+#delete Year column
+debt4 <- debt3 %>%
+  select(-c(`Year`))
+debt4
+  
+
+```
+Seems like we now have a date column and from separating the 'old' Year and Quarter column, we've retained the Quarter variable!
+
+We can use pivot_longer () to put all the information for different types of debt (which are currently their own distinct variables) into two columns/variables called Debt_Type (character values) and Debt_Amount (numeric values). After pivoting, the remaining columns/variables will be Quarter, Debt_Type, Debt_Amount, and Date.
+
+```{r}
+# pivoting variables of different types/measures of debt into two variables called Debt_Type and Debt_Amount
+
+debt5 <- debt4 %>%
+  pivot_longer(cols = c(`Mortgage`, `HE Revolving`, `Auto Loan`, `Credit Card`, `Student Loan`, `Other`), names_to = "Debt_Type", values_to = "Debt_Amount")
+debt5 <- debt5 %>%
+  select(-c(Total))
+debt5
+
+```
+Seems like the pivot worked as expected; in this version of the dataset, Quarter, Date, Debt_Type and Debt_Amount are now variables!
+
+
+## Time Dependent Visualization
+First, we'll track total debt over time, or in other words, by date. I'll use a basic connected scatterplot, which is a line plot overlaid by the dots from a scatterplot that can be used to show the relationship between two numeric variables (Holtz, 2018).
+
+```{r}
+#total debt over time
+ggplot(debt4, aes(x= Date, y=Total))+
+  geom_line(color= "darkblue", size=2)+
+  labs(title= "Total Debt from 2003-2021", x= "Date", y= "Debt, in trillions")+
+  geom_point(shape=21, color= "darkblue", fill="green", size=2)+
+  theme_minimal()
+```
+From what we can see, for the most part, it seems like there is a relatively positive correlation--as the years have passed, the total amount of debt (in trillions) continues to rise!
+
+## Visualizing Part-Whole Relationships
+Next, we'll use stacked bar plots to visualize Debt (in trillions) by Year sorted by Debt_Type and Quarter. This type of plot is useful for displaying multiple variables simultaneously, "split into groups and subgroups" (Holtz, 2018).
+
+```{r}
+#mutate date to get just the year
+debt6 <- debt5 %>%
+  mutate(Date=year(`Date`))
+debt6
+
+# factor () to sequence Debt Type
+debt6$Debt_Type <- factor(debt6$Debt_Type, levels = c("Other", "HE Revolving", "Credit Card", "Student Loan", "Auto Loan", "Mortgage"))
+
+# Stacked Bar Plot of Debt over Year sorted by Debt Type
+ggplot(debt6, aes(x= Date, y= `Debt_Amount`, fill= Debt_Type))+
+  geom_bar(position= "stack", stat= "identity")+
+  labs(x= "Year", y= "Debt, in trillions", fill= "Debt Type", title= "Stacked Bar Plot of Debt over Year sorted by Debt Type")+
+  theme_minimal()
+
+# factor () to sequence Quarter
+debt6$Quarter <- factor(debt6$Quarter, levels = c("4", "3", "2","1"))
+
+# Stacked Bar Plot of Debt over Year sorted by Quarter
+ggplot(debt6, aes(x=Date, y= `Debt_Amount`, fill= Quarter, title = "Stacked Bar Plot of Debt over Year by Quarter"))+
+  geom_bar(position= "stack", stat = "identity")+
+  labs(x= "Year", y= "Debt, in trillions", fill= "Quarter")+
+  theme_minimal()
+
+
+```
+From the second stacked bar plot, in particular, we can better see that even though the year 2021 visually seems like an outlier in other graphs, its Quarter 1 and Quarter 2 debt amounts were following the upward trending pattern as they are higher than those respective figures in 2020, the previous year.
+
+## References
+Holtz, Y. (2018). Connected scatterplot. The R Graph Gallery. https://r-graph-gallery.com/connected-scatterplot.html
+
+Holtz, Y. (2018). Connected scatterplot with R and ggplot2. The R Graph Gallery. https://r-graph-gallery.com/connected_scatterplot_ggplot2.html
+
+Holtz, Y. (2018). Grouped, stacked and percent stacked barplot in ggplot2. The R Graph Gallery. https://r-graph-gallery.com/48-grouped-barplot-with-ggplot2.html
+
