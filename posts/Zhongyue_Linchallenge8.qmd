@@ -80,10 +80,6 @@ This dataset, which consists of 2,985 rows and 3 columns, captures the following
 
 From my understanding, the dataset provides information on employment numbers distributed across various counties in multiple US states.
 
-
-
-
-
 Are there any variables that require mutation to be usable in your analysis stream? For example, do you need to calculate new values in order to graph them? Can string values be represented numerically? Do you need to turn any variables into factors and reorder for ease of graphics and visualization?
 
 Document your work here.
@@ -108,22 +104,22 @@ head(data_clean)
 
 Be sure to include a sanity check, and double-check that case count is correct!
 ```{r}
-# Creating a dataset for total state employment
+# Create a dataset for total state employment
 state_totals <- data_clean %>%
   group_by(STATE) %>%
   summarise(total_state_employment = sum(TOTAL, na.rm = TRUE))
 
-# Creating a dataset for county-specific counts
+# Create a dataset for county-specific counts
 county_counts <- data_clean %>%
   select(STATE, COUNTY, TOTAL)
 
-# Joining the datasets
+# Join the state and county datasets
 joined_data <- left_join(county_counts, state_totals, by = "STATE")
 
-# Checking the first few rows of the joined data
+# Print the first few rows of the joined data
 head(joined_data)
 
-# Checking the structure of the joined data
+# Check the structure of the joined data
 str(joined_data)
 
 
@@ -131,6 +127,26 @@ str(joined_data)
 In this code, I create two datasets, `state_totals` and `county_counts`, from the original `data_clean`. `state_totals` contains total employment by state and `county_counts` provides employee counts by county. I then join these datasets on the `STATE` column to form `joined_data`, and check the output using `head` and `str` functions.
 
 ### Visualization
+
+```{r}
+# Calculate the proportion of employment for each county within its state
+joined_data <- joined_data %>%
+  mutate(employment_prop = TOTAL / total_state_employment)
+
+# Print the first few rows of the new dataset
+head(joined_data)
+
+# Plot the distribution of employment proportions
+ggplot(joined_data, aes(x = employment_prop)) +
+  geom_histogram(binwidth = 0.01) +
+  xlim(c(0, 0.2)) +
+  labs(title = "Distribution of County Employment Proportions Within States",
+       x = "Proportion of State Employment",
+       y = "Number of Counties")
+
+
+```
+
 
 ```{r}
 # Subset to include only the top 10 states with the highest total employment
