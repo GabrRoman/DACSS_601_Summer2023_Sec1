@@ -1,0 +1,122 @@
+---
+title: "Challenge 9"
+author: "Audrey Bertin"
+description: "Creating a function"
+date: "6/29/2023"
+format:
+  html:
+    df-print: paged
+    toc: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_9
+  - functions
+  - audrey_bertin
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(ggplot2)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+For this week's challenge, I'll create a function that calculates z score for a certain value based on a baseline computed from a vector.
+
+It will take the following as input:
+
+- `baseline` = vector of numbers of any length
+- `value` = the value to compute the z score for
+
+It will then give the following as output:
+
+- a dataframe with `mean`, `sd` (of baseline), `input_value` and `z_score`
+
+#### Function Definition
+
+
+```{r}
+z_score <- function(baseline, value){
+  mean <- mean(baseline)
+  sd <- sd(baseline)
+  z_score <- abs((value - mean)/sd)
+  
+  results = tibble(mean = mean, sd = sd, input_value = value, z_score = z_score)
+  return(results)
+}
+```
+
+#### Testing
+
+
+Let's use the following inputs to test the function:
+
+```{r}
+baseline = c(4, 2, -1, 4, 9, 2, 3, 3, 1 -5)
+value = 10
+```
+
+
+We expect the following results if this runs correctly:
+
+- Mean should be: `r mean(baseline)`
+- SD should be: `r sd(baseline)`
+- Input value should be `r value`
+- Z score should be the absolute value of (`value` - `mean`) / `sd` -> abs value of (`r value` - `r mean(baseline)`) / `r sd(baseline)` -> `r abs((value -  mean(baseline)) / sd(baseline))`
+
+We confirm this by running the function below and confirming the results match:
+
+```{r}
+results = z_score(baseline, value)
+results
+```
+
+```{r}
+test_zscore <- function(baseline, value){
+  
+  results = z_score(baseline, value)
+
+  expected_mean = mean(baseline)
+  actual_mean = results$mean
+  
+  expected_sd = sd(baseline)
+  actual_sd = results$sd
+  
+  expected_input = value
+  actual_input = results$input_value
+  
+  expected_z = abs((value -  mean(baseline)) / sd(baseline))
+  actual_z = results$z_score
+  
+  cat("Mean matches: ", expected_mean == actual_mean, "( Actual:", actual_mean, "Expected:", expected_mean, ")\n")
+  cat("SD matches: ", expected_sd == actual_sd, "( Actual:", actual_sd, "Expected:", expected_sd, ")\n")
+  cat("Input matches: ", expected_input == actual_input, "( Actual:", actual_input, "Expected:", expected_input, ")\n")
+  cat("Z Score matches: ", expected_z == actual_z, "( Actual:", actual_z, "Expected:", expected_z, ")")
+}
+
+```
+
+```{r}
+test_zscore(baseline, value)
+```
+
+
+We can test again with a second set:
+
+
+```{r}
+baseline = c(-12, 4, 7, -3, 1, 1, 0, 8, 23, -3, -8, 12, -14, 2, 16)
+value = -6
+```
+
+```{r}
+test_zscore(baseline, value)
+```
+
+
+The function seems to work as expected!
