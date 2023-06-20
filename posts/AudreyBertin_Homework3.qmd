@@ -790,7 +790,72 @@ team_plot("Alpine", "#0078C1", "#FD4BC7")
 > I really like these graphs and find them really useful for comparing driver pairings across the season. My only note would be that having both the positive and negative points gaps at the same time makes the gaps look larger than they really are, but at least this is consistent across all the drivers, so it does not misrepresent trends over time. And, I like the way it makes the graphs symmetrical, which I am not sure how we could achieve otherwise. 
 > Not sure if it would also make sense to look at percentage gaps (in terms of % of overall points) as well, since the number of points achieved by different teams is quite different, so a 10 points gap for Red Bull is extremely small, while for Aston Martin this may be a huge gap.
 
-Finally, we look at qualifying.
+Finally, we look at qualifying. Let's look at each teammate pair to see how their qualifying records compared from 2021-2022.
+
+First we look at some summary statistics on qualifying position:
+
+```{r}
+overall_results %>%
+  select(surname, constructor_name, year, round, gp_name, qualifying_position) %>%
+  group_by(surname, constructor_name, year) %>% arrange(qualifying_position, .by_group = TRUE) %>% summarise(best_qual=first(qualifying_position), worst_qual=last(qualifying_position), avg_qual = mean(qualifying_position)) %>%
+  arrange(avg_qual)
+```
+Arranging by average qualifying position, Verstappen had the best average in both 2021 and 2022 of any driver in our list, followed by Leclerc and Sainz in 2022. The worst qualifying pair was Stroll and Vettel in 2022, with an average position of 15.77 and 14.35 respectively. Norris ('21), Leclerc ('21, '22), Perez ('22), Sainz ('22), and Verstappen ('21, '22) are the only drivers in our list to qualify in Pole Position. Verstappen ('21), Ocon ('20), Tsunoda ('21, '22), Stroll ('21, '22) and Vettel ('22) are the only drivers to qualify last.
+
+Graphing the distributions, we can get a better sense of the relative gap between teammates:
+
+```{r}
+team_boxplot <- function(team_name, color1, color2) {
+  overall_results %>%
+  filter(constructor_name == team_name) %>%
+  ggplot(aes(x=surname, y = qualifying_position, fill = surname)) + geom_boxplot() + facet_wrap(~year) +
+  scale_fill_manual(values = c(color1, color2)) + scale_y_reverse() +
+  ggtitle(paste0("Distribution of Qualifying Positions For ", team_name, " Drivers, 2021-2022")) +
+  xlab(NULL) + ylab("Qualifying Position") + theme_minimal()
+}
+```
+
+Looking at Red Bull's Perez vs Verstappen, Perez seemed to close the qualifying gap from 2021 to 2022.
+
+```{r}
+team_boxplot("Red Bull", "#E30118", "#000B8D")
+
+```
+For McLaren, Ricciardo's average qualifying position got worse in 2022, while Norris had a wider distribution. Overall, the gap seems to have increased.
+
+```{r}
+team_boxplot("McLaren", "#47C7FC", "#FF8000")
+```
+Looking at Ferrari, Leclerc's best qualifying position was better than Sainz in both 2021 and 2022, but not his median. Leclerc seemed to take a step forward in terms of qualifying better than his teammate in 2022, though both drivers improved their qualifying significantly (likely due to the Ferrari performing very well in 2022). It is interesting to note that although Sainz had a lower overall limit on qualifying in 2021 (worse lows), he still ended up with more points than Leclerc in that season.
+
+```{r}
+team_boxplot("Ferrari", "#ED1C24", "#FFF200")
+```
+With Aston, Vettel did better than Stroll both years and the gap between median position remained pretty consistent. Vettel's qualifying seemed to get less consistent from 2021 - 2022, though.
+
+```{r}
+team_boxplot("Aston Martin", "#00594F", "#CEDC00")
+```
+
+For Alpha Tauri, Gasly qualified better than Tsunoda consistently in 2021, but this gap significantly closed in 2022. This looks more to do with Gasly performing *worse* than Tsunoda necessarily performing *better*, since Tsunoda's qualifying position distribution looks relatively similar over time.
+
+```{r}
+team_boxplot("Alpha Tauri", "#00293F", "#F1F3F4")
+
+```
+Finally, with Alpine, Alonso and Ocon seem to be our closest matched teammates overall. They qualified almost identically in 2021. In 2022, Alonso was more consistent, but both drivers seemed to have their moments of success and failure.
+
+```{r}
+team_boxplot("Alpine", "#0078C1", "#FD4BC7")
+
+```
+
+> == COMMENTARY / LIMITATIONS == : 
+> I'm not sure if it would also be helfpful to include some sort of count of how many times each driver qualified for each of the three qualifying sessions. That is something that people talk about a lot on the TV broadcast, but this information is technically covered here (since qualifying position is directly dependant on which sessions the driver participates in), so I'm not sure if it would be interesting at all.
+> On these graphs as well as the previous set, I'm not sure if it makes sense to keep the legend or not since we have that information on the x-axis as well. 
+
+
+
 
 ## References
 
