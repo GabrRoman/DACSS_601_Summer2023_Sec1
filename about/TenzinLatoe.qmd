@@ -1,11 +1,11 @@
 ---
 title: "Tenzin Latoe"
-image: images/Pand.jpeg
+image: images/Panda.jpeg
 about:
   template: solana
   image-width: 15em
   image-shape: round
-  image: images/Pand.jpeg
+  image: images/Panda.jpeg
   links:
     - icon: github
       text: Github
