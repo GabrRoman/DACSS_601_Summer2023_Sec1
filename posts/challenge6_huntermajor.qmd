@@ -119,14 +119,14 @@ First, we'll track total debt over time, or in other words, by date. I'll use a 
 #total debt over time
 ggplot(debt4, aes(x= Date, y=Total))+
   geom_line(color= "darkblue", size=2)+
-  labs(title= "Total Debt from 2003-2021", x= "Date", y= "Debt, in trillions")+
+  labs(title= " Line Plot of Total Debt from 2003-2021", x= "Date", y= "Debt, in trillions")+
   geom_point(shape=21, color= "darkblue", fill="green", size=2)+
   theme_minimal()
 ```
 From what we can see, for the most part, it seems like there is a relatively positive correlation--as the years have passed, the total amount of debt (in trillions) continues to rise!
 
 ## Visualizing Part-Whole Relationships
-Next, we'll use stacked bar plots to visualize Debt (in trillions) by Year sorted by Debt_Type and Quarter. This type of plot is useful for displaying multiple variables simultaneously, "split into groups and subgroups" (Holtz, 2018).
+Next, we'll use a line plot, using geom_path() to visualize Debt (in trillions) by Year sorted by Debt_Type. We'll also use a stacked bar plot to visualize Debt (in trillions) by Year, sorted by Quarter. These types of plots are useful for displaying multiple variables simultaneously, "split into groups and subgroups" (Holtz, 2018).
 
 ```{r}
 #mutate date to get just the year
@@ -137,24 +137,24 @@ debt6
 # factor () to sequence Debt Type
 debt6$Debt_Type <- factor(debt6$Debt_Type, levels = c("Other", "HE Revolving", "Credit Card", "Student Loan", "Auto Loan", "Mortgage"))
 
-# Stacked Bar Plot of Debt over Year sorted by Debt Type
+# Line Plot of Debt over Year sorted by Debt Type
 ggplot(debt6, aes(x= Date, y= `Debt_Amount`, fill= Debt_Type))+
-  geom_bar(position= "stack", stat= "identity")+
-  labs(x= "Year", y= "Debt, in trillions", fill= "Debt Type", title= "Stacked Bar Plot of Debt over Year sorted by Debt Type")+
+  geom_path(size=0.5, aes(col=Debt_Type))+
+  labs(x= "Year", y= "Debt, in trillions", fill= "Debt Type", title= "Line Plot of Debt over Year sorted by Debt Type")+
   theme_minimal()
 
 # factor () to sequence Quarter
 debt6$Quarter <- factor(debt6$Quarter, levels = c("4", "3", "2","1"))
 
 # Stacked Bar Plot of Debt over Year sorted by Quarter
-ggplot(debt6, aes(x=Date, y= `Debt_Amount`, fill= Quarter, title = "Stacked Bar Plot of Debt over Year by Quarter"))+
-  geom_bar(position= "stack", stat = "identity")+
-  labs(x= "Year", y= "Debt, in trillions", fill= "Quarter")+
+ggplot(debt6, aes(x=Date, y= `Debt_Amount`, fill= Quarter))+
+  geom_col(aes(col=Quarter))+
+  labs(x= "Year", y= "Debt, in trillions", fill= "Quarter", title = "Stacked Bar Plot of Debt over Year by Quarter")+
   theme_minimal()
 
 
 ```
-From the second stacked bar plot, in particular, we can better see that even though the year 2021 visually seems like an outlier in other graphs, its Quarter 1 and Quarter 2 debt amounts were following the upward trending pattern as they are higher than those respective figures in 2020, the previous year.
+From the first graph, the line plot, we can see that Mortgage incurs the highest amount of debt out of all the debt types and has a line that most resembles, the time dependent visualization, "Line Plot of Total Debt from 2003-2021." From the second graph--the stacked bar plot, in particular, we can better see that even though the year 2021 visually seems like an outlier in other graphs, its Quarter 1 and Quarter 2 debt amounts were following the upward trending pattern as they are higher than those respective figures in 2020, the previous year.
 
 ## References
 Holtz, Y. (2018). Connected scatterplot. The R Graph Gallery. https://r-graph-gallery.com/connected-scatterplot.html
