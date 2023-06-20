@@ -1,5 +1,5 @@
 ---
-title: "Challenge 8 "
+title: "Challenge 8_Solution "
 author: "Zhongyue Lin"
 description: "Joining Data"
 date: "6/19/2023"
