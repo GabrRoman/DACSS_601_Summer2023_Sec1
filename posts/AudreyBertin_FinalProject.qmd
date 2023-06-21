@@ -333,7 +333,7 @@ Next, we'll look at lap times to see if there were any noticeable changes. To lo
 
 In order to look at changes over time, we will just look at the races that happened in 2022 and look at how those specific tracks changed, ignoring races in the previous years on tracks that were not used in 2022.
 
-Since there are so many tracks, we'll just select a random set of 5 to look at, and we'll also remove outlier laps over 150 seconds.
+Since there are so many tracks, we can start by selecting a random set of 5 to look at, and see if we spot any clear patterns worth examining further. In order to make results more consistent, we'll also remove outlier laps over 150 seconds, which is longer than the lap times on the slowest track on the calendar.
 
 ```{r}
 tracks_2022 <- races %>%
@@ -358,9 +358,11 @@ selected_laps %>%
   scale_fill_manual(values = c("white", "orange")) + theme_minimal() +
   xlab("Lap Time (s)") + ggtitle("Lap Time Distributions For Select GPs, Pre and Post 2022 Rule Change")
 ```
-There is no clear pattern here.
+We can see that there is no clear pattern that is consistent across all 5 of our randomly selected tracks.
 
-For the Australian GP, lap times appear to be significantly slower after the rules change than prior. The French GP seems to be slightly faster, as does the Austrian GP. The US Grand Prix times seem pretty much the same. So it is possible that the regulations may have made lap times change differently on different tracks.  
+For the Australian GP, lap times appear to be significantly slower after the rules change than prior. The French GP seems to be slightly faster, as does the Austrian GP. The US Grand Prix times seem pretty much the same. So it is possible that the regulations may have made lap times change differently on different tracks. 
+
+This indicates that there may not be a universal pattern. However, this is only a handful of tracks. What if we look at the data for all the tracks at once and see if there is a pattern *independent* of the track we are looking at.
 
 We can conduct a quick T-test to see if, controlling for track, we see a difference in track times before and after the rules change:
 
@@ -373,7 +375,7 @@ Here, controlling for the race name, we see the following information for the ru
 
 > post_rules_changeTRUE  ||  Estimate: 1.2066  ||  P-value: 0.0437 *  
 
-The p-value of < 0.05 indicates the presence of a potential relationship between lap times and the rules change. Since the estimate is positive, this means that statistically, the lap times seem to be *slightly longer* after the rules change than before, controlling for the track.
+The p-value of < 0.05 indicates the presence of a potential relationship between lap times and the rules change. Since the estimate is positive, this means that statistically, the lap times seem to be *slightly longer* after the rules change than before, controlling for the track. About 1.2 seconds longer on average.
 
 We can also do some further analysis to determine which tracks had the greatest change in lap time by looking at their average lap time before the change and comparing to 2022 times. We display the 5 tracks with the greatest **increase** in lap times, followed by the 5 with the greatest **decrease**, again removing outlier laps over 150 seconds which would indicate some sort of car or weather related issue:
 
@@ -407,13 +409,36 @@ laptime_changes %>%
   xlab("GP Name") + ylab("Avg Lap Time Difference") + ggtitle("Difference in Avg Lap Time, Pre- and Post- 2022 Rules Change") +
   theme_minimal()
 ```
-Here we can see that more tracks had *slower* lap times than had *faster*. We can also see that in the "Faster" direction, the Abu Dhabi GP is an outlier, and most tracks only got *slightly* faster if they did at all. In the "Slower" drection, there were 3 tracks (Japan, Singapore, Monaco) that were > 5 seconds slower. 
+Here we can see that more tracks had *slower* lap times than had *faster*. We can also see that in the "Faster" direction, the Abu Dhabi GP is an outlier, and most tracks only got *slightly* faster if they did at all. In the "Slower" direction, there were 3 tracks (Japan, Singapore, Monaco) that were > 5 seconds slower. 
 
-> == COMMENTARY / LIMITATIONS == : 
-> For our first graph with the 5 random density plots, it is hard to get a sense of the actual pattern so I'm not sure really how helpful this visualization is. I tried doing a version with all the tracks but it was just far too chaotic. Not sure if it is worth keeping some version of this, but potentially having more reasoning behind which tracks were selected, versus just a random draw? But not sure how to define the selection criteria.
-> The statistical model definitely helps make this trend more clear though!
-> I really like the graph with the red and green lap time changes. One thing that could maybe be added to make this more interesting though would be to classify each track further by track type in some way. For example, street track vs purpose built track. These tend to have very different characteristics that could provide further insight
-> It might also make sense to look at this data by constructor to see which constructors had the biggest jump in lap times
+There are several different types of tracks in F1: street tracks (where the cars race on city streets) and traditional circuits (purpose built for racing). They tend to have very different characteristics from one another, and drivers often excel at one or the other. Given this, we can further classify the tracks on our graph above into street vs traditional to see if one type has changed more than the other.
+
+The following tracks in the list above are classified as street tracks:
+
+- Australian GP
+- Azerbaijan GP
+- Monaco GP
+- Canadian GP
+- Saudi Arabian GP
+- Singapore GP
+
+We can add this classification to our data:
+
+```{r}
+street_circuits <- c("Australian Grand Prix", "Azerbaijan Grand Prix", "Monaco Grand Prix", "Candian Grand Prix", "Saudi Arabian Grand Prix", "Singapore Grand Prix")
+
+
+laptime_changes %>%
+  filter(!is.na(difference)) %>%
+  mutate(street_circuit = ifelse(gp_name %in% street_circuits, TRUE, FALSE))  %>%
+  ggplot(aes(x= reorder(gp_name, difference), y = difference, fill = street_circuit)) + geom_col() + coord_flip()  +
+  scale_fill_manual(values = c("gray85", "royalblue")) +
+  xlab("GP Name") + ylab("Avg Lap Time Difference") + ggtitle("Difference in Avg Lap Time, Pre- and Post- 2022 Rules Change", subtitle = "Street circuits vs purpose-built circuits") +
+  theme_minimal() 
+
+```
+
+We can see here that two of the three tracks that ended up the slowest were street circuits. However, there are also two street tracks that were faster. There does not seem to be a clear pattern based on whether the track was a street track or purpose built and how the lap times changed.
 
 
 ### **Q3: How has reliability changed?**
@@ -862,7 +887,7 @@ We summarize our conclusions to each of the research questions below:
 - The rule change appears to have made it *slightly* harder to hold one's position, but not much more, and the change is not significant enough to say anything definitive.
 
 **How have lap times changed?**
-- For some tracks, times seem to have increased with the rule change, while for others they seem to have decreased. Some lap times changed dramatically while others changed only slightly.
+- For some tracks, times seem to have increased with the rule change, while for others they seem to have decreased. Some lap times changed dramatically while others changed only slightly. There does not seem to be any pattern regarding street circuits vs purpose built.
 - Overall, however, there is a statistically significant indication that lap times *increased* slightly on average (about 1.2 seconds) after the 2022 rule change, holding track constant.
 
 
