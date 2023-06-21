@@ -27,7 +27,7 @@ library(tidyverse)
 knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
 ```
 
-I have been regularly watching Formula 1 for the last few years. In that time, there was a significant rule change that--purely observationally--appears to have changed the sport. It is not clear entirely how much or in what ways, so for my final project, I want to dig into the data to see if I can come to some evidence-based conclusions.
+This project focuses on the sport of Formula 1 racing, one which I have actively watched and enjoyed over the past few years. Between the 2021 and 2022 seasons there was a significant rule change that--purely observationally--appears to have shifted things up in the sport. It is not clear entirely how much or in what ways so I wanted to dig into the data to see if I could come to some evidence-based conclusions.
 
 ## F1: A Primer
 
@@ -78,10 +78,10 @@ Points are cumulative across a season, and the championships are awarded to the 
 
 ## Dataset
 
-Data on Formula 1 is available through Kaggle at the following link
+Data on Formula 1 is available through Kaggle at the following link. This is the source of all data for this project:
 https://www.kaggle.com/datasets/rohanrao/formula-1-world-championship-1950-2020
 
-It contains F1 race data from the series' start in 1950 to the present season, which is currently in-progress and will run until November. This data was likely scraped from the official F1 website, which publishes detailed information after every race, and so it is likely to be accurate and official.
+It contains F1 race data from the series' start in 1950 to the present season, which is currently in-progress and will run until November. This data was almost certainly scraped from the official F1 website, which publishes detailed information after every race, and so it is likely to be accurate and official.
 
 There are 14 separate files within this dataset that store different types of information:
 
@@ -181,10 +181,31 @@ status <- readr::read_csv("_data/formula1/status.csv")
 
 ```
 
+## Research Questions
 
-### Dealing With Changing Team Names
+Using this data, I'd like to investigate how Formula 1 has shifted before and after the most recent regulation change between 2021 an 2022.
 
-An important note that was not considered in the previous homework is that in order to look at details by team, we will need to take another consideration into account: team names. From 2016 - 2022, there are quite a few different team names recorded in the data:
+This change shifted how F1 cars look and perform, with new engine requirements, weight requirements, and aerodynamic guidelines. See the links in the bibliography at the end of this post for more information on the changes from 2021-2022. Just by watching (and not looking at any data) this change seems to have shaken things up considerably, finally ending the Mercedes' team's dominant win streak in the Constructors championship and seeing Red Bull take first place instead. 
+
+I'm interested in using this dataset to take a deeper look into how things have changed since the regulations shift -- comparing the previous era to the new era, which started in 2022. 
+
+There are a few different aspects of this this comparison that are of interest:
+
+1. The new regulations were designed to make it easier for cars to follow one another, theoretically making passing easier. How has this translated in reality? Is it easier now than before for "top" cars that start out of position to make up positions? Being "out of position" here means starting the race from a position worse than would be expected based on their car's performance due to a qualifying mistake, mechanical failure, etc.
+
+2. How have lap times changed? Are the new cars getting faster/slower overall? Is this change the same across all race tracks?
+
+3. How has car reliability changed? Are mechanical failures in races more common or less common than before? Are certain types of failures popping up that we didn't see much of before (or the opposite)?
+
+4. How did the regulations shake up the order in the Constructors championships? Did any teams go from dominant to mediocre? Did anyone suddenly shoot up?
+
+5. Which drivers did the best job adapting to the regulations? 
+
+We will look at these questions one by one.
+
+**Notes**: The previous era prior to the regulation change, called the Turbo Hybrid era, technically started in 2014. However, due to a shift in qualifying formats in 2016, we will ignore 2014/15 and just look at 2016-2021 ("Before") and 2022 ("After") as our two comparison periods. We will also exclude the 2023 season as it is still not complete and data is not properly updated yet.
+
+We also need to take another consideration into account: shifting team names. From 2016 - 2022, even though only 10 teams raced at any given time, there are quite a few different team names recorded in the data:
 
 ```{r}
 constructor_standings %>%
@@ -195,9 +216,9 @@ constructor_standings %>%
 ```
 
 
-Although these teams all have separate names and designations, some of them are actually the *same* team, just in different years. For example, the current "Alpha Tauri" team used to be called "Toro Rosso". In order to keep the teams joined together through name changes, we can recategorize the team names as just their current name. 
+Although these teams all have separate names and designations, some of them are actually the *same* team, just in different years. For example, the current "Alpha Tauri" team used to be called "Toro Rosso". In order to keep the teams joined together through name changes, we can re-categorize the team names as just their current name. 
 
-Additionally, we are interested in comparing things before and after the rules change in 2022. This is impossible for teams that no longer existed in any form in 2022. The only team fitting in this category is "Manor Marussia". We can simply remove this one from our data. 
+Additionally, we are interested in comparing things before and after the rules change in 2022. This is impossible for teams that no longer existed in any form in 2022. The only team fitting in this category is "Manor Marussia". We will remove this team from our data before conducting any analysis.
 
 
 ```{r}
@@ -216,34 +237,10 @@ constructors_renamed <- constructors %>%
 ```
 
 
-
-## Research Questions
-
-Using this data, I'd like to investigate how Formula 1 has shifted before and after the most recent regulation change in 2022.
-
-This change shifted how F1 cars look and perform, with new engine requirements, weight requirements, and aerodynamic guidelines. Just by watching (and not looking at any data) this change seems to have shaken things up considerably, finally ending the Mercedes' team's dominant win streak in the Constructors championship and seeing Red Bull take first place instead.
-
-I'm interested in using this dataset to take a deeper look into how things have changed since the regulations shift -- comparing the previous era to the new era, which started in 2022. 
-
-There are a few different aspects of this this comparison that are of interest:
-
-1. The new regulations were designed to make it easier for cars to follow one another, theoretically making passing easier. How has this translated in reality? Is it easier now than before for "top" cars that start out of position to make up positions? Being "out of position" here means starting the race from a position worse than would be expected based on their car's performance due to a qualifying mistake, mechanical failure, etc.
-
-2. How have lap times changed, both in qualifying and the race? Are the new cars getting faster/slower overall? Is this change the same across all race tracks?
-
-3. How has car reliability changed? Are mechanical failures in races more common or less common than before? Are certain types of failures popping up that we didn't see much of before (or the opposite)?
-
-4. How did the regulations shake up the order in the Constructors championships? Did any teams go from dominant to mediocre? Did anyone suddenly shoot up?
-
-5. Which drivers did the best job adapting to the regulations? 
+## Analysis
 
 
-We will look at these questions one by one.
-
-Note: The previous era prior to the regulation change, called the Turbo Hybrid era, technically started in 2014. However, due to a shift in qualifying formats in 2016, we will ignore 2014/15 and just look at 2016-2021 ("Before") and 2022 ("After") as our two comparison periods. We will also exclude the 2023 season as it is still not complete and data is not properly updated yet.
-
-
-### **Is it easier to pass?**
+### **Q1: Is it easier to pass?**
 
 For this data, we need to look at the `results` dataset and capture start position, finish position, and overall positions changed for the time period in question. 
 
@@ -330,7 +327,7 @@ For cars starting in position, we see a similar trend of changing times. However
 
 
 
-### **How have lap times changed?**
+### **Q2: How have lap times changed?**
 
 Next, we'll look at lap times to see if there were any noticeable changes. To look at how lap times changed before and after the rules change, we need to consider the shifting calendar. The races that happen each year are not always the same. For example, 2021 had a Grand Prix in Russia, but this race was cancelled in 2022 due to the war in Ukraine and a ban on Russian participation in motorsport racing.
 
@@ -419,7 +416,7 @@ Here we can see that more tracks had *slower* lap times than had *faster*. We ca
 > It might also make sense to look at this data by constructor to see which constructors had the biggest jump in lap times
 
 
-### **How has reliability changed?**
+### **Q3: How has reliability changed?**
 
 Next, we can look at reliability. Within our results data, we have some basic status information built in that shows us who finished, retired, and was disqualified.
 
@@ -543,7 +540,7 @@ There are a few areas where we saw fewer incidents in 2022 than 2021. These are:
 
 
 
-### **How did the regulation change shake up the championship?**
+### **Q4: How did the regulation change shake up the championship?**
 
 For this question, we will look at the Constructors Standings.
 
@@ -639,7 +636,7 @@ Looking at podiums, we see a similar trend.
 > It is kind of difficult to tell all of these team colors apart. Would it make sense to use an official color palette that is representative of the actual team names? Might be worth adding for a final version.
 > Not sure if it would be interesting or not to look at average finish position as well versus just points (from our first graph). If we look at points, we are missing all the information happening between 11th-20th place since no points are awarded. Technically a team could be finishing middle of the road in 11th all season and they'd look just as bad on the points time table as a team finishing 20th every time, so we definitely lose some info if we don't look at finish position. 
 
-### **Which drivers adapted best to the regulations?**
+### **Q5: Which drivers adapted best to the regulations?**
 
 Next, we'll look at drivers to see who did the best job adapting to the regulations. To do so, we'll look at how drivers performed relative to their teammates, rather than overall, since differences across teams could easily be attributed to differences in cars.
 
@@ -857,7 +854,47 @@ team_boxplot("Alpine", "#0078C1", "#FD4BC7")
 
 ## Conclusions
 
+We summarize our conclusions to each of the research questions below:
+
+**Is it easier to pass?**
+- For drivers who finished races, the average number of positions gained has remained relatively constant.
+- When looking at drivers who started out of position (2 or more places behind where their team started on average), these drivers gained slightly more positions on average post-rule change than pre-change. However, when looking at historical trends, 2022 does not clearly stand out. Drivers starting in position or ahead of expectation, however, appeared to get passed more easily in 2022 than any other year (at least, since 2016).
+- The rule change appears to have made it *slightly* harder to hold one's position, but not much more, and the change is not significant enough to say anything definitive.
+
+**How have lap times changed?**
+- For some tracks, times seem to have increased with the rule change, while for others they seem to have decreased. Some lap times changed dramatically while others changed only slightly.
+- Overall, however, there is a statistically significant indication that lap times *increased* slightly on average (about 1.2 seconds) after the 2022 rule change, holding track constant.
+
+
+**How has reliability changed?**
+- In terms of the overall number of cars finishing each race vs retiring, there seems to be no change associated with the rule change.
+- However, the proportion of *mechanical* related failures seems to have increased significantly, reversing a historic trend of improving reliability. This indicates that there were potential reliability issues introduced with the new engine design. It is possible that in 2023 onward, reliability issues will decrease compared with 2022.
+- The types of mechanical issues that increased the most were related to the engine and power unit, so these are likely where reliability issues were introduced. Wheel nut, suspension, electrical, and brake issues were less prevalent after the rule change.
+
+**How did the regulation change shake up the championship?**
+- Team rankings in the constructors championship changed significantly between 2021 and 2022. After the rules change, Mercedes dropped from 1st to 3rd, both Red Bull and Aston Martin won way more points, and McLaren and Alpha Tauri fell off considerably. Some of the small teams that had been struggling before (Alfa Romeo, Haas), earned more points than in previous years.
+
+**Which drivers adapted best to the regulations?**
+- Looking at retirements, Verstappen, Ocon, Gasly, and Leclerc all appeared to have significantly fewer retirements in 2022 than their teammates. Verstappen and Ocon were the only drivers (of driver pairs that remained identical in 2021 and 2022) to have fewer retirements in 2022 than 2021.
+- Looking at points gaps overall, the largest gap recorded from 2021 to 2022 was Verstappen over Perez, for a whopping 205.5 point difference. The average gap at a given race between any of our 6 pairs of teammates was about 55.
+- For points gaps over time, Norris clearly improved his lead over Ricciardo (McLaren) in 2022, as did Leclerc over Sainz (Ferrari) and Ocon over Alonso (Alpine). Tsunoda was trailing Gasly (Alpha Tauri) significantly in 2021, but their performances were much closer in 2022.
+- Looking at qualifying positions between teammates, Verstappen significantly outperformed Perez in both 2021/2022. Same with Norris over Ricciardo, with again the gap widening in 2022. Both Leclerc and Sainz saw huge improvements in average qualifying position from 2021-2022, with Leclerc qualifying better overall. Of our driver pairs, Stroll/Vettel (Aston Martin) and Alonso/Ocon (Alpine), were the only two pairs who qualified relatively similarly in 2021 and 2022. The driver with the biggest dropoff between 2021 and 2022 was Pierre Gasly (Alpha Tauri) who was previously qualifying mostly in the top 10, but post-rules-change, qualified primarily in the 10-15 range. Gasly previously qualified much better than his teammate Tsunoda, but they were relatively equal in 2022.
+
+Overall, there *do* appear to have been some changes introduced with the rules shift in 2022. Cars seem to be slightly slower overall and less reliable. Teammate pairings have shifted a bit in terms of relative gap, as have the championship rankings.
+
 ## Limitations
+
+Of course, this analysis comes with quite a few limitations.
+
+It is hard to get *much* of a picture of Formula 1 post-rules-change since we only have one year's worth of data to summarize the "After", compared with 6 to summarize the "Before". It is possible that most of the trends we saw here (such as reliability issues) will stabilize over time, as will the gaps between teams. Often, a rule change can shake up a championship temporarily (if a team gets lucky and starts with a good design), but then other teams will continue to develop their designs and start to catch up. 
+
+Additionally, it is hard to get a bigger picture on changes over time since things are constantly changing in F1. We don't have the same race tracks, same drivers, or even same teams year over year, so finding things that are *consistent* enough to not have a bunch of confounding variables is quite difficult and results in limited data. 
+
+It is also very difficult to compare drivers across different teams. Since teams are all in very different cars, just because one driver always finishes ahead of another driver does not mean they are better, and could just mean they have a better car. This means it is hard for us to do any sort of overall analysis to see which driver did the "best" in 2022, and we are limited to only looking at the driver pairings that we could actually compare between 2021 and 2022 because they were consistent.
+
+Additionally, it is hard for us to conclude that any changes we *did* see are due to the rules change. Other things shifted between 2021 and 2022. For example, some drivers got sick and had to miss some races, which may have affected results. Some drivers were moving from their 2nd-3rd year versus 9th-10th, which typically means a different marginal skill improvement rate. If a driver closed the gap with their teammate, it could just be because they were still new to the sport and had a lot more they could learn from 2021-2022 than someone who'd already learned it all. 
+
+It's hard to really say anything for sure, but it is certainly fascinating to see the anecdotal changes from watching on TV appear in the data.
 
 ## References
 
@@ -883,6 +920,15 @@ Kanal, S. (2023). The beginner's guide to...the Formula 1 Grand Prix Weekend. *F
 
 F1 Chronicle Media Team (2020). The Complete Beginners Guide to Formula 1. *F1 Chronicle*.
 <https://f1chronicle.com/a-beginners-guide-to-formula-1/>
+
+#### 2021-2022 Rule Changes
+
+Medland, C. (2022). 7 key rule changes for the 2022 season. *Formula 1*.
+<https://www.formula1.com/en/latest/article.7-key-rule-changes-for-the-2022-season.2E7JH9MywymU8xxw6r5yDS.html>
+
+Masdea, M. (2022). Tech Explained: 2022 F1 Technical Regulations. *Racecar Engineering*.
+<https://www.racecar-engineering.com/articles/tech-explained-2022-f1-technical-regulations/> 
+
 
 #### Techincal / Software
 
