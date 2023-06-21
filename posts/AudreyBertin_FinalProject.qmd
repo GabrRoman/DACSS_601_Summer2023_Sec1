@@ -289,7 +289,7 @@ positions_clean %>%
 ```
 Overall, we see a jump from 2021 (before the rules change) to 2022 (after), but it is very small and doesn't seem to be part of a larger trend.
 
-What if we just look at cars that started out of position? For this analysis, we will define this as a car that **started at least 2 places behind the average starting position of their team that year**. 
+What if we just look at cars that started out of position? For this analysis, we will define this as a car that **started at least 2 places away the average starting position of their team that year**. For teams that started 2+ places *behind* where they would be expected, we'll classify them as "Worse". For those starting 2+ places ahead, we'll classify them as "Better". Everyone else will be "Expected", signifying they qualified close to what was expected.
 
 We can calculate average start position for each team each year and use that to identify who is starting out of position:
 
@@ -300,31 +300,31 @@ avg_start <- positions_clean %>%
 
 out_of_position <- positions_clean %>%
   inner_join(avg_start, by = c('year', 'constructor_name')) %>%
-  mutate(out_of_position = ifelse((start_position - avg_start >= 2), TRUE, FALSE))
-
+  mutate(out_of_position = case_when(
+    start_position - avg_start >= 2 ~ "Worse",
+    start_position - avg_start <= -2 ~ "Better",
+    TRUE ~ "Expected"))
+           
+  
 out_of_position %>%
   group_by(year, out_of_position) %>%
   summarise(avg_gain = mean(positions_gained)) %>%
   mutate(post_rules_change = ifelse(year == 2022, TRUE, FALSE)) %>%
-  ggplot(aes(x = year, y = avg_gain, fill = out_of_position, color = post_rules_change)) + 
+  ggplot(aes(x = year, y = avg_gain, fill = out_of_position)) + 
   geom_col(position = "dodge") +
   geom_hline(yintercept = 0) + 
   ylab("Average Positions Gained") +
   xlab("Season") + 
   ggtitle("Avg Positions Gained Based on Out Of Position Start, 2016-2022") + 
-  scale_fill_manual(values = c("gray", "lightblue")) +
-  scale_color_manual(values = c("white", "orange")) +
+  scale_fill_manual(values = c("gray", "lightgreen", "orangered")) +
+  geom_vline(xintercept = 2021.5) +
   theme_minimal()
 ```
-We see now that drivers who started in position on average *lost* positions (but typically fewer) while drivers who started out of position on average *gained* positions (typically more). This makes sense logically. When a fast car starts the race behind where they should, they can more easily pass. If a car starts at its average position or even higher, then it is surrounded by other cars that are at least as good, and so it's much easier to be passed and much harder to pass.
+We see now that drivers who started in expected position on average *lost* positions, but not as many positions as drivers who started in a *better* than expected position. Drivers who started behind their expected position on average *gained* somewhere between 2-3 positions. This makes sense logically. When a fast car starts the race behind where they should, they can more easily pass. If a car starts at its average position or even higher, then it is surrounded by other cars that are at least as good, and so it's much easier to be passed and much harder to pass.
 
-Looking at the trend overall, there does not seem to be a clear change with the 2022 rule change. In 2022, the average number of positions gained for cars starting out of position was higher than 2021, but is more so part of a continuing upward trend than an outlier, particularly as we note that both 2017 and 2018 have higher average positions gained.
+Looking at the trend overall, there does not seem to be a clear change with the 2022 rule change. In 2022, the average number of positions gained for cars starting out of position (worse) was higher than 2021, but is more so part of a continuing upward trend than an outlier, particularly as we note that both 2017-2019 all have higher average positions gained.
 
-For cars starting in position, we see a similar trend of changing times. However, we do note that 2022 is the largest number of positions lost on average across all years in our time frame, so it is possible that starting in position (or ahead of expectations) left drivers more vulnerable than in past years. In other words, just because they started at the front does not mean that a faster car behind could not pass.
-
-> == COMMENTARY / LIMITATIONS == : 
-> I think that the second graph definitely helps provide context that the first one is missing (by adding in whether a driver started out of position). It might be slightly confusing though that in a sense, a driver could also be "out of position" by starting AHEAD of where they would be expected, so at the moment we are more so comparing starting behind expectation to starting at or above expectation. Not sure if this makes sense, or if it would make more sense to categorize as below expecation / at expectation / above expectation.
-
+For cars starting in average position, we see a similar trend of changing times, going slightly downward. There doesn't seem to be a clear association with the rule change though as 2022 is not a historical peak. However for drivers starting ahead of position, 2022 seems to be the peak in terms of positions lost. It is possible that starting ahead of expectations left drivers more vulnerable than in past years. In other words, just because they started at the front does not mean that a faster car behind could not pass, when before, passing was quite difficult even if the car behind was quick.
 
 
 ### **Q2: How have lap times changed?**
