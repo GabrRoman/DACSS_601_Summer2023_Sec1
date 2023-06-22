@@ -754,22 +754,32 @@ overall_results <- race_results %>%
 
 overall_results %>% head(5)
 ```
-Let's start by looking at retirements:
+Let's start by looking at retirements. Specifically, at retirements that were the driver's fault, and not due to a mechanical issue with their car. This can give us a quick overview of the number of "mistakes" each driver is making throughout the season. 
+
+Below are the unique statuses for drivers who retired from 2021-2022. 
 
 ```{r}
 overall_results %>%
-  group_by(code, surname, constructor_name, year) %>%
-  summarize(retirements = sum(retired == 1)) %>%
-  mutate(year = factor(year)) %>%
-  ggplot(aes(x = surname, y = retirements, fill =year)) + geom_col() + facet_wrap(~constructor_name, scales = "free_x") + xlab(NULL) + ylab("# of Retirements") + ggtitle("# of Retirements By Driver and Year", subtitle = "For Driver Pairings That Raced in both 2021 and 2022") + scale_fill_manual(values = c("skyblue", "orange1"))
+ filter(retired == 1) %>%
+  select(status) %>%
+  table()
 ```
-From this graph, we can see a few patterns:
-- Drivers that did better (fewer retirements) than their teammates in 2022 were:  Verstappen (vs Perez), Norris (vs Ricciardo), Leclerc (vs Sainz), Ocon (vs Alonso), and Gasly (vs Tsunoda). 
-- Stroll and Vettel did similarly in 2022.
-- In terms of change from 2021 to 2022, Verstappen and Ocon are the only two drivers that improved in terms of retiring *less* than the year before. Vettel, Perez, and Gasly retired the same amount. Tsunoda, Alonso, Leclerc, Sainz, Norris, and Ricciardo all retired more in 2022 than 2021.
+Those that are most clearly related to driver error are "Accident", "Collision", "Collision damage", "Spun off", so we will filter just for these accident types.
 
-> == COMMENTARY / LIMITATIONS == : 
-> Would it make sense to again filter these retirements to those that exclude car related failures? This might leave us with very little data depending on driver, but it could help us be more accurate in avoiding issues of bad luck. For example, Alonso looks really bad here in 2022, but the reality was that he kept having terrible luck with his car breaking down.
+```{r}
+overall_results %>%
+  filter(retired == 1, status %in% c("Accident", "Collision", "Collision damage", "Spun off")) %>%
+  group_by(code, surname, constructor_name, year, status) %>%
+  summarize(n = n()) %>%
+  ggplot(aes(x = surname, y = n, fill = status)) + geom_col() + facet_grid(rows = vars(constructor_name), cols = vars(year), scales = "free_y") + coord_flip() + scale_fill_brewer(palette = "Set1") +
+    theme(strip.text.y.right = element_text(angle = 0)) + ggtitle("Driver-Related Retirements For 2021-22 Driver Pairs") + xlab(NULL) + ylab("# of Retirements")
+
+```
+
+From this graph, we can see a few things:
+- Drivers that had *more* driver-related retirements after the regulations change were: Tsunoda (Alpha Tauri), Alonso (Alpine),  Sainz (Ferrari), and Ricciardo (McLaren). Sainz seemed to have the worst year overall in the new season with four different driver-related retirements. 
+- Drivers who had *fewer* driver-error issues in 2022 were Ocon (Alpine), Verstappen (Red Bull) and Perez (Red Bull). Ocon and Verstappen were the only drivers from the six teams we looked at here that had zero driver-related retirements (if any, they were related to car failure and not a driver issue). 
+- Several drivers remained the same in terms of driver errors from 2021 to 2022. These drivers were Gasly (Alpha Tauri), Vettel (Aston Martin), Leclerc (Ferrari), and Norris (McLaren).
 
 Next, we can look at the *proportion* of points each driver earned for their team. We take the total constructors championship points and cumulative drivers championship points for each driver to calculate the gap between each of our driver pairs.
 
@@ -853,9 +863,6 @@ team_plot("Alpha Tauri", "#00293F", "#F1F3F4")
 team_plot("Alpine", "#0078C1", "#FD4BC7")
 ```
 
-> == COMMENTARY / LIMITATIONS == : 
-> I really like these graphs and find them really useful for comparing driver pairings across the season. My only note would be that having both the positive and negative points gaps at the same time makes the gaps look larger than they really are, but at least this is consistent across all the drivers, so it does not misrepresent trends over time. And, I like the way it makes the graphs symmetrical, which I am not sure how we could achieve otherwise. 
-> Not sure if it would also make sense to look at percentage gaps (in terms of % of overall points) as well, since the number of points achieved by different teams is quite different, so a 10 points gap for Red Bull is extremely small, while for Aston Martin this may be a huge gap.
 
 Finally, we look at qualifying. Let's look at each teammate pair to see how their qualifying records compared from 2021-2022.
 
@@ -949,7 +956,7 @@ We summarize our conclusions to each of the research questions below:
 
 
 **Which drivers adapted best to the regulations?**
-- Looking at retirements, Verstappen, Ocon, Gasly, and Leclerc all appeared to have significantly fewer retirements in 2022 than their teammates. Verstappen and Ocon were the only drivers (of driver pairs that remained identical in 2021 and 2022) to have fewer retirements in 2022 than 2021.
+- Looking at retirements, Verstappen and Ocon were the only two drivers from our consistent 2021-2022 driver pairs to not have any driver-error related retirements in 2022. Sainz had by far the worst year of the drivers we considered, with four driver-error retirements in 2022. Clearly he did not seem to get along well with the new cars.
 - Looking at points gaps overall, the largest gap recorded from 2021 to 2022 was Verstappen over Perez, for a whopping 205.5 point difference. The average gap at a given race between any of our 6 pairs of teammates was about 55.
 - For points gaps over time, Norris clearly improved his lead over Ricciardo (McLaren) in 2022, as did Leclerc over Sainz (Ferrari) and Ocon over Alonso (Alpine). Tsunoda was trailing Gasly (Alpha Tauri) significantly in 2021, but their performances were much closer in 2022.
 - Looking at qualifying positions between teammates, Verstappen significantly outperformed Perez in both 2021/2022. Same with Norris over Ricciardo, with again the gap widening in 2022. Both Leclerc and Sainz saw huge improvements in average qualifying position from 2021-2022, with Leclerc qualifying better overall. Of our driver pairs, Stroll/Vettel (Aston Martin) and Alonso/Ocon (Alpine), were the only two pairs who qualified relatively similarly in 2021 and 2022. The driver with the biggest dropoff between 2021 and 2022 was Pierre Gasly (Alpha Tauri) who was previously qualifying mostly in the top 10, but post-rules-change, qualified primarily in the 10-15 range. Gasly previously qualified much better than his teammate Tsunoda, but they were relatively equal in 2022.
