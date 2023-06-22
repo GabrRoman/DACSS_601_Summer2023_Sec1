@@ -237,6 +237,7 @@ constructors_renamed <- constructors %>%
 ```
 
 
+
 ## Analysis
 
 
@@ -491,7 +492,8 @@ results_status <- results %>%
   filter(raceId >= 948) %>%
   inner_join(races, by = "raceId") %>%
   inner_join(status,by="statusId") %>%
-  select(raceId, year, driverId, disqualified, retired, status)
+  inner_join(constructors_renamed %>% select(constructorId, constructor_name), by = "constructorId") %>%
+  select(raceId, year, driverId, constructor_name, disqualified, retired, status)
   
 
 retirements <- results_status %>%
@@ -527,14 +529,18 @@ We can see here that there was a strong change in direction in terms of increase
 
 Given this jump from 2021 to 2022, it would be interesing to look into whether this was universal across all types of mechanical failures or if the new regulations caused some types of failures to increase while others decreased.
 
+We start by calculating the number of failures across each of these types (and by team, which we will look into shortly).
+
 ```{r}
 mechanical_failures <- retirements %>%
   filter(year %in% c(2021, 2022), mechanical_failure == TRUE) %>%
-  group_by(year, status) %>%
+  group_by(year, constructor_name, status) %>%
   summarize(count = n()) 
 
 mechanical_failures
 ```
+
+We then plot the number of failures in 2021 vs 2022 for each type of mechanical failure to see if we can get a sense of overall trends:
 
 ```{r}
 mechanical_failures %>%
@@ -543,14 +549,16 @@ mechanical_failures %>%
   mutate(change = `2022` - `2021`) %>%
   ggplot() +
   geom_segment( aes(x=reorder(status, change), xend=status, y=`2021`, yend=`2022`), color="black")  +
-  geom_point( aes(x=status, y=`2021`), color="skyblue", size=3 ) +
-  geom_point( aes(x=status, y=`2022`), color="orange1", size=3 ) +
+  geom_point( aes(x=status, y=`2021`, color="2021"), size=3 ) +
+  geom_point( aes(x=status, y=`2022`, color="2022") , size=3 ) +
   coord_flip() +
   theme_minimal() +
   xlab(NULL) +
   ylab("# of Retirements") +
-  ggtitle("# of Retirements For Different Mechanical Related Issues", subtitle = "2021 (Blue) vs 2022, post rules-change (Orange)") +
-  theme_minimal()
+  ggtitle("# of Retirements For Different Mechanical Related Issues", subtitle = "2021 (Pre-Rule Change) vs 2022 (Post-Change)") +
+  theme_minimal() +
+  labs(color = "Year") + 
+  scale_color_manual(values = c("skyblue", "orange1"))
 ```
 
 This plot gives us a lot more information than we had previously. We can now see that patterns vary significantly across different types of mechanical issues. Engines, for example, had a HUGE increase in number of related retirements. 2021 had only 1 engine related retirement while 2022 had 6! This makes sense as a big part of 2022 was a change in engine design, and often a new year of engine design means that there are still some kinks to be worked out.
@@ -559,9 +567,30 @@ We also see a big increase in power unit related failures, as well as water rela
 
 There are a few areas where we saw fewer incidents in 2022 than 2021. These are: wheel nuts, suspension, electrical, and brake issues.
 
-> == COMMENTARY / LIMITATIONS == : 
-> The lollipop chart here is super useful for helping explain what we saw in the earlier analysis and I think that would be interesting to readers. It might be useful to see if there is a way to add a legend for the colors though. Because of the way I had to draw the plot, this legend did not show up, which cna make it harder to read.
-> Another thing that is potentially worth looking into here is which teams were the ones facing the mechanical issues. Were these issues universal (all teams having them), or were they just focused on one specific team (e.g. there was a lot of commentary throughout the season on Ferrari's reliability issues). We are missing that information in this analysis so far, and it could just mean that rather than the regulations instituting overall reliability challenges, what really happened is that one team was just terrible at designing a reliable car compared with the others.
+Next, we can look at whether these mechanical issues that arose in 2022 were universal (across all teams) or whether some teams faced them more than others. The four issues that were most prevalent in 2022 were engine, power unit, gearbox, and hydraulic failures. We can look at each of these by team:
+
+```{r}
+team_colors <- c(
+"Williams" = "#00A0DE",
+"Red Bull" = "#FDD900",
+"McLaren" = "#FF8000",
+"Haas" = "#000000",
+"Ferrari" = "#ED1C24",
+"Aston Martin" = "#00594F",
+"Alpine" = "#FD4BC7",
+"Alpha Tauri" = "#20394C",
+"Alfa Romeo" = "#A42134",
+"Mercedes" = "#00A19B")
+
+
+
+
+mechanical_failures %>%
+  filter(year == 2022, status %in% c("Engine", "Power Unit", "Hydraulics", "Gearbox")) %>%
+  ggplot(aes(x=constructor_name, y = count, fill = constructor_name)) + geom_col() + facet_wrap(~status) + coord_flip() + theme_minimal() + xlab(NULL) + ylab("# of Retirements") + ggtitle("# of Retirements By Team for Top 4 Mechanical Issues In 2022") + scale_y_continuous(breaks = c(0, 1, 2)) + scale_fill_manual(values = team_colors[unique(mechanical_failures$constructor_name)])
+```
+
+We now see that issues varied dramatically across teams. McLaren and Red Bull only faced gearbox issues. Aston Martin and Alpine only faced Engine issues (and made up the majority), Williams only had Hydraulics issues, and Alpha Tauri only had power unit issues. The only team with none of these four issues was Mercedes, who appeared to have the best reliability overall.
 
 
 
@@ -605,7 +634,8 @@ constructors_ranked %>%
   theme_minimal() +
   xlab("Season") +
   ylab("Constructors' Championship Points") +
-  ggtitle("Points Earned In The Constructors' Championship, 2016-2022", subtitle = "Using Current Team Names")
+  ggtitle("Points Earned In The Constructors' Championship, 2016-2022", subtitle = "Using Current Team Names") +
+  scale_color_manual(values = team_colors[unique(constructors_ranked$constructor_name)])
 ```
 
 As we can see here, relative rankings in the championship remained pretty steady for a good part of the old regulations, with Mercedes dominant, Ferrari having a few good years, and Red Bull close behind. 
@@ -621,22 +651,22 @@ wins_podiums <- constructor_standings %>%
   inner_join(constructors_renamed, by = 'constructorId') %>%
   inner_join(races, by = 'raceId') %>%
   inner_join(results, by = c('raceId', 'constructorId')) %>%
-  select(constructor_name, year, gp_name, rank) %>%
+  select(constructor_name, year, gp_name, finish_position) %>%
   filter(year >= 2016 & year < 2023) %>%
   group_by(constructor_name, year) %>%
-  summarize(wins = sum(rank == 1), podiums = sum(rank %in% c(1, 2, 3)))
+  summarize(wins = sum(finish_position == 1), podiums = sum(finish_position %in% c(1, 2, 3)), avg_finish =mean(finish_position))
 
 wins_podiums %>%
   arrange(desc(podiums))
 ```
 
-Looking at a summary of each of these new variables we see that for wins, the most we had recorded was 10 in a season. The average was 2 wins per team.
+Looking at a summary of each of these new variables we see that for wins, the most we had recorded was 19 in a season. The average was 2 wins per team.
 
 ```{r}
 summary(wins_podiums$wins)
 ```
 
-For podiums, the max was 29 across both drivers, with an average of 6 per team.
+For podiums, the max was 33 across both drivers, with an average of 6 per team.
 
 ```{r}
 summary(wins_podiums$podiums)
@@ -644,22 +674,37 @@ summary(wins_podiums$podiums)
 
 ```{r}
 wins_podiums %>%
-  ggplot(aes(x = year, y = wins, col = constructor_name)) + geom_line() + theme_minimal() + ggtitle("Wins Per Season, 2016-2022") + geom_vline(xintercept = 2021) 
+  ggplot(aes(x = year, y = wins, col = constructor_name)) + geom_line() + theme_minimal() + ggtitle("Wins Per Season, 2016-2022") + geom_vline(xintercept = 2021) +
+    scale_color_manual(values = team_colors[unique(wins_podiums$constructor_name)]) +
+  ylab("# of Wins") + xlab("Season")
+
 ```
 
-We see that looking at Wins, Mercedes took a big dip and Ferrari took a big jump, while Red Bull remained pretty steady after the rule change.
+We see that looking at Wins, Mercedes took a big dip and Red Bull and Ferrari took a big jump, while most of the other teams remained pretty steady after the rule change.
 
 ```{r}
 wins_podiums %>%
-  ggplot(aes(x = year, y = podiums, col = constructor_name)) + geom_line() + theme_minimal() + ggtitle("Podiums Per Season, 2016-2022", subtitle = "Where a Podium Here Only Includes 2nd/3rd") + 
-  geom_vline(xintercept = 2021) 
+  ggplot(aes(x = year, y = podiums, col = constructor_name)) + geom_line() + theme_minimal() + ggtitle("Podiums Per Season, 2016-2022", subtitle = "Where a Podium Here Includes 1st-3rd Place") + 
+  geom_vline(xintercept = 2021) +
+  scale_color_manual(values = team_colors[unique(wins_podiums$constructor_name)]) +
+  ylab("# of Podiums") + xlab("Season")
 ```
 
-Looking at podiums, we see a similar trend.
+Looking at podiums, we see a similar trend. Red Bull and Ferrari doing much beter, Mercedes doing much worse. These teams seemed to take up a majority of the podiums, leaving the other teams earning fewer in 2022 than they did before.
 
-> == COMMENTARY / LIMITATIONS == : 
-> It is kind of difficult to tell all of these team colors apart. Would it make sense to use an official color palette that is representative of the actual team names? Might be worth adding for a final version.
-> Not sure if it would be interesting or not to look at average finish position as well versus just points (from our first graph). If we look at points, we are missing all the information happening between 11th-20th place since no points are awarded. Technically a team could be finishing middle of the road in 11th all season and they'd look just as bad on the points time table as a team finishing 20th every time, so we definitely lose some info if we don't look at finish position. 
+Finally, we can look at average finishing position to get a better sense of what is happening in the midfield and backmarker teams, as these teams don't often podium/win, or even score points, so it can be hard to track them.
+
+
+```{r}
+wins_podiums %>%
+  ggplot(aes(x = year, y = avg_finish, col = constructor_name)) + geom_line() + theme_minimal() + ggtitle("Avg Finishing Position Per Season, 2016-2022") + 
+  geom_vline(xintercept = 2021) +
+  scale_color_manual(values = team_colors[unique(wins_podiums$constructor_name)]) +
+  ylab("Avg Finish Position") + xlab("Season") + scale_y_reverse()
+```
+
+Looking here, we again see the same pattern at the top. Mercedes are finishing slightly worse than before, and both Ferrari and Red Bull had better average finishing positions in 2022. With this graph, though, we get a better sense of what was happening with the lower scoring teams. For example, we can see that McLaren on average finished several places behind where thehy finished in 2021, while Haas made a big jump forward from finishing at the back, to finishing closer to 14th on average. Alfa Romeo, Aston Martin, Alpine, and Williams were all relatively stable between 2021 and 2022 in terms of average finishing position.
+
 
 ### **Q5: Which drivers adapted best to the regulations?**
 
@@ -899,7 +944,9 @@ We summarize our conclusions to each of the research questions below:
 - The types of mechanical issues that increased the most were related to the engine and power unit, so these are likely where reliability issues were introduced. Wheel nut, suspension, electrical, and brake issues were less prevalent after the rule change.
 
 **How did the regulation change shake up the championship?**
-- Team rankings in the constructors championship changed significantly between 2021 and 2022. After the rules change, Mercedes dropped from 1st to 3rd, both Red Bull and Aston Martin won way more points, and McLaren and Alpha Tauri fell off considerably. Some of the small teams that had been struggling before (Alfa Romeo, Haas), earned more points than in previous years.
+- Team rankings in the constructors championship changed significantly between 2021 and 2022. After the rules change, Mercedes dropped from 1st to 3rd, both Red Bull and Aston Martin won way more points, and McLaren and Alpha Tauri fell off considerably. Some of the small teams that had been struggling before (Alfa Romeo, Haas), earned more points than in previous years. 
+- In 2022, it seems like the top teams took *more* of the podiums than in previous years, so all of the midfield and backmarker teams seemed to earn fewer podiums than in previous years. At the back, though, Haas made a big step forward in 2022 with a sigificant improvement in average finishing position.
+
 
 **Which drivers adapted best to the regulations?**
 - Looking at retirements, Verstappen, Ocon, Gasly, and Leclerc all appeared to have significantly fewer retirements in 2022 than their teammates. Verstappen and Ocon were the only drivers (of driver pairs that remained identical in 2021 and 2022) to have fewer retirements in 2022 than 2021.
