@@ -877,7 +877,9 @@ team_boxplot("Alpine", "#0078C1", "#FD4BC7")
 > On these graphs as well as the previous set, I'm not sure if it makes sense to keep the legend or not since we have that information on the x-axis as well. 
 
 
-## Conclusions
+## Critical Reflection
+
+### Summary
 
 We summarize our conclusions to each of the research questions below:
 
@@ -907,19 +909,37 @@ We summarize our conclusions to each of the research questions below:
 
 Overall, there *do* appear to have been some changes introduced with the rules shift in 2022. Cars seem to be slightly slower overall and less reliable. Teammate pairings have shifted a bit in terms of relative gap, as have the championship rankings.
 
-## Limitations
+### Limitations
 
 Of course, this analysis comes with quite a few limitations.
 
-It is hard to get *much* of a picture of Formula 1 post-rules-change since we only have one year's worth of data to summarize the "After", compared with 6 to summarize the "Before". It is possible that most of the trends we saw here (such as reliability issues) will stabilize over time, as will the gaps between teams. Often, a rule change can shake up a championship temporarily (if a team gets lucky and starts with a good design), but then other teams will continue to develop their designs and start to catch up. 
+One thing I learned pretty quickly is just how hard it is to get a bigger picture on changes happening over time--in large part due to the constantly changing nature of F1. We don't have the same race tracks, same drivers, or even same teams year over year, so finding things that are *consistent* enough to not have a bunch of confounding variables is quite difficult and results in limited data. We have to sort of pick and choose some things, which ends up leaving others out, so it's very difficult to get the full picture. Rather, we have to settle for getting close.
 
-Additionally, it is hard to get a bigger picture on changes over time since things are constantly changing in F1. We don't have the same race tracks, same drivers, or even same teams year over year, so finding things that are *consistent* enough to not have a bunch of confounding variables is quite difficult and results in limited data. 
+Another issue I anticipated before even looking at the data was the difficulty of comparing drivers across different teams. Since teams are all in very different cars, just because one driver always finishes ahead of another driver does not mean they are better, and could just mean they have a better car. This made it so that, for our final research questions about driver adaptation, the only way this could reasonably be addressed was by limiting the research to just the driver pairings that stayed the same from 2021-2022, which unfortunately meant that we left out more than half the drivers. 
 
-It is also very difficult to compare drivers across different teams. Since teams are all in very different cars, just because one driver always finishes ahead of another driver does not mean they are better, and could just mean they have a better car. This means it is hard for us to do any sort of overall analysis to see which driver did the "best" in 2022, and we are limited to only looking at the driver pairings that we could actually compare between 2021 and 2022 because they were consistent.
+Since we were comparing before and after, this also meant that there were certain drivers and some tracks in our data that we had to leave out, because they were only present in 2021 OR 2022 and not both. For example, there were several rookie drivers in 2022 that I did not analyze any data for because there was no data from the year before to compare with.
 
-Additionally, it is hard for us to conclude that any changes we *did* see are due to the rules change. Other things shifted between 2021 and 2022. For example, some drivers got sick and had to miss some races, which may have affected results. Some drivers were moving from their 2nd-3rd year versus 9th-10th, which typically means a different marginal skill improvement rate. If a driver closed the gap with their teammate, it could just be because they were still new to the sport and had a lot more they could learn from 2021-2022 than someone who'd already learned it all. 
+Additionally, F1 is a very complex sport with a lot of moving parts. It is hard for us to conclude that any changes we saw in the data were actually due to the rules change. Other things shifted between 2021 and 2022. For example, some drivers got sick and had to miss some races, which may have affected our data. Other races may have had weather related issues that slightly messed with lap times. Some drivers were moving from their 2nd-3rd year versus 9th-10th, which typically means a different marginal skill improvement rate. If a driver closed the gap with their teammate, it could just be because they were still new to the sport and had a lot more they could learn from 2021-2022 than someone who'd already learned it all. 
 
 It's hard to really say anything for sure, but it is certainly fascinating to see the anecdotal changes from watching on TV appear in the data.
+
+Finally, there is the larger issue of not enough data. It is hard to get *much* of a picture of Formula 1 post-rules-change since we only have one year's worth of data to summarize the "After", compared with 6 to summarize the "Before". It is possible that most of the trends we saw here (such as reliability issues) will stabilize over time, as will the gaps between teams. Often, a rule change can shake up a championship temporarily (if a team gets lucky and starts with a good design), but then other teams will continue to develop their designs and start to catch up. 
+
+### Future Work
+
+Thankfully, this data issue is one that will be resolved with time. It would be really interesting to go back in a few years time (before the next regulations change in 2026), and look at *all* the data from the new regulations change to see if anything from 2022 was just an outlier or if there were clearer patterns.
+
+There are a few other areas where it might be interesting to dig in as well:
+
+- One thing I noticed in this analysis as well is that for the previous regulations change, the longer it went on, car reliability seemed to improve over time. Then, with the new rules change, reliability issues spiked up again. It would be interesting to investigate this pattern further to see if the same slow, steady improvement followed by big spike occurs with each new regulations cycle. 
+
+- We did not get to cover any of the F1 rookies from 2022. It would be interesting to do analysis to see if we could identify (based on comparison to teammates potentially), which rookie did the best job adapting in their first year with the new regulations.
+
+- On a larger scale, an analysis comparing how rookie and veteran drivers (or maybe the "greats" who have a ton of wins and podiums) react to regulations changes differently would be an interesting angle. One could imagine that the best of the best drivers are very good at adapting to change and learning quickly the first year after a regulations shift, while rookie drivers might have more difficulty adapting. 
+
+- When there is a regulations change, teams tend to update their cars more frequently with new design changes/improvements as they learn more about what works and what doesn't. It would be really interesting to see, right after a regulations change, how frequently teams swap positions throughout the season in terms of performance (As in, Red Bull is the fastest week 1, then week 4 Mercedes has upgrades and they suddenly jump to first, etc.) and how much performance improves each week. How many seconds separate the finishing times of all the different teams? Are they getting closer together or further apart?
+
+There are a huge number of interesting questions to look into and the analysis for this project only scratched the surface. Hopefully, as more data comes out, this is something I can look into further!
 
 ## References
 
