@@ -924,9 +924,58 @@ team_boxplot("Alpine", "#0078C1", "#FD4BC7")
 
 ```
 
-> == COMMENTARY / LIMITATIONS == : 
-> I'm not sure if it would also be helfpful to include some sort of count of how many times each driver qualified for each of the three qualifying sessions. That is something that people talk about a lot on the TV broadcast, but this information is technically covered here (since qualifying position is directly dependant on which sessions the driver participates in), so I'm not sure if it would be interesting at all.
-> On these graphs as well as the previous set, I'm not sure if it makes sense to keep the legend or not since we have that information on the x-axis as well. 
+Finally, we can look at how many times each driver qualified for each qualifying session. When watching the Formula 1 broadcast, this is often referenced as a statistic around driver performance, e.g. "This is the first time that Charles Leclerc has been eliminated in Q1 all season, what a shocker of a result!"
+
+We start by finding the highest qualifying session each driver made it to per race:
+
+```{r}
+highest_qualifying <- overall_results %>%
+  select(surname, constructor_name, year, q1_time_s, q2_time_s, q3_time_s) %>%
+  mutate(made_Q1 = ifelse(!is.na(q1_time_s), TRUE, FALSE),
+         made_Q2 = ifelse(!is.na(q2_time_s), TRUE, FALSE),
+         made_Q3 = ifelse(!is.na(q3_time_s), TRUE, FALSE),
+         highest_qualifying = case_when(
+           made_Q3 == TRUE ~ "Q3",
+           made_Q2 == TRUE ~ "Q2",
+           made_Q1 == TRUE ~ "Q1",
+           TRUE ~ "None"
+         ))
+
+highest_qualifying
+```
+
+We can then count up how many times each driver was eliminated in each of the three sessions. Looking at this data, we can rank the drivers by how often they made it to Q3, the final qualifying session which includes the 10 best drivers. Max Verstappen had the most impressive performance of all, making Q3 100% of the time in 2022 and 95% of the time in 2021, followed by Leclerc (2022) and Norris (2021) with about 90% of the time.
+
+The driver who made Q3 the least was Stroll (2022), with making Q3 about 10% of the time.
+
+```{r}
+highest_qualifying %>%
+  group_by(surname, constructor_name, year) %>%
+  summarize(
+    out_Q1 = sum(highest_qualifying == "Q1", na.rm=TRUE)/n(),
+    out_Q2 = sum(highest_qualifying == "Q2", na.rm=TRUE)/n(),
+    out_Q3 = sum(highest_qualifying == "Q3", na.rm=TRUE)/n()) %>%
+  arrange(desc(out_Q3))
+```
+Of course, it's hard to compare drivers across teams to one another. We can plot these results by team to get a better sense of comparison.
+
+```{r}
+highest_qualifying %>%
+  ggplot(aes(x = surname, fill = highest_qualifying)) + geom_bar(position = "fill") + facet_grid(rows = vars(constructor_name), cols = vars(year), scales = "free_y") + coord_flip() + scale_fill_brewer(palette = "Set1") +
+    theme(strip.text.y.right = element_text(angle = 0)) + ggtitle("Frequency of Highest Qualifying Session Made By Each Driver, 2021-2022") + xlab(NULL) + ylab("Proportion of Qualifying Sessions")
+```
+
+Looking at this, we can quickly get a sense of how well each driver (and team) did at qualifying in 2021 and 2022. Note that *None* here means that a driver does not have a qualifying time recorded. This is potentially due to a crash or mechanical failure of some kind.
+
+We see overall that Verstappen is dominant. The only other drivers that come close to matching how often he made Q3 in 2022 were his teammate Perez, and Ferrari's Sainz and Leclerc. In 2021, the closest drivers were Perez, Norris, Leclerc, and Gasly (of Alpha Tauri). 
+
+Looking at changes from 2021 to 2022 we can see a few interesting things as well:
+- For Alpha Tauri, both Tsunoda and Gasly had much more trouble making it to late qualifying sessions (Q2/Q3) in 2022, but this seemed to affect Gasly much more, with a huge fall off in performance. He got eliminated in Q1 quite a few times in 2022, which is pretty poor.
+- In 2021, Ocon and Alonso (Alpine) seemed to make qualifying sessions at similar rates, but in 2022, Alonso jumped forward and made Q3 significantly more often.
+- The closest overall recorded teammate match in this data was Sainz and Leclerc in 2022, who made each qualifying session at almost equal rates, with the exception of Leclerc going out in Q1. Ocon and Alonso in 2021 were also very close.
+- Ricciardo (McLaren) had a huge fall of in how often he made Q3, particularly compared with his teammate Norris.
+- Red Bull as a team appear to be the most consistent in making Q3 for both years.
+
 
 
 ## Critical Reflection
@@ -960,8 +1009,9 @@ We summarize our conclusions to each of the research questions below:
 - Looking at points gaps overall, the largest gap recorded from 2021 to 2022 was Verstappen over Perez, for a whopping 205.5 point difference. The average gap at a given race between any of our 6 pairs of teammates was about 55.
 - For points gaps over time, Norris clearly improved his lead over Ricciardo (McLaren) in 2022, as did Leclerc over Sainz (Ferrari) and Ocon over Alonso (Alpine). Tsunoda was trailing Gasly (Alpha Tauri) significantly in 2021, but their performances were much closer in 2022.
 - Looking at qualifying positions between teammates, Verstappen significantly outperformed Perez in both 2021/2022. Same with Norris over Ricciardo, with again the gap widening in 2022. Both Leclerc and Sainz saw huge improvements in average qualifying position from 2021-2022, with Leclerc qualifying better overall. Of our driver pairs, Stroll/Vettel (Aston Martin) and Alonso/Ocon (Alpine), were the only two pairs who qualified relatively similarly in 2021 and 2022. The driver with the biggest dropoff between 2021 and 2022 was Pierre Gasly (Alpha Tauri) who was previously qualifying mostly in the top 10, but post-rules-change, qualified primarily in the 10-15 range. Gasly previously qualified much better than his teammate Tsunoda, but they were relatively equal in 2022.
+- Verstappen was by far the most dominant and consistent driver in terms of making it to Q3 in qualifying and his team (Red Bull) was overall most reliable at making Q3 across both drivers. Gasly and Ricciardo had the biggest fall off in performance relative to their teammates. The Aston Martin team also seemed to struggle a lot with the new regulations, being eliminated in Q1/Q2 quite frequently in 2022 compared with 2021.
 
-Overall, there *do* appear to have been some changes introduced with the rules shift in 2022. Cars seem to be slightly slower overall and less reliable. Teammate pairings have shifted a bit in terms of relative gap, as have the championship rankings.
+From this, we can see that overall, there *do* appear to have been some changes introduced with the rules shift in 2022. Cars seem to be slightly slower overall and less reliable. Teammate pairings have shifted a bit in terms of relative gap, as have the championship rankings.
 
 ### Limitations
 
