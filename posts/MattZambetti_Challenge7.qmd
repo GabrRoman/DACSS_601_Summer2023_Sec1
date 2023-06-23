@@ -1,0 +1,97 @@
+---
+title: "Challenge 7 Submission"
+author: "Matt Zambetti"
+description: "Visualizing Multiple Dimensions"
+date: "6/22/2023"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_7
+  - air_bnb
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(ggplot2)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Read in data
+
+I am re-using the Airbnb data from my Challenge 5 Submission so I can elaborate on the plots.
+
+  - air_bnb  ⭐⭐⭐
+
+```{r}
+ab_nyc_2019 <- read_csv("_data/AB_NYC_2019.csv")
+
+ab_nyc_2019
+```
+
+### Briefly describe the data
+
+The data presented is information about Airbnb listings in New York. It runs through the typical information about each listing including the name of the listing, the hosts name, some location data, and finally plenty of booking information (including price, nights, etc.)
+
+## Tidy Data (as needed)
+
+As I previously mentioned, I did not need to tidy any of the data.
+
+The only mutation that I made, was the calculation of minimum nights cost. My idea behind this was to add an additional comparison metric that took into account what property is the cheapest AND which one has the lowest minimum stay cost. This is done by multiplying the `minimum nights` and the `price` per night variables.
+
+
+```{r}
+ab_nyc_2019 <- ab_nyc_2019 %>%
+  mutate(`minimum_cost`= `price`*`minimum_nights`)
+
+ab_nyc_2019
+```
+
+## Visualization with Multiple Dimensions
+
+### First Visualization
+
+The first visualization I am doing is editing my `Price per Night by Each Neighbordhood Group`. As suggested by Sean, I will by trying to utilize the `facet_wrap` function to split the histogram across panels.
+
+```{r}
+ggplot(ab_nyc_2019, aes(x=`price`,fill=`neighbourhood_group`)) +
+  geom_bar(width=25) +
+  scale_x_continuous(limits = c(0, 1000)) +
+  ggtitle("Price per Night Divided by Each Neighborhood Group") +
+  labs(y = "Number of Apartments", x = "Cost per Night", fill="Neighborhood Group") +
+  facet_wrap(~neighbourhood_group)
+```
+Above we can see, instead of stacking all the data in one graph, we break them up into five separate plots which really allow the comparison.
+
+I chose to use a bar graph because I wanted to emphasize the quantity at each price entry. This gives the viewer a much better understanding at the amount of each unlike a line graph. I also believe a line graph would show a variable through time where as these entries are price independent.
+
+### Second Visualization
+
+The second graph I wanted to recreate was the `Number of Nights Versus Cost Per Night` graph with a distinction of each `Neighbourhood Group`. Here, I wanted to adjust the plot size and the transparency as suggested to give the viewer an easier time to view
+
+```{r}
+# Adding custom color pallete
+cbp2 <- c("#000000", "#009E73", "#FF0000", "#0072B2", "#00FF00")
+
+ggplot(ab_nyc_2019, aes(x=`minimum_nights`, y=`price`, color=`neighbourhood_group`)) +
+  geom_point(size=1, alpha=0.5) +
+  scale_x_continuous(limits = c(0, 500)) +
+  ggtitle("Minimum Nights Versus Cost per Night") +
+  labs(y = "Cost Per Night", x = "Mimimum Nights", color = "Neighborhood Group") +
+  scale_colour_manual(values = cbp2)
+```
+
+I used a scatter plot here because I did not want to count how many fell into each group, but rather see if there was correlation or a trend with the three variables at hand. The main two variables I wanted to compare were `Cost Per Night` and `Minimum Cost`, but still wanted to see if `Neighborhood Group` had any effect.
+
+I chose not to use `facet_wrap()` because I did not want to focus on the `Neighborhood Group` distinction but rather the other two variables as I mentioned. Also, I realized the previous color scheme I was using was a bit hard to read, so I preloaded my own colors into the chart.
+
+
+
+

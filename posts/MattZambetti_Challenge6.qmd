@@ -1,8 +1,8 @@
 ---
-title: "Challenge 6 Instructions"
-author: "Sean Conway"
+title: "Challenge 6 Submission"
+author: "Matt Zambetti"
 description: "Visualizing Time and Relationships"
-date: "5/30/2023"
+date: "6/22/2023"
 format:
   html:
     toc: true
