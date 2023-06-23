@@ -1,5 +1,5 @@
 ---
-title: "HW3 - World Happiness Data"
+title: "HW3_World Happiness Data"
 author: "Zhongyue Lin"
 description: "Summarize statistics and visualize project data sets - World Happiness Data"
 date: "6/22/2023"
