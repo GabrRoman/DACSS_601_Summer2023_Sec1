@@ -1,0 +1,107 @@
+---
+title: "Challenge 4 Instructions"
+author: "Gabrielle Roman"
+description: "More data wrangling: pivoting"
+date: "5/30/2023"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_4
+  - abc_poll
+  - eggs
+  - fed_rates
+  - hotel_bookings
+  - debt
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to:
+
+1)  read in a data set, and describe the data set using both words and any supporting information (e.g., tables, etc)
+2)  tidy data (as needed, including sanity checks)
+3)  identify variables that need to be mutated
+4)  mutate variables and sanity check all mutations
+
+## Read in data
+
+Read in one (or more) of the following datasets, using the correct R package and command.
+
+-   abc_poll.csv ⭐
+-   poultry_tidy.xlsx or organiceggpoultry.xls⭐⭐
+-   FedFundsRate.csv⭐⭐⭐
+-   hotel_bookings.csv⭐⭐⭐⭐
+-   debt_in_trillions.xlsx ⭐⭐⭐⭐⭐
+
+```{r}
+library(readr)
+abc_poll_2021 <- read_csv("_data/abc_poll_2021.csv")
+View(abc_poll_2021)
+abc_poll_2021
+```
+
+### Briefly describe the data
+This data set appears to provide demographic information and answers from a group of participants who completed a poll. Judging by the number of rows, there were 527 participants and 31 columns classifying the participants by variables such as gender, education level, work status, and race.
+
+## Tidy Data (as needed)
+
+Is your data already tidy, or is there work to be done? Be sure to anticipate your end result to provide a sanity check, and document your work here.
+
+```{r}
+#political
+abc_poll_2021%>%
+  select(starts_with("Q"))%>%
+  colnames()
+
+#demographic
+abc_poll_2021%>%
+  select(starts_with("pp"))%>%
+  colnames()
+
+
+```
+
+I will identify which variables constitute demographics; which are political answers, and which are demographic information.
+
+Political answer demographics have "Q" in their heading, while demographic headers begin with "pp".
+
+## Identify variables that need to be mutated
+
+Are there any variables that require mutation to be usable in your analysis stream? For example, are all time variables correctly coded as dates? Are all string variables reduced and cleaned to sensible categories? Do you need to turn any variables into factors and reorder for ease of graphics and visualization?
+
+Variables worth adjusting are the "An" and "A" in the QPID column and the "Non-Hispanic" designation in the ppethm column.
+
+```{r}
+table(abc_poll_2021$ppethm)
+
+abc_poll <- abc_poll_2021%>%
+  mutate(ethnicity = str_remove(ppethm,", Non-Hispanic"))%>%
+  select(-ppethm)
+
+abc_poll_complete <- abc_poll%>%
+  mutate(party_affiliation = str_remove(QPID, "A[n]* "))%>%
+  select(-QPID)
+
+#sanity check
+table(abc_poll_complete$ethnicity)
+table(abc_poll_complete$party_affiliation)
+view(abc_poll_complete)
+
+
+```
+
+Any additional comments?
