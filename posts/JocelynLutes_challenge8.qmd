@@ -1,0 +1,136 @@
+---
+title: "Challenge 8: Joining Data"
+author: "Jocelyn Lutes"
+description: "Joining tables from the SNL dataset"
+date: "6/27/2023"
+format:
+  html:
+    df-print: paged
+    toc: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_8
+  - snl
+  - jocelyn_lutes
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(here)
+library(lubridate)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+
+## Read in data
+
+For this challenge, I will be using the SNL dataset.
+
+```{r}
+actors <- read_csv(here('posts', '_data', 'snl_actors.csv'))
+casts <-  read_csv(here('posts', '_data', 'snl_casts.csv'))
+seasons <-  read_csv(here('posts', '_data', 'snl_seasons.csv'))
+```
+
+### Briefly describe the data
+
+The SNL data set is comprised of three tables: actors, casts, and seasons.
+
+**Actors**
+
+The `actors` table contains data to describe the different actors from `SNL`. This table contains data, such as their URL, type of actor on the show (e.g. cast, crew, guest), and gender. Each of the `r nrow(actors %>% distinct())` rows is uniquely defined using an identification variable named `aid`.
+
+``` {r}
+actors
+```
+
+**Casts**
+
+The `casts` table provides information about the casts of the different seasons. This table contains data to match an actor to a season and descriptive information about their time on the season, such as their first and last episode dates, if they were an anchor for "Weekend Update", and the number of episodes they acted on. Each of the `r nrow(casts %>% distinct(aid, sid))` rows is uniquely identified by the actor id (`aid`) and season id (`sid`).
+
+``` {r}
+casts
+```
+
+
+**Seasons**
+
+The `seasons` table provides information about `r nrow(seasons %>% distinct(sid))` different seasons of SNL, such as the year, dates of the first and last episodes, and number of episodes.
+
+``` {r}
+seasons
+```
+
+## Tidy Data (as needed)
+
+In its raw form, the data is already tidy, so no pivoting will be needed. However, after reviewing the data, there are still some cleaning steps that we should take.
+
+First, we will `mutate` the data so that all of the date columns are properly formatted as dates. 
+
+```{r}
+# Casts table
+cast_date_cols <- casts %>%
+  select(contains('epid')) %>% 
+  colnames()
+
+casts <- casts %>%
+  mutate(across(cast_date_cols, ymd))
+
+glimpse(casts)
+
+# Seasons table
+season_date_cols <- seasons %>%
+  select(contains('epid')) %>% 
+  colnames()
+
+seasons <- seasons %>%
+  mutate(across(season_date_cols, ymd))
+
+glimpse(seasons)
+```
+
+Next, it appears that the gender column from `actors` might have some values that would be better coded as `NA`. Given that the gender classification appears to be binary, we will classify `andy` and `unknown` as `NA`.
+
+```{r}
+actors %>%
+  group_by(gender) %>%
+  tally()
+
+actors <- actors %>%
+  mutate(gender = ifelse(gender %in% c('andy', 'unknown'), NA, gender))
+
+actors %>%
+  group_by(gender) %>%
+  tally()
+```
+
+Finally, we will convert all categorical variables in the tables to factors.
+
+```{r}
+actors <- actors %>%
+  mutate(gender = factor(gender))
+
+glimpse(actors)
+```
+
+## Join Data
+
+Now, we will use the unique identification columns to join the three tables into a single table. Because we do not want to lose any data, we will use a left join. When joining our tables, we will start with `casts`. This table includes both `aid` and `sid`, which will make it easy to join the other two tables. We will also specify a suffix for any variable names that overlap between the tables.
+
+With a `left_join`, we would expect to see a table with `r nrow(casts)` rows and `r ncol(actors) + ncol(seasons) + ncol(casts) - 2` columns. (Note: because we join on `aid` and `sid`, those columns only appear in the data once.)
+
+``` {r}
+joined <- casts %>%
+  left_join(actors, by = 'aid') %>%
+  left_join(seasons, by = 'sid', suffix = c('_actor', '_season'))
+
+joined
+```
+
+From the data frame above, we can see that our resulting joined table matches our expected dimensions!
