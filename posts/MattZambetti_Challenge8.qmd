@@ -1,0 +1,132 @@
+---
+title: "Challenge 8 Submission"
+author: "Matt Zambetti"
+description: "Joining Data"
+date: "6/232023"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_8
+  - debt
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(ggplot2)
+library(readxl)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Read in data
+
+The two data sets I read in were the `fed_rate` and the `debt` one.
+
+  - fed_rate ⭐⭐⭐
+  - debt ⭐⭐⭐
+
+```{r}
+
+# Reading the Fed Data
+
+fed_data <- read_csv("_data/FedFundsRate.csv")
+
+head(fed_data)
+
+# Reading the Debt Data
+
+debt_data <- read_excel("_data/debt_in_trillions.xlsx")
+
+head(debt_data)
+
+```
+
+### Briefly describe the data
+
+`Fed Rate`: This data contains basic information about the federal economy. It includes measurements around the Fed Rate, GDP, Inflation, Unemployment, and other economical measures.
+
+`Debt Rate`: This data contains measurements of various types of debt.
+
+## Tidy Data (as needed)
+
+For the `Fed Data`, from quick observation there is no data that needs to be tidied, except for reformatting the Year, Month, and Day into a Data Column.
+
+```{r}
+
+# Creating the date column for the fed rate
+date_col <- paste(fed_data$Year, fed_data$Month, fed_data$Day)
+
+fed_data <- fed_data %>%
+  mutate(Date = as.Date(date_col,format = "%Y %m %d"), .before=`Year`)
+
+fed_data <- fed_data[-c(2, 3, 4)]
+
+head(fed_data)
+
+```
+
+Similarly, for the `Debt Data` we had to create a `Date` variable as well, which consisted of expaning the year to be four digits, and formatting the quarter to be the first of each corresponding month. (Q1=March, Q2=June, Q3=September, Q4=December).
+
+```{r}
+
+# Creating the date column for the debt table
+
+debt_data[c('Year','Month')] <- str_split_fixed(debt_data$`Year and Quarter`, ':', 2)
+debt_data <- debt_data[,c(9,10,1:8)]
+
+# Changing the year to match
+debt_data <- mutate(debt_data, 'Year'=paste('20',debt_data$Year, sep=''))
+# Changing the month to match
+debt_data$Month[debt_data$Month == 'Q1'] <- '3'
+debt_data$Month[debt_data$Month == 'Q2'] <- '6'
+debt_data$Month[debt_data$Month == 'Q3'] <- '9'
+debt_data$Month[debt_data$Month == 'Q4'] <- '12'
+# Adding in a day
+debt_data <- debt_data %>% mutate(Day = 1, .after=Month)
+
+# Formatting into Date
+date_col <- paste(debt_data$Year, debt_data$Month, debt_data$Day)
+
+debt_data <- debt_data %>%
+  mutate(Date = as.Date(date_col,format = "%Y %m %d"), .before=`Year`)
+
+debt_data <- debt_data[-c(2, 3, 4, 5)]
+
+head(debt_data)
+
+
+```
+
+## Join Data
+
+My methodology in joining is combining the debt data of each quarter with the various measurements we are given in `Fed Rates` on those given months. For example, `Q1` corresponding with March, `Q2` corresponds with June, `Q3` corresponds with September and `Q4` corresponds with December. So as we can see in my data mutation, I expanded the years to be four digits and separated the quarter from the year in the `Debt` data so we could join the two.
+
+I only wanted to have entries where we had both the Debt and Fed Data, so I chose to do a right join, since there were a lot less entries in the `Debt Data`.
+
+```{r}
+
+combined_data <- fed_data %>% right_join(debt_data, by = join_by(Date))
+
+head(combined_data)
+
+```
+
+A simple observation we could make is by comparing two different rates. We can do this by graphing the two and making comparisons about the lines.
+
+```{r}
+
+combined_data %>%
+  ggplot(aes(Date)) +
+  geom_line(aes(y = combined_data$Total, color='Red')) +
+  geom_line(aes(y = combined_data$`Inflation Rate`, color='Blue')) +
+  ylab("Inflation Rate/Debt")
+
+```
+If we look closely we can see something interesting. We can see that when the inflation rate changes, there is a bit of a lag in the Debt graph, for example right when the inflation rate drops in 2010, the debt graph takes 3ish years to bottom out as well. The same observation can be made for when the inflation rate spikes around 2006.
