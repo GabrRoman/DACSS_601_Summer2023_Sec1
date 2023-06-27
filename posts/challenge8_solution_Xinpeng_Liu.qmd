@@ -1,0 +1,157 @@
+---
+title: "Challenge 8 Submission"
+author: "Xinpeng Liu"
+description: "Joining Data"
+date: "6/26/2023"
+format:
+  html:
+    df-print: paged
+    toc: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_8
+  - railroads
+  - snl
+  - faostat
+  - debt
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(ggplot2)
+library(readxl)
+library(dplyr)
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to:
+
+1)  read in multiple data sets, and describe the data set using both words and any supporting information (e.g., tables, etc)
+2)  tidy data (as needed, including sanity checks)
+3)  mutate variables as needed (including sanity checks)
+4)  join two or more data sets and analyze some aspect of the joined data
+
+(be sure to only include the category tags for the data you use!)
+
+## Read in data
+
+Read in one (or more) of the following datasets, using the correct R package and command.
+
+  - military marriages ⭐⭐
+  - faostat ⭐⭐
+  - railroads  ⭐⭐⭐
+  - fed_rate ⭐⭐⭐
+  - debt ⭐⭐⭐
+  - us_hh ⭐⭐⭐⭐
+  - snl ⭐⭐⭐⭐⭐
+
+we choose faostat for this challengs
+
+```{r}
+cattle_dairy <- read_csv("_data/FAOSTAT_cattle_dairy.csv")
+country_groups <- read_csv("_data/FAOSTAT_country_groups.csv")
+egg_chicken <- read_csv("_data/FAOSTAT_egg_chicken.csv")
+livestock <- read_csv("_data/FAOSTAT_livestock.csv")
+cattle_dairy
+country_groups
+egg_chicken
+livestock
+```
+
+### Briefly describe the data
+These datasets appear to come from the Food and Agriculture Organization of the United Nations (FAO) and relate to livestock and agricultural statistics from different countries. The datasets include the following:
+
+  - 1. FAOSTAT_cattle_dairy.csv: This dataset contains information about dairy cattle across different countries. For each record, the data includes the country name, the year, and various information about dairy cattle including the number of milk animals, the yield of milk per animal, and the total production of milk. Data also include information about whether the data is an estimate, calculated data, or official data.
+
+  - 2. FAOSTAT_country_groups.csv: This is a lookup table containing details about different countries and their respective groupings. This can be useful when comparing data between different regions or groups of countries. The information includes country code, country name, M49 code, and ISO2 and ISO3 codes. The M49 and ISO codes are standardized country codes used in international data.
+
+  - 3. FAOSTAT_egg_chicken.csv: This dataset has information on chicken egg production across different countries. Similar to the cattle dataset, it includes information about the number of laying chickens, yield of eggs per chicken, and total egg production for each year. Again, data also include information about whether the data is an estimate, calculated data, or official data.
+
+  - 4. FAOSTAT_livestock.csv: This dataset includes information about livestock populations (specifically, it mentions asses) in different countries. The data includes the country, the year, and the number of animals in the livestock population.
+  
+## Sanity checks
+we make four step to do sanity checks
+
+  - 1. Check the first few and the last few records of the dataset.
+  - 2. Check the structure and summary of the dataset.
+  - 3. Look for missing values.
+  - 4. Check for duplicate rows.
+
+```{r}
+# Function to perform sanity checks
+sanity_check <- function(df) {
+  print(head(df)) # check first few rows
+  print(tail(df)) # check last few rows
+  print(str(df)) # check structure
+  print(summary(df)) # check summary
+  print(any(is.na(df))) # check for missing values
+  print(anyDuplicated(df)) # check for duplicates
+}
+
+# Perform sanity checks
+sanity_check(cattle_dairy)
+sanity_check(country_groups)
+sanity_check(egg_chicken)
+sanity_check(livestock)
+
+```
+
+
+
+## Join Data
+
+Be sure to include a sanity check, and double-check that case count is correct!
+
+We used left_join() function from the dplyr package in R to join our datasets. The data from different sources, 'livestock', 'egg_chicken', and 'cattle_dairy', share common variables such as 'Area' and 'Year'. This makes these variables ideal keys for joining the data. We chose a left join because we wanted to keep all rows from the livestock dataset (our left dataset), and add matching rows from egg_chicken and cattle_dairy datasets to it. 
+
+```{r}
+dplyr::glimpse(cattle_dairy)
+dplyr::glimpse(country_groups)
+dplyr::glimpse(egg_chicken)
+dplyr::glimpse(livestock)
+
+livestock <- livestock %>% rename(Livestock_Stock = Value)
+egg_chicken <- egg_chicken %>% rename(Egg_Production = Value)
+cattle_dairy <- cattle_dairy %>% rename(Dairy_Production = Value)
+
+df_joined <- livestock %>%
+  left_join(egg_chicken, by = c("Area", "Year")) %>%
+  left_join(cattle_dairy, by = c("Area", "Year"))
+
+correlation_egg <- cor(df_joined$Livestock_Stock, df_joined$Egg_Production, use = "complete.obs")
+correlation_dairy <- cor(df_joined$Livestock_Stock, df_joined$Dairy_Production, use = "complete.obs")
+```
+
+## Data analysis
+
+For the analysis, we chose to use scatter plots. A scatter plot is a type of plot using Cartesian coordinates to display values for two variables for a set of data. In our case, the variables are livestock population and production outputs. This type of plot is particularly useful when we want to see if there's a correlation or pattern between two numeric variables, as it allows us to visually examine possible relationships.
+
+```{r}
+
+print(paste("Correlation between livestock stock and egg production:", correlation_egg))
+print(paste("Correlation between livestock stock and dairy production:", correlation_dairy))
+
+ggplot(df_joined, aes(x = Livestock_Stock, y = Egg_Production)) +
+  geom_point() +
+  theme_minimal() +
+  labs(title = "Livestock Stock vs Egg Production",
+       x = "Livestock Stock",
+       y = "Egg Production")
+
+# Scatter plot of Livestock Stock vs Dairy Production
+ggplot(df_joined, aes(x = Livestock_Stock, y = Dairy_Production)) +
+  geom_point() +
+  theme_minimal() +
+  labs(title = "Livestock Stock vs Dairy Production",
+       x = "Livestock Stock",
+       y = "Dairy Production")
+```
+
+By visually inspecting the scatter plots, we can identify trends and correlations between the variables. For instance, if we observe an upward trend, it would suggest that as livestock population increases, so does egg or dairy production, indicating a positive correlation. On the contrary, a downward trend would suggest a negative correlation.
