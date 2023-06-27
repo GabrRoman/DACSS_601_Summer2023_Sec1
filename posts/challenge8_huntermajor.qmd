@@ -1,0 +1,149 @@
+---
+title: "Challenge 8 Post: Joining FAOSTAT Datasets"
+author: "Hunter Major"
+description: "Joining Data"
+date: "6/27/2023"
+format:
+  html:
+    df-print: paged
+    toc: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_8
+  - faostat
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(ggplot2)
+library(readxl)
+library(readr)
+library(lubridate)
+library(dplyr)
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to:
+
+1)  read in multiple data sets, and describe the data set using both words and any supporting information (e.g., tables, etc)
+2)  tidy data (as needed, including sanity checks)
+3)  mutate variables as needed (including sanity checks)
+4)  join two or more data sets and analyze some aspect of the joined data
+
+(be sure to only include the category tags for the data you use!)
+
+## Read in data
+
+Read in one (or more) of the following datasets, using the correct R package and command.
+
+  - Today, I'll be reading in faostat ⭐⭐
+
+```{r}
+cattledairy <-read_csv("_data/FAOSTAT_cattle_dairy.csv")
+cattledairy
+
+countrygroups <- read_csv ("_data/FAOSTAT_country_groups.csv")
+countrygroups
+```
+
+```{r}
+dim(cattledairy)
+head(cattledairy)
+str(cattledairy)
+
+```
+
+```{r}
+dim(countrygroups)
+head(countrygroups)
+str(countrygroups)
+```
+
+### Briefly describe the data
+These FAOSTAT datasets are likely sourced from the United Nation's Food and Agriculture Association (FAO). They provide information about the livestock and agriculture of various nations.
+
+  - The FAOSTAT_cattle_dairy dataset contains data on dairy cattle and has 36,449 observations and 14 columns/variables. It has the following variables: Domain Code, Domain, Area Code, Area, Element Code, Element, Item Code, Item, Year Code, Year, Unit, Value, Flag, and Flag Description.
+  
+  - The FAOSTAT_country_groups dataset contains data on country groups and various countries. It has 1,943 observations and 7 columns/variables. The variables in this dataset are as follows: Country Group Code, Country Group, Country Code, Country, M49 Code, ISO2 Code, and ISO3 Code.
+
+## Tidy Data (as needed)
+
+Is your data already tidy, or is there work to be done? Be sure to anticipate your end result to provide a sanity check, and document your work here.
+
+The data is already tidy.
+
+## Mutating Variables
+Are there any variables that require mutation to be usable in your analysis stream? For example, do you need to calculate new values in order to graph them? Can string values be represented numerically? Do you need to turn any variables into factors and reorder for ease of graphics and visualization?
+
+There seems to be a good opportunity to join the Country variable of FAOSTAT_country_groups with the Area variable of FAOSTAT_cattle_dairy. Within the FAOSTAT_country_groups dataset, the only variable I will be joining with the FAOSTAT_cattle_dairy dataset is the Country variable, so before doing so, I will remove the other variables from the FAOSTAT_country_groups dataset. I don't think this is the best practice in real-world data cleaning as it deletes a lot of data, but for the purposes of this joining exercise and to pair down the amount of information I'll have in the joined dataset (to something that's more concise, relevant, and useful for this challenge); this seems convenient to me.
+```{r}
+# removing all variables except Country from FAOSTAT_country_groups
+countrygroups2 <- countrygroups %>% select(-c(`Country Group Code`, `Country Group`, `Country Code`, `M49 Code`, `ISO2 Code`, `ISO3 Code`))
+countrygroups2
+
+# check for new dimensions
+dim(countrygroups2)
+```
+Now there's one variable, Country, and 1,943 rows in the countrygroups2 dataset.
+
+I also feel like I can pair down on the variables in the FAOSTAT_cattle_dairy dataset, so I will be removing the following variables for convenience:
+  - Domain
+  - Domain Code
+  - Area Code
+  - Element Code
+  - Item
+  - Item Code
+  - Year Code
+  - Flag
+  - Flag Description
+  
+```{r}
+# removing unnecessary variables from FAOSTAT_cattle_dairy
+cattledairy2 <- cattledairy %>% select(-c(`Domain`, `Item`, `Domain Code`, `Area Code`, `Element Code`, `Item Code`, `Year Code`, `Flag`, `Flag Description`))
+cattledairy2
+
+#check for new dimensions
+dim(cattledairy2)
+```
+Now, there's 5 variables and 36,449 observations in cattledairy2.
+
+## Join Data
+
+Be sure to include a sanity check, and double-check that case count is correct!
+```{r}
+#joining Country to Area from countrygroups2 to cattledairy2
+joincattlecountry <- inner_join(cattledairy2, countrygroups2,
+                                 by = c("Area" = "Country"))
+joincattlecountry
+
+#getting rid of repeat rows
+joincattlecountry2 <- unique(joincattlecountry)
+joincattlecountry2
+
+#pair down to years 2000-2004
+joincattlecountry3 <- joincattlecountry2[joincattlecountry2$Year >= "2000" & joincattlecountry2$Year <= "2004",]
+joincattlecountry3
+```
+I got rid of repeating rows and further paired the dataset down just to range from years 2000-2004.
+
+## Data Visualization
+```{r}
+# Scatterplot of Value over Time Sorted by Element
+ggplot(joincattlecountry3, aes(x= Year, y= Value, fill= Element))+
+  geom_point(shape= 21, color="black", size= 2)+
+  labs(title= "Scatterplot of Dairy Cattle Value sorted by Element", subtitle = "2000-2004", x= "Year", y= "Value", fill= "Element")+
+  theme(axis.text.x = element_text(angle = 30, size = 2))+
+  facet_grid()+
+  theme_minimal()
+  
+```
+
+
+
