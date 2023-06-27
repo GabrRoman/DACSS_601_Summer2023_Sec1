@@ -23,6 +23,7 @@ categories:
 library(tidyverse)
 library(here)
 library(lubridate)
+library(ggplot2)
 
 knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
 ```
@@ -114,7 +115,7 @@ Finally, we will convert all categorical variables in the tables to factors.
 
 ```{r}
 actors <- actors %>%
-  mutate(gender = factor(gender))
+  mutate(gender = factor(gender, levels = c('male', 'female')))
 
 glimpse(actors)
 ```
@@ -134,3 +135,73 @@ joined
 ```
 
 From the data frame above, we can see that our resulting joined table matches our expected dimensions!
+
+## Analysis
+
+For our analysis of the data, we will explore how the size and composition of the SNL cast has changed over time. From the table below, we can see that there is only one season of SNL for each year, so we will use `year` as our time variable.
+
+``` {r}
+joined %>%
+  distinct(sid, year) %>%
+  group_by(sid) %>%
+  summarize(n_years = n()) %>%
+  arrange(desc(n_years))
+```
+
+First, we will explore how the size of the full-time and part-time cast has changed over time. To do this, we will first construct a variable, where `Full-Season` means that an actor appeared in all episodes of a season and `Part-Season` means that an actor only appeared in some episodes. We will then use `group_by` and `summarize` to obtain counts of actors per group. We will use a connected scatter plot to show how the counts vary over group and time.
+
+``` {r}
+joined %>%
+  # limit to cast members
+  filter(type == 'cast') %>%
+  # create a full-time cast indicator var
+  mutate(full_time_cast = factor(ifelse(season_fraction == 1, 'Full-Season', 'Part-Season'))) %>%
+  # get the count of actors for each year and cast type
+  distinct(year, aid, full_time_cast) %>%
+  group_by(year, full_time_cast) %>%
+  summarize(count = n()) %>%
+  # plot the change over time
+  ggplot(aes(x = year, y = count, color = full_time_cast)) +
+  geom_line() +
+  geom_point() +
+  theme_minimal() +
+  labs(title = 'SNL Cast Size by Year (1975-2020)',
+    x = 'Year',
+    y = 'Cast Size',
+    fill = 'Cast Type') +
+  scale_color_manual(values = c('#2B598E', 'darkgrey'))
+```
+
+From the graph above, we can see that there is an increasing trend in the number of full-season members on SNL. Since 1980, the number of part-season cast members has remained fairly low.
+
+Given that the number of full-season cast members has been increasing since 1975, we can also explore how the gender composition of the cast has changed over time. For this analysis, we will use `group_by` and `summarize` to calculate the percentage of males and females on the cast, and we will use a stacked bar plot to visualize the results. In this case, because the percentage for each year sums to 100%, a stacked bar plot seems to be a fairly easy way to see differences in the groups.
+
+``` {r}
+totals_by_year <- joined %>%
+  filter(type == 'cast', season_fraction == 1, !is.na(gender)) %>%
+  distinct(year, aid) %>%
+  group_by(year) %>%
+  summarize(total_count = n())
+  
+joined %>%
+  filter(type == 'cast', season_fraction == 1, !is.na(gender)) %>%
+  mutate(gender = ifelse(gender == 'male', 'M', 'F')) %>%
+  distinct(year, aid, gender) %>%
+  group_by(year, gender) %>%
+  summarize(count = n()) %>%
+  left_join(totals_by_year, by = 'year') %>%
+  mutate(pct = round(count / total_count, 1)) %>%
+  ggplot(aes(x = year, y = pct, fill = gender)) +
+  geom_col() +
+  labs(title = 'Gender Composition of SNL Cast (1975-2020)',
+    x = 'Year',
+    y = 'Percent',
+    fill = 'Gender') + 
+  theme_minimal() + 
+  scale_y_continuous(labels = scales::percent) + 
+  # color scales for gender
+  # https://blog.datawrapper.de/gendercolor/
+  scale_fill_manual(values = c('#EB9347', '#5AABB9'))
+```
+
+From this graph, we can see that across time, males have made up a larger percentage of the SNL cast. In recent years, however, the percentage of males has been fairly stable at ~60%, which is a decrease from previous years.
