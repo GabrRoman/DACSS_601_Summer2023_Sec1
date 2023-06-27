@@ -1,0 +1,108 @@
+---
+title: "Challenge 8 Solutions"
+author: "Moira Chiong"
+description: "Joining Data"
+date: "6/27/2023"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_8
+  - railroads
+  - snl
+  - faostat
+  - debt
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(readxl)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to:
+
+1)  read in multiple data sets, and describe the data set using both words and any supporting information (e.g., tables, etc)
+2)  tidy data (as needed, including sanity checks)
+3)  mutate variables as needed (including sanity checks)
+4)  join two or more data sets and analyze some aspect of the joined data
+
+(be sure to only include the category tags for the data you use!)
+
+## Read in data
+
+```{r}
+setwd("C:/Users/chion/OneDrive/Desktop/DACSS 601/DACSS_601_Summer2023_Sec1/posts")
+library(readxl)
+debt_in_trillions <- read_excel("_data/debt_in_trillions.xlsx")
+
+library(readr)
+FedFundsRate <- read_csv("_data/FedFundsRate.csv")
+```
+
+## Briefly describe the data
+
+```{r}
+summary(FedFundsRate)
+summary(debt_in_trillions)
+```
+##Description of data
+
+There are 904 observations with 8 variables in the federal funds rate data set. The data covers the years 1954-2017 and pertains to federal funds rates. The federal funds target rate is recorded monthly for 1954-2008, while the upper and lower targets cover 2008-2017. There is also macroeconomic data for real GDP (percent change), unemployment and inflation. The real GDP data is recorded for the first and forth quarters, while the unemployment and inflation data is recorded quarterly. The mean of the federal funds target rate is higher than than the median at 5.66 and 5.5 respectively, likely indicating a skewed right distribution. The federal funds rate ranges from 1 to 11.5. In addition, as expected, the federal funds upper target rate and lower target rate also indicate a skewed right distribution, with a mean of .3 and median of .25 for upper targets and mean of .06 and median of 0 for lower targets. In fact, all of the macroeconomic data is also skewed right, as expected, with means higher than the medians (See table below).
+
+There are 74 observations and 8 variables recorded quarterly in the debt in trillions data set. The debt data does indicate as uniform distribution patterns, with the variables showing both skewed left (Mortgage, HE, Other, Total) and skewed right distributions(Auto Loan, Credit Card, Student Loan (see table below).
+
+To join the two data sets, I needed to convert the existing dates to calendar dates to use them as the joining variable. 
+
+## Tidy Data (as needed)
+
+```{r}
+
+debt <- debt_in_trillions
+
+#Convert quarters to dates
+debt <- debt %>%
+  mutate(Date=parse_date_time(`Year and Quarter`, orders="yq"))
+
+# to simplify, remove year and quarters
+debt <- debt %>%
+   select(-contains("Year")) %>%
+  # move Date to front
+select(Date, 1:last_col(0))
+# view data
+debt
+
+fed <-FedFundsRate
+#create calendar date column out of original columns
+fed_calendar_date <- paste(fed$Year, fed$Month, fed$Day)
+# mutate new column, create new calendar date column
+fed <- fed %>%
+  mutate(Date = as.Date(fed_calendar_date,format = "%Y %m %d"), .before=`Year`)
+View()
+# filter out old date columns
+fed <- fed[-c(2,3,4)]
+fed
+```
+
+## Join Data
+```{r}
+joined <- fed %>%
+  right_join(debt, by=join_by(Date)) %>%
+  rename(Other_Debt=Other,Total_Debt=Total)
+joined
+
+# filter date so data is present for both sets
+joined <- joined %>%
+  filter(Date < '2017-01-01')
+joined
+View(joined)
+```
