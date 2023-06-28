@@ -25,6 +25,7 @@ library(readxl)
 library(readr)
 library(lubridate)
 library(dplyr)
+library(tidyr)
 knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
 ```
 
@@ -138,12 +139,27 @@ I got rid of repeating rows and further paired the dataset down just to range fr
 # Scatterplot of Value over Time Sorted by Element
 ggplot(joincattlecountry3, aes(x= Year, y= Value, fill= Element))+
   geom_point(shape= 21, color="black", size= 2)+
-  labs(title= "Scatterplot of Dairy Cattle Value sorted by Element", subtitle = "2000-2004", x= "Year", y= "Value", fill= "Element")+
+  labs(title= "A Scatterplot of Dairy Cattle Value sorted by Element", subtitle = "2000-2004", x= "Year", y= "Value", fill= "Element")+
   theme(axis.text.x = element_text(angle = 30, size = 2))+
   facet_grid()+
   theme_minimal()
   
 ```
+Using Pivot-Wider to get country specific-data
+```{r}
+#using pivot wider to get country specific data
+joincattlecountry4 <- joincattlecountry3 %>% pivot_wider(names_from = Element, values_from = Value)
+joincattlecountry4
 
+#pair down to Areas starting with letter "A": Afghanistan-Azerbaijan
+joincattlecountry5 <- joincattlecountry4[joincattlecountry4$Area >= "Afghanistan" & joincattlecountry4$Area <= "Azerbaijan",]
+joincattlecountry5
 
+#Bar Plot of Yield Value by Country
+ggplot(joincattlecountry5, aes(x= Area, y= Yield))+
+         geom_bar(width= .5, stat="identity", fill="orange", position= position_dodge(width = .8))+
+         facet_grid()+
+         theme(axis.text.x = element_text(angle = 30, size = 8))+
+         labs(title = "Bar Plot of Yield (hg/An) By Country", subtitle= "2000-2004", x= "Country", y= "Yield (hg/An")
+```
 
