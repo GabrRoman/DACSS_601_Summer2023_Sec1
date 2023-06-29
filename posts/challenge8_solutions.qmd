@@ -10,15 +10,11 @@ format:
     code-fold: false
     code-copy: true
     code-tools: true
-    css: styles.css
-    mermaid-format: png
 categories:
   - challenge_8
   - activeduty
   - snl
   - faostat
-editor_options: 
-  chunk_output_type: console
 ---
 
 ```{r}
@@ -177,23 +173,6 @@ military_sheets
 ```
 
 Now we have a list of sheet names to map with the function. Typically, a `purrr::map_()` function creates a list of data frames with each element in the original vector fed to the function as a single list element, as depicted below.
-
-```{mermaid}
-%%| fig-cap: Purrring Military Workbook
-flowchart LR
-  subgraph Excel
-    A[Airforce] --> E{Read military}
-    B[MarineCorp] --> E
-    C[Navy] --> E
-    D[Army] --> E
-  end
-  subgraph R.List
-    E --> F("list[[1]], branch==airforce")
-    E --> G("list[[2]], branch==marines")
-    E --> H("list[[3]], branch==navy")
-    E --> I("list[[4]], branch==army")
-  end
-```
 
 We are going to use `map_dfr()` to join the four elements of the list into a single dataframe. `map` is the generic `purrr` function, and adding on the `dfr` means that we want to turn all of the list elements created by `map` into a single dataframe (df) that is joined by rows (r). 
 
@@ -418,17 +397,6 @@ casts
 seasons
 ```
 
-```{r}
-rmarkdown::paged_table(actors)
-```
-
-```{r}
-rmarkdown::paged_table(casts)
-```
-
-```{r}
-rmarkdown::paged_table(seasons)
-```
 
 ## Analysis  
 
