@@ -1,5 +1,5 @@
 ---
-title: "Challenge 1 Submission"
+title: "Challenge 1 - Birds"
 author: "Srujan Kagitala"
 description: "Reading in data and creating a post"
 date: "6/26/2023"

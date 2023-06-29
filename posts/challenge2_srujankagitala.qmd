@@ -1,0 +1,138 @@
+---
+title: "Challenge 2 - Hotel Bookings"
+author: "Srujan Kagitala"
+description: "Data wrangling: using group() and summarise()"
+date: "6/26/2023"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_2
+  - railroads
+  - faostat
+  - hotel_bookings
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to
+
+1)  read in a data set, and describe the data using both words and any supporting information (e.g., tables, etc)
+2)  provide summary statistics for different interesting groups within the data, and interpret those statistics
+
+## Read in the Data
+
+Read in one (or more) of the following data sets, available in the `posts/_data` folder, using the correct R package and command.
+
+-   railroad\*.csv or StateCounty2012.xls ⭐
+-   FAOstat\*.csv or birds.csv ⭐⭐⭐
+-   hotel_bookings.csv ⭐⭐⭐⭐
+
+```{r}
+#| label: read
+booking_data <- read.csv("_data/hotel_bookings.csv")
+head(booking_data)
+```
+
+Add any comments or documentation as needed. More challenging data may require additional code chunks and documentation.
+
+## Describe the data
+
+Using a combination of words and results of R commands, can you provide a high level description of the data? Describe as efficiently as possible where/how the data was (likely) gathered, indicate the cases and variables (both the interpretation and any details you deem useful to the reader to fully understand your chosen data).
+
+```{r}
+#| label: summary
+
+#Number of bookings per hotel.
+no_bookings_by_hotel <- booking_data %>%
+  group_by(hotel) %>%
+  summarise(count = n())
+```
+
+This data set contains booking data of `r unique(no_bookings_by_hotel$hotel)`. It contains `r nrow(booking_data)` bookings information. `r no_bookings_by_hotel$count[1]` and `r no_bookings_by_hotel$count[2]` observations are respectively captured from `r no_bookings_by_hotel$hotel[1]` and `r no_bookings_by_hotel$hotel[2]`. The information available per booking are `r names(booking_data)`.
+
+## Provide Grouped Summary Statistics
+
+Conduct some exploratory data analysis, using dplyr commands such as `group_by()`, `select()`, `filter()`, and `summarise()`. Find the central tendency (mean, median, mode) and dispersion (standard deviation, mix/max/quantile) for different subgroups within the data set.
+
+```{r}
+#| label: analysis
+
+# Number of bookings cancelled versus not cancelled 
+# per hotel across years 
+(hotel_booking_by_year <- booking_data %>%
+  group_by(hotel, arrival_date_year, is_canceled) %>%
+  summarise(no_bookings = n()))
+
+total_hotel_bookings_by_year <- hotel_booking_by_year %>%
+  group_by(hotel, arrival_date_year) %>%
+  summarise(no_bookings = sum(no_bookings))
+
+ggplot(data = total_hotel_bookings_by_year, aes(x= arrival_date_year, y=no_bookings)) +
+  geom_bar(stat = "identity", mapping = aes(fill = hotel), position = "dodge") +
+  ggtitle("Total bookings across hotels") +
+  ylab("bookings") +
+  xlab("year")
+
+cancelled_bookings_by_year <- hotel_booking_by_year %>% 
+  filter(is_canceled == 1) %>%
+  select(hotel, arrival_date_year, no_bookings)
+
+ggplot(data = cancelled_bookings_by_year, aes(x= arrival_date_year, y=no_bookings)) +
+  geom_bar(stat = "identity", mapping = aes(fill = hotel), position = "dodge") +
+  ggtitle("Cancelled bookings across hotels") +
+  ylab("bookings") +
+  xlab("year")
+
+not_cancelled_bookings_by_year <- hotel_booking_by_year %>% 
+  filter(is_canceled == 0) %>%
+  select(hotel, arrival_date_year, no_bookings)
+
+ggplot(data = not_cancelled_bookings_by_year, aes(x= arrival_date_year, y=no_bookings)) +
+  geom_bar(stat = "identity", mapping = aes(fill = hotel), position = "dodge") +
+  ggtitle("Active bookings across hotels") +
+  ylab("bookings") +
+  xlab("year")
+
+# Total number of bookings that are not cancelled per hotel
+(actual_hotel_booking <- hotel_booking_by_year %>%
+  filter(is_canceled == 0) %>%
+  group_by(hotel) %>%
+  summarise(no_bookings = sum(no_bookings)))
+
+# Mean, median and standard deviation of night stays
+# during the week and weekends per hotel
+(stay_pattern <- booking_data %>% 
+  group_by(hotel) %>%
+  summarise(mean_stay_week_nights = mean(stays_in_week_nights),
+            median_stay_week_nights = median(stays_in_week_nights),
+            sd_stay_week_nights = sd(stays_in_week_nights),
+            mean_stay_weekend_nights = mean(stays_in_weekend_nights),
+            median_stay_weekend_nights = median(stays_in_weekend_nights),
+            sd_stay_weekend_nights = sd(stays_in_weekend_nights)))
+
+# Number of repeated guests who didn't cancel per hotel.
+(repeated_guests <- booking_data %>%
+  filter(is_repeated_guest == 1, is_canceled == 0) %>%
+  group_by(hotel) %>%
+  summarise(count = n()))
+```
+
+### Explain and Interpret
+
+Be sure to explain why you choose a specific group. Comment on the interpretation of any interesting differences between groups that you uncover. This section can be integrated with the exploratory data analysis, just be sure it is included.
+
+Compared the number of booking across hotels on a yearly basis and tried to observe the retention rate among customers.We can see that in the period of 3 years, `r actual_hotel_booking$hotel[1]` has `r actual_hotel_booking$no_bookings[1]` bookings that aren't cancelled whereas `r actual_hotel_booking$hotel[2]` has `r actual_hotel_booking$no_bookings[2]`. Out of these, `r (repeated_guests$count[1]/actual_hotel_booking$no_bookings[1])*100`% and `r (repeated_guests$count[2]/actual_hotel_booking$no_bookings[2])*100`% are repeated bookings for `r repeated_guests$hotel[1]` and `r repeated_guests$hotel[2]` respectively. Although the number of bookings for City Hotel were higher, Resort Hotel has a  better customer retention rate compared to City Hotel.
