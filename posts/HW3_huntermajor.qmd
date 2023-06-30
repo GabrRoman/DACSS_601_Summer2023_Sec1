@@ -20,9 +20,6 @@ categories:
 ```{r}
 # loading packages into R Studio
 
-#| label: setup
-#| warning: false
-#| message: false
 
 library(tidyverse)
 library(dplyr)
@@ -31,12 +28,14 @@ library(readxl)
 library(tidyr)
 library(googlesheets4)
 library(stringr)
+library(lubridate)
+library(ggplot2)
 
 
 knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
 ```
 
-## Homework 2 Overview
+## Homework 3 Overview
 For this homework, your goal is to read in a more complicated dataset. Please use the category tag "hw2" as well as a tag for the dataset you choose to use.
 
 Read in a dataset. It's strongly recommended that you choose a dataset you're considering using for the final project. If you decide to use one of the datasets we have provided, please use a challenging dataset - check with us if you are not sure. 
@@ -210,19 +209,19 @@ Looks like Wind.speed.kmh and Pressure.inHg were removed successfully!
 ```{r}
 # change values that read in Deaths column as "None" to the number 0
 atlantic_hurricanes12$Deaths <- str_replace(atlantic_hurricanes12$Deaths, "None", "0")
-print(atlantic_hurricanes12)
+atlantic_hurricanes12
 
 # change values in Deaths column that read as "Unknown" to NA
 atlantic_hurricanes12$Deaths <- na_if(atlantic_hurricanes12$Deaths, "Unknown")
-print(atlantic_hurricanes12)
+atlantic_hurricanes12
 
 # change values in Deaths column that contain >1,000 to NA
 atlantic_hurricanes12$Deaths <- na_if(atlantic_hurricanes12$Deaths, ">1,000")
-print(atlantic_hurricanes12)
+atlantic_hurricanes12
 
 # change Deaths column to read as a numeric variable
 atlantic_hurricanes13 <- transform(atlantic_hurricanes12, Deaths = as.numeric(Deaths))
-print(atlantic_hurricanes13)
+atlantic_hurricanes13
 ```
 As expected, looks like the Deaths column now reads as a numeric variable and the "None" value has been switched to 0 and the "Unknown" value has been switched to NA!
 
@@ -272,7 +271,7 @@ atlantic_hurricanes15
 
 # removing $ dollar sign from Damage.$.amount column, making Damage.$.amount column a numeric variable
 atlantic_hurricanes15$`Damage.$.amount`= as.numeric(gsub("\\$", "", atlantic_hurricanes15$`Damage.$.amount`))
-print(atlantic_hurricanes15)
+atlantic_hurricanes15
 
 ```
 
@@ -306,34 +305,51 @@ unique(atlantic_hurricanes17$Land.areas.affected)
 Looks like modifications to the Land.areas.affected column were made successfully as expected!
 
 ## Summary Statistics
+### summary stats about Max.wind.speed.mph
 ```{r}
 # summary stats about Max.wind.speed.mph
 summary(atlantic_hurricanes17$Max.wind.speed.mph)
-
+```
+### summary stats about Max.pressure.hPa
+```{r}
 #summary stats about Max.pressure.hPa
 summary(atlantic_hurricanes17$Max.pressure.hPa)
-
+```
+### summary stats about Deaths
+```{r}
 #summary stats about Deaths
 summary(atlantic_hurricanes17$Deaths)
+```
 
+### summary stats about Land.areas.affected
+```{r}
 # summary stats about total number of distinct land areas affected
 atlantic_hurricanes17%>% summarise(count = n_distinct(Land.areas.affected))
 
 # summary of how many times each land area was featured
 table(atlantic_hurricanes17$Land.areas.affected)
+```
 
+### summary stats about Max.category
+```{r}
 # summary stats about total number of distinct Max categories featured
 atlantic_hurricanes17%>% summarize(count = n_distinct(Max.category))
 
 # summary stats about how many times each distinct Max category is featured
 table(atlantic_hurricanes17$Max.category)
-
+```
+### summary stats about Name
+```{r}
 #summary stats about total number of distinct hurricane names featured
 atlantic_hurricanes17%>% summarize(count = n_distinct(Name))
 
 #summary stats about how many times each hurricane name was featured-->there are repeats because of how we pivoted land areas affected earlier but also hurricane names are periodically recycled
 table(atlantic_hurricanes17$Name)
+```
 
+### summary stats about Damage.$.units
+
+```{r}
 # summary stats number of distinct Damage.$.units
 atlantic_hurricanes17%>% summarise(count = n_distinct(`Damage.$.unit`))
 
@@ -341,10 +357,64 @@ atlantic_hurricanes17%>% summarise(count = n_distinct(`Damage.$.unit`))
 table(atlantic_hurricanes17$`Damage.$.unit`)
 
 ```
+## Note: Fully Tidying both the Duration column and the Damage.$.amount column is still in progress! *this and is relevant summary stats and visualizations incorporating them will be fully updated by the final project due date
 
+## Data Visualizations
+### making temporary modifications to duration column and pairing down the number of years from 1920-2020 down to 2000-2020 for visualization purposes in this draft
+```{r}
+# Modifying the Duration column into Date and Year
+atlantic_hurricanes18 <- atlantic_hurricanes17 %>%
+  separate(Duration, c("Date", "Year"), ", ")
+atlantic_hurricanes18
 
+# Editing down to only focus on years 2000-2020
+atlantic_hurricanes19 <- atlantic_hurricanes18[atlantic_hurricanes18$Year >= "2000" & atlantic_hurricanes18$Year <= "2020",]
+atlantic_hurricanes19
 
+```
 
+## Connected Scatterplot of Correlation between Max.wind.speed.mph and Max.pressure.hPa
+```{r}
+# Scatterplot of Correlation between Max.wind.speed.mph and Max.pressure.hPa
+ggplot(atlantic_hurricanes19, aes(x= Max.wind.speed.mph, y= Max.pressure.hPa))+
+  geom_point(size=3, fill="black", color="black")+
+  geom_line(color= "red", size= 1)+
+  labs(title = "Connected Scatterplot of Correlation between Max.wind.speed.mph & Max.pressure.hPa", subtitle = "2000-2020", x= " Max Wind Speed (mph)", y="Max Pressure (hPa)")+
+  theme(axis.text.x = element_text(angle = 30, size = 2))+
+  facet_grid()+
+  theme_minimal()
+
+```
+For the most part, it seems as though as Wind Speed (mph) increases, Pressure (hPa) decreases--meaning that more severe hurricanes (of a higher category) have lower pressure (hPa) measures.
+
+## Bar Plot of Max Category by Max.wind.speed.mph sorted by Hurricane Name, 2018-2020
+```{r}
+#pair down to storms between 2018-2020
+
+atlantic_hurricanes20 <- atlantic_hurricanes19[atlantic_hurricanes19$Year >= "2018" & atlantic_hurricanes19$Year <= "2020",]
+atlantic_hurricanes20
+
+# bar plot of Name by Max.wind.speed.mph
+ggplot(atlantic_hurricanes20, aes(x= Max.category, y= Max.wind.speed.mph, fill= Name))+
+  geom_bar(stat = "identity", position= position_dodge(width = .6), width = 0.4)+
+  labs(title = "Bar Plot of Max Category by Max Wind Speed sorted by Hurricane Name", subtitle= "2018-2020, **Category 4 data not included in dataset", x= "Max Category (no storms w/ max cat. 1 in these years)", y="Max Wind Speed (mph)", fill= "Hurricane Name")+
+  facet_grid()+
+  theme_light()
+
+```
+Looks like half of the hurricanes (6 out of 12) from 2018-2020 were Category 2 storms with max wind speeds hovering slightly over 100 mph.
+
+## Bar Plot of Hurricane Frequency over the Years, 2000-2020 sorted by Damage.$.unit
+```{r}
+# Bar Plot of Hurricane Count over the Years, 2000-2020, sorted by Damage.$.unit
+ggplot(data = atlantic_hurricanes19, aes(x= Year, fill= `Damage.$.unit`))+
+  geom_bar(width= .2, position= position_dodge(width = .4))+
+  facet_grid()+
+  theme(axis.text.x = element_text(angle = 30, size = 7))+
+  labs(title= "Bar Plot of Hurricane Count over the Years sorted by unit of Damage Cost ($USD)", subtitle= "2000-2020", x= "Year", y= "Count", fill= "Damage.$.unit")
+  
+```
+Overall, notwithstanding the damage $ unit values that are NA or non-available, it seems like the damage from hurricanes across 2000-2020 is becoming more expensive--even in more recent years where it may seem like there's slightly less hurricanes per year (compared to a year like 2005), more hurricanes are more consistently causing damage in the billions of dollars...the last recorded hurricanes where the damage cost stayed within the thousands unit was in the year 2006--over 15 years ago.
 
 ## Potential Research Questions This Dataset Could Help Answer
 Do duration, wind speed, pressure, and hurricane category classification have any correlation with deaths and damage costs caused by hurricanes? If so, how so? Which areas are most susceptible to the most severe and devastating hurricanes in the century this dataset covers? On the other hand, there are some limitations to this dataset. Something I noticed this dataset doesn't answer is, at what point in the duration of the hurricane were these measures of wind speed and pressure taken? While I'm assuming it is a listing of the highest intensity recorded wind speed and pressure throughout the course of the storm, this isn't clear. Moreover, for the hurricanes that impacted multiple areas, the windspeed and pressure was likely not the exact same measure in each successive location the hurricane made landfall in. While insights can be deduced from this dataset, especially after additional, forthcoming stages of cleaning the data, studying each storm and each area individually will provide additional, more full and nuanced context(s) of systems, resources, lived experiences, etc that influenced and/or were influenced by the hurricane(s).
