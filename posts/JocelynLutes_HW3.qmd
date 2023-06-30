@@ -59,7 +59,7 @@ NHANES data is divided into five main categories:
 
 `Questionnaire Data`: Information that comes from an interview, including personal and family health history, medication use, physical activity, and many others.
 
-Across these five categories, the full NHANES dataset includes approximately 94 tables, but we will only use 12 tables for our analysis. All of the tables can be easily joined using the subject's unique identification number.
+Across these five categories, the full NHANES dataset includes approximately 94 tables, but we will only use 12 tables (or possibly fewer) for our analysis. All of the tables can be easily joined using the subject's unique identification number.
 
 The website for NHANES currently has data dating back to 1999 available to the public, but for this analysis, we will focus on the data collected from January 2017 to March 2020 (pre-pandemic data).
 
