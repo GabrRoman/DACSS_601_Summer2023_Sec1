@@ -746,7 +746,7 @@ sample %>%
   theme_minimal() +
   scale_y_continuous(labels = scales::percent) +
   labs(
-    title = 'BMI Classification by Food Security Group',
+    title = 'Diabetes Classification by Food Security Group',
     x = 'Food Security',
     y = 'Percent',
     fill = 'Diabetes'
@@ -774,7 +774,7 @@ sample %>%
   theme_minimal() +
   scale_y_continuous(labels = scales::percent) +
   labs(
-    title = 'BMI Classification by Food Security Group',
+    title = 'Blood Pressure Status by Food Security Group',
     x = 'Food Security',
     y = 'Percent',
     fill = 'High Blood Pressure'
@@ -802,7 +802,7 @@ sample %>%
   theme_minimal() +
   scale_y_continuous(labels = scales::percent) +
   labs(
-    title = 'BMI Classification by Food Security Group',
+    title = 'Cholesterol Status by Food Security Group',
     x = 'Food Security',
     y = 'Percent',
     fill = 'High Cholesterol'
@@ -922,7 +922,7 @@ sample %>%
   theme_minimal() +
   scale_y_continuous(labels = scales::percent) +
   labs(
-    title = 'BMI Classification by Food Security Group and CRP Level',
+    title = 'Diabetes Classification by Food Security Group and CRP Level',
     x = 'Food Security',
     y = 'Percent',
     fill = 'Diabetes'
@@ -945,7 +945,7 @@ sample %>%
   theme_minimal() +
   scale_y_continuous(labels = scales::percent) +
   labs(
-    title = 'BMI Classification by Food Security Group and CRP Level',
+    title = 'Blood Pressure Classification by Food Security Group and CRP Level',
     x = 'Food Security',
     y = 'Percent',
     fill = 'High Blood Pressure'
