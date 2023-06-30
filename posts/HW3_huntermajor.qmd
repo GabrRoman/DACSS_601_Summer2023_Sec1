@@ -378,7 +378,7 @@ atlantic_hurricanes19
 # Scatterplot of Correlation between Max.wind.speed.mph and Max.pressure.hPa
 ggplot(atlantic_hurricanes19, aes(x= Max.wind.speed.mph, y= Max.pressure.hPa))+
   geom_point(size=3, fill="black", color="black")+
-  geom_line(color= "red", size= 1)
+  geom_line(color= "red", size= 1)+
   labs(title = "Connected Scatterplot of Correlation between Max.wind.speed.mph & Max.pressure.hPa", subtitle = "2000-2020", x= " Max Wind Speed (mph)", y="Max Pressure (hPa)")+
   theme(axis.text.x = element_text(angle = 30, size = 2))+
   facet_grid()+
