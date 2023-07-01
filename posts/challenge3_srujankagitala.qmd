@@ -1,0 +1,94 @@
+---
+title: "Challenge 3 - Australian Marriage"
+author: "Srujan Kagitala"
+description: "Tidy Data: Pivoting"
+date: "6/26/2023"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_3
+  - animal_weights
+  - eggs
+  - australian_marriage
+  - usa_households
+  - sce_labor
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to:
+
+1.  read in a data set, and describe the data set using both words and any supporting information (e.g., tables, etc)
+2.  identify what needs to be done to tidy the current data
+3.  anticipate the shape of pivoted data
+4.  pivot the data into tidy format using `pivot_longer`
+
+## Read in data
+
+Read in one (or more) of the following datasets, using the correct R package and command.
+
+-   animal_weights.csv ⭐
+-   eggs_tidy.csv ⭐⭐ or organiceggpoultry.xls ⭐⭐⭐
+-   australian_marriage\*.xls ⭐⭐⭐
+-   USA Households\*.xlsx ⭐⭐⭐⭐
+-   sce_labor_chart_data_public.xlsx 🌟🌟🌟🌟🌟
+
+```{r}
+#| label: read
+
+#read data
+marriage_data <- read.csv("_data/australian_marriage_tidy.csv")
+
+#print head of read data.
+head(marriage_data)
+```
+
+### Briefly describe the data and Anticipate the End Result
+
+Describe the data, and be sure to comment on why you are planning to pivot it to make it "tidy"
+
+The data set I choose is Australian marriage. It looks like it captures the responses of participants to a survey across regions in Australia. The data set has `r nrow(marriage_data)` rows and `r ncol(marriage_data)` columns. The variables recorded for each observation are `r names(marriage_data)`. The data currently records two observations for each region in Australia. So, I want to tidy the data to represent all the responses and their statistics specific to an area into a single observation. For this, we need to convert the values "resp" variable can take to independent variables and assign values from count and percent variables. The tidied data set will contain territory, yes/no count, yes/no percent for each observation. 
+
+### Challenge: Describe the final dimensions
+
+```{r}
+#| label: calculation
+
+# Unique values of resp variable.
+no_unqiue_resp_values = length(unique(marriage_data$resp))
+
+#expected rows
+rows = nrow(marriage_data)/no_unqiue_resp_values
+
+#expected columns
+columns = (ncol(marriage_data) - 2)* no_unqiue_resp_values + 1
+```
+
+The number of unique values the resp variable has are `r no_unqiue_resp_values`. After pivoting wider, the data set will have `r rows` rows and `r columns` columns. So, the pivoted data set will have `r rows`x`r columns` dimension.
+
+### Challenge: Pivot the Chosen Data
+
+```{r}
+#| label: pivot
+
+#pivot wider on resp variable with values from count and percent
+marriage_pivot <- marriage_data %>%
+  pivot_wider(names_from=resp, values_from=c(count, percent))
+marriage_pivot
+```
+
+The dimensions of dataset after pivoting longer match with the calculated dimension.
