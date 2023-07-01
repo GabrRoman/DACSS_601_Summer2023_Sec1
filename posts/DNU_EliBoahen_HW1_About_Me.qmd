@@ -1,0 +1,44 @@
+---
+title: "Eli Boahen"
+image: images/Eli_Boahen_Blog_Image.jpg
+about:
+  template: solana
+  image-width: 15em
+  image-shape: round
+  image: images/Eli_Boahen_Blog_Image.jpg
+  links:
+    - icon: github
+      text: Github
+      href: https://github.com/ElizBoahen
+---
+
+## Introductions
+>Hi, I'm Eli ( they / them )
+I'm new to grad school and looking for global and domestic opportunities
+
+## Education/Work Background
+>Undergrad at Smith College as a STEM Posse 2 Scholar
+
+I did a self Designed major in Arts and Technology, combining Computer Science, Engineering, Art, and Design into one field of study. I believe that IDP ( interdisciplinary ) is an amazing way to not only problem solve, but verify a problem in the first place.
+
+## R experience
+I took DACSS 601 in the Spring, then I did an ISSR Workshop this summer ( Hi Techaer Fei! ).
+
+## Research interests
+AI Ethics | Cyborg Anthropology | HCI | and Data Ethics
+
+I want to work in the IOT and assistant device space to create technology that supports user well being as well as autonomy. I would like to work in industry, though everyday a PhD sounds more and more tempting. Ultimately, I want to improve the course of future-tech.
+
+I am interested in the IOT and assistive device space because of its privacy, security, and autonomy challenges. There are overlaps with robotics, digital media, and the health sector! However other the course of this masters, I've taken an interest in technoliteracy.
+
+I've enjoyed improving digital experiences through design, now I want to use data to build and advocate for those experiences. Technoliteracy effects access, autonomy, and blurs consent when it comes to technology--and blurred consent s not true consent. Through research, projects, and initiatives, I hope to change the current status quo.
+
+
+## Hometown
+New York City
+
+## Hobbies
+I love my houseplants, DIY, listening to music, and I study Japanese with my friend.
+
+## Fun fact
+I'm Ghanaian-American and I love okonomiyaki
