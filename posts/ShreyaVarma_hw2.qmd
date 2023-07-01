@@ -85,7 +85,6 @@ glimpse(hotel_bookings)
 barplot(table(hotel_bookings$distribution_channel))
 
 
-# Create the bar plot with all month names in order
 month_counts <- table(hotel_bookings$arrival_date_month)
 barplot(month_counts, names.arg = month.name)
 
@@ -93,14 +92,14 @@ barplot(month_counts, names.arg = month.name)
 
 ## Research Questions
 
-1. Weekends vs Weekdays: Do most number of tourists book on weekdays or weekends?
+Weekends vs Weekdays: Do most number of tourists book on weekdays or weekends?
 
-2. Lead time: We can analyse the lead time to check in how advance people do their bookings and if it is dependent on any of the distribution channels. 
+Lead time: We can analyse the lead time to check in how advance people do their bookings and if it is dependent on any of the distribution channels. 
 
-3. Market segment: We can check which market segment is most predominant and if the distribution channel depends on the market segment
+Market segment: We can check which market segment is most predominant and if the distribution channel depends on the market segment
 
-4. Length of stay: We can check if the length of stay varies across customer segments or hotel types
+Length of stay: We can check if the length of stay varies across customer segments or hotel types
 
-5. Are there differences in booking behavior and preferences between domestic and international guests?
+Are there differences in booking behavior and preferences between domestic and international guests?
 
     
