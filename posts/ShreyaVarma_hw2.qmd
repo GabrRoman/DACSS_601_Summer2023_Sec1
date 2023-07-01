@@ -1,0 +1,105 @@
+---
+title: "Homework 2"
+author: "Shreya Varma"
+description: "Reading in Data"
+date: "06/25/2023"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - hw2
+  - shreya
+  - hotel_bookings.csv
+---
+
+```{r}
+#| label: setup
+#| warning: false
+
+library(tidyverse)
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Instructions
+
+For this homework, your goal is to read in a more complicated dataset. Please use the category tag "hw2" as well as a tag for the dataset you choose to use.
+
+1. Read in a dataset. It's strongly recommended that you choose a dataset you're considering using for the final project. If you decide to use one of the datasets we have provided, please use a challenging dataset - check with us if you are not sure. 
+2. Clean the data as needed using dplyr and related tidyverse packages.
+Provide a narrative about the data set (look it up if you aren't sure what you have got) and the variables in your dataset, including what type of data each variable is. The goal of this step is to communicate in a visually appealing way to non-experts - not to replicate r-code.
+3. Identify potential research questions that your dataset can help answer.
+
+
+## Read in the dataset
+
+I will be using the Hotel Bookings dataset for my Homework. I have imported it using the read_csv() function and will use the glimpse() function the see the columns it has. On a high level it seems to have the information of hotel type and its customer data like arrival departure information, number of people, their booking details, payment type and reservation details. The data has 119,390 rows and 32 columns. To get more insights I will use the summary() function. From the summary we can see that the data captured is from 2015 to 2017. 
+
+```{r}
+
+hotel_bookings <- read_csv("_data/hotel_bookings.csv")
+hotel_bookings
+glimpse(hotel_bookings)
+summary(hotel_bookings)
+```
+
+## Clean the data
+
+We can now start cleaning the dataset. I will be checking if any columns have duplicate values, missing values, null values and remove irrelavent columns. I will also use data visualization to understand the data better.
+
+1. Duplicate values: I see that the data has duplicate rows thus I will drop it using the unique() function. Now the new data has 87,392 rows.
+
+```{r}
+duplicate_rows <- hotel_bookings[duplicated(hotel_bookings) | duplicated(hotel_bookings, fromLast = TRUE), ]
+duplicate_rows
+
+hotel_bookings <- unique(hotel_bookings)
+
+glimpse(hotel_bookings)
+
+```
+
+2. Missing and Null values: We see that there are no missing values in the rows we have 
+
+```{r}
+count_missing <- sum(is.na(hotel_bookings))
+count_missing
+```
+
+3. Removing irrelevant data: Since 82k rows in Company column does not contain any data I am dropping the column.
+
+```{r}
+
+head(hotel_bookings)
+table(hotel_bookings$company)
+hotel_bookings <- hotel_bookings[, -which(names(hotel_bookings) == "company")]
+glimpse(hotel_bookings)
+```
+4. Data visualization: We see that most of the bookings comes from the distribution channel TA/TO. Thus most people book through travel agents or tour operators. To check which months see most number of tourists I created a frequency bar plot of all months. February and June seem to have the highest number of tourists.    
+
+```{r}
+
+barplot(table(hotel_bookings$distribution_channel))
+
+
+month_counts <- table(hotel_bookings$arrival_date_month)
+barplot(month_counts, names.arg = month.name)
+
+```
+
+## Research Questions
+
+Weekends vs Weekdays: Do most number of tourists book on weekdays or weekends?
+
+Lead time: We can analyse the lead time to check in how advance people do their bookings and if it is dependent on any of the distribution channels. 
+
+Market segment: We can check which market segment is most predominant and if the distribution channel depends on the market segment
+
+Length of stay: We can check if the length of stay varies across customer segments or hotel types
+
+Are there differences in booking behavior and preferences between domestic and international guests?
+
+    
