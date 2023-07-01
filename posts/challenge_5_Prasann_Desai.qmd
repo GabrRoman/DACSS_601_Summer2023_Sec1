@@ -1,0 +1,153 @@
+---
+title: "Challenge 5"
+author: "Prasann Desai"
+description: "Introduction to Visualization"
+date: "7/1/2023"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_5
+  - Prasann Desai
+  - cereal
+
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+
+library(tidyverse)
+library(ggplot2)
+library(scales)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to:
+
+1)  read in a data set, and describe the data set using both words and any supporting information (e.g., tables, etc)
+2)  tidy data (as needed, including sanity checks)
+3)  mutate variables as needed (including sanity checks)
+4)  create at least two univariate visualizations
+   - try to make them "publication" ready
+   - Explain why you choose the specific graph type
+5)  Create at least one bivariate visualization
+   - try to make them "publication" ready
+   - Explain why you choose the specific graph type
+
+[R Graph Gallery](https://r-graph-gallery.com/) is a good starting point for thinking about what information is conveyed in standard graph types, and includes example R code.
+
+(be sure to only include the category tags for the data you use!)
+
+## Read in data
+
+Read in one (or more) of the following datasets, using the correct R package and command.
+
+-   cereal.csv ⭐
+-   Total_cost_for_top_15_pathogens_2018.xlsx ⭐
+-   Australian Marriage ⭐⭐ 
+-   AB_NYC_2019.csv ⭐⭐⭐
+-   StateCounty2012.xls ⭐⭐⭐
+-   Public School Characteristics ⭐⭐⭐⭐ 
+-   USA Households ⭐⭐⭐⭐⭐
+
+```{r}
+# Function call to read a csv file
+cereal_df <- read_csv("_data/cereal.csv")
+```
+```{r}
+# Preview of the dataset
+cereal_df
+```
+
+### Briefly describe the data
+
+Response:
+
+From the above output, we can see that the dataset contains mainly the nutritional information (Sodium and Sugar content) + category/type about 20 cereal products. Based on the column names and general knowledge, it is safe to assume that the unit of measurement for Sodium Content is milligrams and for Sugar it is grams.
+
+## Tidy Data (as needed)
+
+Is your data already tidy, or is there work to be done? Be sure to anticipate your end result to provide a sanity check, and document your work here.
+
+Response: It appears to me that the data is already tidy. (Each variable has its own column, Each observation has its own row and Each value is in its own cell)
+
+```{r}
+# Sanity check for duplicate responses
+n_distinct(cereal_df$Cereal)
+```
+
+```{r}
+# Check to see if the category wise totals add up to 20
+table(cereal_df$Type)
+```
+
+Are there any variables that require mutation to be usable in your analysis stream? For example, do you need to calculate new values in order to graph them? Can string values be represented numerically? Do you need to turn any variables into factors and reorder for ease of graphics and visualization?
+
+Document your work here.
+
+```{r}
+# Normalizing the 'Sodium' and 'Sugar' columns to a scale of 0-1. It will be helpful with comparative Bivariate analysis/visualization.
+cereal_df <- mutate(cereal_df, sodium_norm = rescale(Sodium), sugar_norm = rescale(Sugar))
+cereal_df
+```
+
+## Univariate Visualizations
+
+```{r}
+# Building a temp df suitable for creating a pie chart
+cereals_by_type <- count(cereal_df, Type) %>% mutate(prop = round(n*100/sum(n),1), lab.ypos = cumsum(prop) - 0.5*prop)
+cereals_by_type$label <- paste0(cereals_by_type$Type, "\n", round(cereals_by_type$prop), "%")
+cereals_by_type
+```  
+
+```{r}
+# Creating a pie chart
+ggplot(cereals_by_type, 
+       aes(x = "",
+           y = prop,
+           fill = Type)) + 
+  geom_bar(width = 1,
+           stat = "identity", 
+           color = "black") +
+  geom_text(aes(y = lab.ypos, label = label),
+            color = "black") +
+  coord_polar("y",
+              start = 0,
+              direction = -1
+              ) +
+  theme_void() +
+  labs(title = "Cereals by Type")
+  
+```
+
+
+## Bivariate Visualization(s)
+
+```{r}
+# Building a scatter plot of sodium_norm and sugar_norm
+ggplot(cereal_df,
+       aes(x = sodium_norm,
+           y = sugar_norm,
+           col = Type
+           )) +
+  geom_point(size = 2,
+             alpha = 0.8
+             ) + 
+  labs(x = "Relative sodium content",
+       y = "Relative sugar content",
+       title = "Sodium vs. Sugar content",
+       subtitle = "Nutritional content comparison of 20 cereals")
+
+```
+
+
+
+Any additional comments?

@@ -12,10 +12,6 @@ format:
 categories:
   - challenge_4
   - abc_poll
-  - eggs
-  - fed_rates
-  - hotel_bookings
-  - debt
   - Prasann Desai
 ---
 
