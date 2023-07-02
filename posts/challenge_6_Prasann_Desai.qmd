@@ -1,0 +1,155 @@
+---
+title: "Challenge 6"
+author: "Prasann Desai"
+description: "Visualizing Time and Relationships"
+date: "7/1/2023"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_6
+  - Prasann Desai
+  - debt
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(ggplot2)
+library(readxl)
+library(lubridate)
+library(scales)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to:
+
+1)  read in a data set, and describe the data set using both words and any supporting information (e.g., tables, etc)
+2)  tidy data (as needed, including sanity checks)
+3)  mutate variables as needed (including sanity checks)
+4)  create at least one graph including time (evolution)
+   - try to make them "publication" ready (optional)
+   - Explain why you choose the specific graph type
+5)  Create at least one graph depicting part-whole or flow relationships
+   - try to make them "publication" ready (optional)
+   - Explain why you choose the specific graph type
+
+[R Graph Gallery](https://r-graph-gallery.com/) is a good starting point for thinking about what information is conveyed in standard graph types, and includes example R code.
+
+(be sure to only include the category tags for the data you use!)
+
+## Read in data
+
+Read in one (or more) of the following datasets, using the correct R package and command.
+
+  - debt  ⭐
+  - fed_rate ⭐⭐
+  - abc_poll ⭐⭐⭐
+  - usa_hh ⭐⭐⭐
+  - hotel_bookings ⭐⭐⭐⭐
+  - AB_NYC ⭐⭐⭐⭐⭐
+
+  
+
+```{r}
+# Function call to read a csv file
+debt_df <- read_excel('_data/debt_in_trillions.xlsx')
+debt_df
+```
+
+### Briefly describe the data
+
+Response:
+
+From the above output, we can see that the dataset contains different categories of debt at a granularity of year-quarter. It also contains a 'Total' column that contains the total of all debt categories in each row.
+
+
+## Tidy Data (as needed)
+
+Is your data already tidy, or is there work to be done? Be sure to anticipate your end result to provide a sanity check, and document your work here.
+
+Response: The data is not already tidy since all categories of debt have a separate column - and we need to have the debt values in a single column and each category-name is another column. We will be using the pivot_longer function to make it tidy.
+
+```{r}
+# Remove the 'Total column'
+debt <- select(debt_df, !Total)
+
+# Using the pivot_longer function to pivot the dataset
+debt_pivoted <- pivot_longer(debt, col = !'Year and Quarter', names_to = "debt_category", values_to = "debt_in_trillions")
+```
+
+```{r}
+# Sanity check: It is expected the total number of rows in the resulting dataset would be 74 * 6 = 444
+debt_pivoted
+```
+
+
+Are there any variables that require mutation to be usable in your analysis stream? For example, do you need to calculate new values in order to graph them? Can string values be represented numerically? Do you need to turn any variables into factors and reorder for ease of graphics and visualization?
+
+Document your work here.
+
+Response: I would split the 'Year and Quarter' column into separate columns and improve the readability - convert the string -> '03' to number -> 2003
+
+```{r}
+# Extracting year and quarter from the 'Year and Quarter' column and creating separate columns for them
+# Converting the 'Year' column to integer
+debt_pivoted <- mutate(debt_pivoted, 
+                       Quarter = str_split(`Year and Quarter`, ":", simplify = TRUE)[,2], 
+                       Year = as.integer(str_split(`Year and Quarter`, ":", simplify = TRUE)[,1]) + 2000)
+debt_pivoted
+```
+
+## Time Dependent Visualization
+```{r}
+debt_year <- group_by(debt_pivoted, Year, Quarter)
+debt_yoy <- summarise(debt_year, debt_sum = sum(debt_in_trillions, na.rm = TRUE))
+debt_yoy$year_q <- yq(paste0(debt_yoy$Year, ":", debt_yoy$Quarter))
+debt_yoy
+```
+
+
+```{r}
+# Line plot of trend of Debt over years each quarter (It's very intuitive to visualize this trend in a line chart)
+ggplot(debt_yoy, aes(x = year_q, y = debt_sum)) +
+  geom_line(color = "orange", 
+            size=1) +
+  scale_x_date(date_breaks = '3 years',
+               labels = date_format("%b-%y")) +
+  labs(title = "Total Debt (Y-o-Y)",
+       subtitle = "Q1 2003 - Q2 2021",
+       x = "Year-Quarter",
+       y = "Debt (in trillions)") +
+  theme_minimal()
+```
+
+
+
+## Visualizing Part-Whole Relationships
+
+```{r}
+# Line plot of trend of Debt over years each quarter (split by category, It's very intuitive to visualize this trend in a multi-line chart)
+debt_pivoted$year_q <- yq(paste0(debt_pivoted$Year, ":", debt_pivoted$Quarter))
+
+ggplot(debt_pivoted, aes(x = year_q, y = debt_in_trillions, color = debt_category)) +
+  geom_point(size=0.5) +
+  geom_line(size=0.5) +
+  scale_x_date(date_breaks = '3 years',
+               labels = date_format("%b-%y")) +
+  labs(title = "Total Debt (Y-o-Y)",
+       subtitle = "Q1 2003 - Q2 2021",
+       x = "Year-Quarter",
+       y = "Debt (in trillions)") +
+  theme_minimal() +
+  scale_color_brewer(palette = "Dark2")
+```
+
+
+
