@@ -1,0 +1,98 @@
+---
+title: "Challenge 5"
+author: Gabrielle Roman
+description: "Introduction to Visualization"
+date: "6/30/2023"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_5
+  - railroads
+  - cereal
+  - air_bnb
+  - pathogen_cost
+  - australian_marriage
+  - public_schools
+  - usa_households
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(ggplot2)
+library(readxl)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to:
+
+1)  read in a data set, and describe the data set using both words and any supporting information (e.g., tables, etc)
+2)  tidy data (as needed, including sanity checks)
+3)  mutate variables as needed (including sanity checks)
+4)  create at least two univariate visualizations
+   - try to make them "publication" ready
+   - Explain why you choose the specific graph type
+5)  Create at least one bivariate visualization
+   - try to make them "publication" ready
+   - Explain why you choose the specific graph type
+
+[R Graph Gallery](https://r-graph-gallery.com/) is a good starting point for thinking about what information is conveyed in standard graph types, and includes example R code.
+
+(be sure to only include the category tags for the data you use!)
+
+## Read in data
+
+Read in one (or more) of the following datasets, using the correct R package and command.
+
+-   cereal.csv ⭐
+-   Total_cost_for_top_15_pathogens_2018.xlsx ⭐
+-   Australian Marriage ⭐⭐ 
+-   AB_NYC_2019.csv ⭐⭐⭐
+-   StateCounty2012.xls ⭐⭐⭐
+-   Public School Characteristics ⭐⭐⭐⭐ 
+-   USA Households ⭐⭐⭐⭐⭐
+
+```{r}
+cereal<-read.csv("_data/cereal.csv")
+cereal%>%
+  arrange(desc(cereal$Sugar))
+round(max(cereal$Sodium) - min(cereal$Sodium))/30
+
+
+```
+
+### Briefly describe the data
+The data set identifies several types of commercial cereals by their sodium level, sugar level, and "type" (a letter, the meaning of which is unclear). 
+
+## Tidy Data (as needed)
+
+The data appears to be tidied already. I will create univariate graphs of Sugar content, then Sodium content, and a Bivariate graph (scatter plot) with both Sugar and Sodium factored in.
+
+The range of Sugar content varies from 0 to 18, so I'll create 9 bins. This will place 2 observations in each bin. For Sodium, I'll use 10 bins.
+
+## Univariate Visualizations
+
+I chose a basic histogram for the univariate plots. I thought it demonstrated the relationship between count and variable in an orderly and simple way.
+
+```{r}
+ggplot(cereal, aes(Sugar)) + geom_histogram(bins = 6) + labs(x = "Sugar (in grams)")
+
+ggplot(cereal, aes(Sodium)) + geom_histogram(bins = 10) + labs(x = "Sodium (in grams)")
+```
+
+## Bivariate Visualization(s)
+
+The following is a scatter plot, which I chose because it takes the focus from the cereal names and places it solely on the sodium/sugar relationship.
+
+```{r}
+ggplot(cereal, aes(Sugar, Sodium)) + geom_point() + labs(title = "Sugar versus Sodium Content in Cereals", x = "Sugar in Grams", y = "Sodium in Grams")
+```
