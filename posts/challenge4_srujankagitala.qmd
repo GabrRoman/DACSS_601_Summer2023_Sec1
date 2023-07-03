@@ -1,0 +1,128 @@
+---
+title: "Challenge 4 - Hotel Bookings"
+author: "Srujan Kagitala"
+description: "More data wrangling: pivoting"
+date: "6/26/2023"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_4
+  - hotel_bookings
+  - srujan_kagitala
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to:
+
+1)  read in a data set, and describe the data set using both words and any supporting information (e.g., tables, etc)
+2)  tidy data (as needed, including sanity checks)
+3)  identify variables that need to be mutated
+4)  mutate variables and sanity check all mutations
+
+## Read in data
+
+Read in one (or more) of the following datasets, using the correct R package and command.
+
+-   hotel_bookings.csv⭐⭐⭐⭐
+
+```{r}
+#| label: read
+
+booking_data <- read.csv("_data/hotel_bookings.csv")
+head(booking_data)
+```
+
+### Briefly describe the data
+```{r}
+#| label: describe
+
+#Number of bookings per hotel.
+no_bookings_by_hotel <- booking_data %>%
+  group_by(hotel) %>%
+  summarise(count = n())
+```
+
+This data set contains booking data of `r unique(no_bookings_by_hotel$hotel)`. It contains `r nrow(booking_data)` bookings information. `r no_bookings_by_hotel$count[1]` and `r no_bookings_by_hotel$count[2]` observations are respectively captured from `r no_bookings_by_hotel$hotel[1]` and `r no_bookings_by_hotel$hotel[2]`. The information available per booking are `r names(booking_data)`.
+
+## Tidy Data (as needed)
+
+Is your data already tidy, or is there work to be done? Be sure to anticipate your end result to provide a sanity check, and document your work here.
+
+```{r}
+#| label: summary_pre
+
+#Overall summary of data across variables before converting character to factor.
+summary(booking_data)
+names(booking_data)
+```
+
+We can see from summary that all character variables don't give any summary of the data. They have to be converted to factor to get valuable insights from summary. We can drop 'arrival_date_week_number' variable because this is redundant information. If we want to do some analysis to find effective marketing strategies,we need to drop rows with NA values(Undefined) for distribution_channel and market_segment variables. After all this pre processing, we will be left with observations less than or equal to `r nrow(booking_data)` and `r ncol(booking_data)-1` columns.
+
+```{r}
+#| label: clean
+
+# Drop rows with NA values for market_segment, distribution_channel.
+# Convert character variables to factor.
+# Drop arrival_date_week_number variable.
+clean_booking_data <- booking_data %>%
+  filter(distribution_channel != "Undefined",
+         market_segment != "Undefined") %>%
+  mutate_if(is.character, as.factor) %>%
+  select (-arrival_date_week_number)
+
+summary(clean_booking_data)
+```
+
+So, we have `r nrow(clean_booking_data)` observations and `r ncol(clean_booking_data)` columns after cleaning the data.
+
+## Identify variables that need to be mutated
+
+Are there any variables that require mutation to be usable in your analysis stream? For example, are all time variables correctly coded as dates? Are all string variables reduced and cleaned to sensible categories? Do you need to turn any variables into factors and reorder for ease of graphics and visualization?
+
+There are three independent variables for arrival_date_year, arrival_date_month, arrival_date_day_of_month which is unnecessary. Hence, they can be combined to one variable arrival_date. Also, variables like is_canceled, is_repeated_guest have to be converted to Boolean instead of integer for readability. We will be left with `r ncol(clean_booking_data)-2` columns after this step.
+
+```{r}
+#| label: tidy
+
+# combine day, month and year columns to date column.
+# Remove arrival_date_week_number_column.
+booking_data_tidy <- clean_booking_data %>%
+  mutate(arrival_date = as.Date(paste(arrival_date_month,
+                                      arrival_date_day_of_month,
+                                      arrival_date_year, sep = "-"),
+                                format="%B-%d-%Y"),
+         is_repeated_guest = as.logical(is_repeated_guest),
+         is_canceled = as.logical(is_canceled)) %>%
+  select(-arrival_date_month,
+         -arrival_date_day_of_month,
+         -arrival_date_year)
+
+head(booking_data_tidy)
+```
+
+So, we have `r nrow(booking_data_tidy)` observations and `r ncol(booking_data_tidy)` columns after combing all the date related variables to "arrival_date" variable.
+
+```{r}
+#| label: analysis
+
+# Hotel wise frequency of distribution_channel
+booking_data_tidy %>% group_by(hotel, distribution_channel) %>% summarise(count=n())
+# Hotel wise frequency of market_segment
+booking_data_tidy %>% group_by(hotel, market_segment) %>% summarise(count=n())
+```
+

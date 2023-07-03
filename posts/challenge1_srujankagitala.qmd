@@ -1,0 +1,82 @@
+---
+title: "Challenge 1 - Birds"
+author: "Srujan Kagitala"
+description: "Reading in data and creating a post"
+date: "6/26/2023"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_1
+  - wildbirds
+  - srujan_kagitala
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to
+
+1)  read in a dataset, and
+
+2)  describe the dataset using both words and any supporting information (e.g., tables, etc)
+
+## Read in the Data
+
+Read in one (or more) of the following data sets, using the correct R package and command.
+
+-   birds.csv ⭐⭐
+
+Find the `_data` folder, located inside the `posts` folder. Then you can read in the data, using either one of the `readr` standard tidy read commands, or a specialized package such as `readxl`.
+
+```{r}
+#| label: read
+bird_data <- read.csv("_data/birds.csv")
+str(bird_data) # To examine the structure of the bird_data object.
+```
+
+```{r}
+#| label: preprocess
+# Convert variables with character to factor format to get insights about data.
+bird_data <- bird_data %>% mutate(Domain.Code = factor(Domain.Code),
+                                  Domain = factor(Domain),
+                                  Area = factor(Area),
+                                  Element = factor(Element),
+                                  Item = factor(Item),
+                                  Unit = factor(Unit),
+                                  Flag = factor(Flag),
+                                  Flag.Description = factor(Flag.Description))
+```
+
+
+Add any comments or documentation as needed. More challenging data sets may require additional code chunks and documentation.
+
+## Describe the data
+
+Using a combination of words and results of R commands, can you provide a high level description of the data? Describe as efficiently as possible where/how the data was (likely) gathered, indicate the cases and variables (both the interpretation and any details you deem useful to the reader to fully understand your chosen data).
+
+The birds data set has `r nrow(bird_data)` observations and each observation has `r ncol(bird_data)` data points recorded. The variables recorded are `r names(bird_data)`. The below table shows a brief summary of each variable in the data set. For a quantitative variable, descriptive statistics are shown. Whereas, counts for unique values a variable can take are shown for categorical variables.
+
+```{r}
+#| label: summary
+summary(bird_data)
+```
+Various types of birds like `r unique(bird_data$Item)` are considered in this data sample. This data set contains the collection source for each observation. These sources are `r unique(bird_data$Flag.Description)`. Below are pie chart and boxplot for variables Item and Value respectively.
+
+```{r}
+#| label: plots
+pie(summary(bird_data$Item), col=rainbow(length(summary(bird_data$Item))), main="Types of Birds")
+boxplot(bird_data$Value, horizontal=TRUE, main = "Boxplot for values", xlab = "values")
+```
