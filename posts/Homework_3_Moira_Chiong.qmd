@@ -17,7 +17,7 @@ library(readxl)
 library(tidyverse)
 library(dplyr)
 library(ggplot2)
-pseo_ma_SANDBOX <- read_excel("pseo_ma_SANDBOX.xlsx")
+pseo_ma_SANDBOX <- read_excel("datafolderMoiraChiong/pseo_ma_SANDBOX.xlsx")
 pseo_ma_SANDBOX
 View(pseo_ma_SANDBOX)
 ```
