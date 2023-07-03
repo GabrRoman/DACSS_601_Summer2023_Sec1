@@ -1,0 +1,31 @@
+---
+title: "Srujan Kagitala"
+image: images/srujankagitala.jpeg
+about:
+  template: solana
+  image-width: 15em
+  image-shape: round
+  image: images/srujankagitala.jpeg
+  links:
+    - icon: github
+      text: Github
+      href: https://github.com/srujan1997
+---
+
+## Education/Work Background
+I earned Bachelor of Technology and Master of Technology in Electronics & Electrical Communication Engineering from Indian Institute of Technology, Kharagpur in 2019. I worked as software development engineer for about 3.5 years and decided to pursue MS in Computer Science from Umass Amherst. So, I am in Amherst since February, 2023.
+
+## R experience
+None
+
+## Research interests
+Data Science, Reinforcement Learning
+
+## Hometown
+Hyderabad, India
+
+## Hobbies
+I love to be fit, play sports, hang out with friends and watch movies.
+
+## Fun fact
+Enjoy being impromptu.
