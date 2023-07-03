@@ -1,0 +1,181 @@
+---
+title: "Challenge 5 - AB NYC"
+author: "Srujan Kagitala"
+description: "Introduction to Visualization"
+date: "6/28/2023"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_5
+  - railroads
+  - cereal
+  - air_bnb
+  - pathogen_cost
+  - australian_marriage
+  - public_schools
+  - usa_households
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(ggplot2)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to:
+
+1)  read in a data set, and describe the data set using both words and any supporting information (e.g., tables, etc)
+2)  tidy data (as needed, including sanity checks)
+3)  mutate variables as needed (including sanity checks)
+4)  create at least two univariate visualizations
+   - try to make them "publication" ready
+   - Explain why you choose the specific graph type
+5)  Create at least one bivariate visualization
+   - try to make them "publication" ready
+   - Explain why you choose the specific graph type
+
+[R Graph Gallery](https://r-graph-gallery.com/) is a good starting point for thinking about what information is conveyed in standard graph types, and includes example R code.
+
+(be sure to only include the category tags for the data you use!)
+
+## Read in data
+
+Read in one (or more) of the following datasets, using the correct R package and command.
+
+-   cereal.csv ⭐
+-   Total_cost_for_top_15_pathogens_2018.xlsx ⭐
+-   Australian Marriage ⭐⭐ 
+-   AB_NYC_2019.csv ⭐⭐⭐
+-   StateCounty2012.xls ⭐⭐⭐
+-   Public School Characteristics ⭐⭐⭐⭐ 
+-   USA Households ⭐⭐⭐⭐⭐
+
+```{r}
+#| label: read
+
+stay_data <- read_csv("_data/AB_NYC_2019.csv")
+head(stay_data)
+```
+
+### Briefly describe the data
+
+```{r}
+#| label: describe
+
+area_wise_stays <- stay_data %>%
+  group_by(neighbourhood_group, room_type) %>%
+  summarise(count = n())
+```
+
+The AB_NYC_2019 provides information on Airbnb stays in New York in 2019. There are details about `r nrow(stay_data)` stays. They are distributed across `r unique(area_wise_stays$neighbourhood_group)` neighbourhoods. The below table shows the number of stay options across New York neighbourhood.
+
+```{r}
+area_wise_stays
+```
+Each stay option has information about `r names(stay_data)`.
+
+## Tidy Data (as needed)
+
+Is your data already tidy, or is there work to be done? Be sure to anticipate your end result to provide a sanity check, and document your work here.
+
+Variables like id and host_id are int but they are actually categorical. So, they have to be converted to factor. We can drop one of the columns out of "host_id" and "name" for exploratory analysis as they only act as primary keys. "last_review" column has to be converted to date format to represent the true data format. All character columns like neighbourhood_group, neighbourhood, etc have to be converted to factor to get better insights on using summary. After this step, summary will give value counts for categorical variables and there will be `r ncol(stay_data)-1` columns.
+
+```{r}
+#| label: process
+
+stay_data <- stay_data %>%
+  select(-name) %>%
+  mutate_if(is.character, as.factor) %>%
+  mutate(id = as.factor(id),
+         host_id = as.factor(host_id),
+         last_review = as.Date(last_review, format = "%Y-%m-%d"))
+
+summary(stay_data)
+```
+
+Cleaned data has `r ncol(stay_data)` columns. Summary shows value counts of categorical variables. The class of "last_review" is `r class(stay_data$last_review)`.
+
+Are there any variables that require mutation to be usable in your analysis stream? For example, do you need to calculate new values in order to graph them? Can string values be represented numerically? Do you need to turn any variables into factors and reorder for ease of graphics and visualization?
+
+Adding percent column to "area_wise_stays" tibble that has been created above by grouping original data based on "neighbourhood_group" and "room_type".
+
+```{r}
+#| label: extract
+
+(percent_rooms_in_area <- area_wise_stays %>%
+  group_by(neighbourhood_group) %>%
+  summarise(count = sum(count)) %>%
+  mutate(percent = count * 100 / sum(count),
+         id = LETTERS[row_number()]))
+```
+We have the percent distribution of rooms across New York as shown above and each row is tagged with a id.
+
+## Univariate Visualizations
+
+```{r}
+#| label: univariate_plot
+
+# pie chart of above room distribution data
+ggplot(percent_rooms_in_area, 
+       aes(x = "", y = percent,
+           fill = paste(id,' - ',neighbourhood_group,'(',round(percent,2),'%)'))) +
+  geom_bar(width = 10, stat = "identity", color = "black") +
+  geom_text(aes(x = 2.5, label = id), 
+            position = position_stack(vjust=0.5),
+            color = "black") +
+  coord_polar("y", start = 0) +
+  theme_void() +
+  labs(title = "Stays in New York area",
+       fill = "Area")
+  
+# box plot for availability in 365
+ggplot(stay_data, mapping = aes(y = availability_365, fill = "orange")) +
+  geom_boxplot() +
+  theme(axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        legend.position = "none") +
+  coord_flip() +
+  labs(y = "Availability (Number of days in year)")
+
+```
+
+Pie chart has been chosen to show room distribution because "neighbourhood_group" is categorical variable. Box plot has been chosen to show availability of stays in New York as it is a quantitative variable and we can get some good statistical idea as well.
+
+## Bivariate Visualization(s)
+
+```{r}
+#| label: bivariate_plot
+
+#Bar graph for room types in New York neighbourhood
+ggplot(data = area_wise_stays, aes(x= room_type, y=count)) +
+  geom_bar(stat = "identity",
+           mapping = aes(fill = neighbourhood_group),
+           position = "dodge") +
+  labs(title ="Room types in New York neighbourhood",
+       y = "Number of rooms",
+       x = "Room Type",
+       fill = "Area")
+
+#Plot price distribution for each room type
+ggplot(stay_data, aes(x = price, fill = room_type)) +
+  geom_density(adjust =250, alpha = 0.5) +
+  theme_linedraw() +
+  facet_wrap(~room_type) +
+  theme(legend.position = "none") +
+  labs(title = "Price density for various room types in New York",
+       x = "Price ($)")
+```
+
+Bar plot has been chosen to show the number of rooms based on their types across New York area as the variable is categorical. Likewise, density plot has been chosen for price because it is a continuous variable. We can see that the standard deviation in prices is higher for entire home/shared room compared to private room throughout New York.
