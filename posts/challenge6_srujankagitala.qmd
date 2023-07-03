@@ -1,0 +1,172 @@
+---
+title: "Challenge 6 - Hotel Bookings"
+author: "Srujan Kagitala"
+description: "Visualizing Time and Relationships"
+date: "6/30/2023"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_6
+  - hotel_bookings
+  - srujan_kagitala
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(ggplot2)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to:
+
+1)  read in a data set, and describe the data set using both words and any supporting information (e.g., tables, etc)
+2)  tidy data (as needed, including sanity checks)
+3)  mutate variables as needed (including sanity checks)
+4)  create at least one graph including time (evolution)
+   - try to make them "publication" ready (optional)
+   - Explain why you choose the specific graph type
+5)  Create at least one graph depicting part-whole or flow relationships
+   - try to make them "publication" ready (optional)
+   - Explain why you choose the specific graph type
+
+[R Graph Gallery](https://r-graph-gallery.com/) is a good starting point for thinking about what information is conveyed in standard graph types, and includes example R code.
+
+(be sure to only include the category tags for the data you use!)
+
+## Read in data
+
+Read in one (or more) of the following datasets, using the correct R package and command.
+  - hotel_bookings ⭐⭐⭐⭐
+
+
+```{r}
+#| label: read
+
+booking_data <- read_csv("_data/hotel_bookings.csv")
+head(booking_data)
+```
+
+Most of the tidying is similar to challenge 4.
+
+### Briefly describe the data
+
+```{r}
+#| label: describe
+
+#Number of bookings per hotel.
+no_bookings_by_hotel <- booking_data %>%
+  group_by(hotel) %>%
+  summarise(count = n())
+```
+
+This data set contains booking data of `r unique(no_bookings_by_hotel$hotel)`. It contains `r nrow(booking_data)` bookings information. `r no_bookings_by_hotel$count[1]` and `r no_bookings_by_hotel$count[2]` observations are respectively captured from `r no_bookings_by_hotel$hotel[1]` and `r no_bookings_by_hotel$hotel[2]`. The information available per booking are `r names(booking_data)`.
+
+## Tidy Data (as needed)
+
+Is your data already tidy, or is there work to be done? Be sure to anticipate your end result to provide a sanity check, and document your work here.
+
+All character variables have to be converted to factor to get valuable insights from summary. We can drop 'arrival_date_week_number' variable because this is redundant information. If we want to do some analysis to find effective marketing strategies,we need to drop rows with NA values(Undefined) for distribution_channel and market_segment variables. After all this pre processing, we will be left with observations less than or equal to `r nrow(booking_data)` and `r ncol(booking_data)-1` columns.
+
+```{r}
+#| label: clean
+
+# Drop rows with NA values for market_segment, distribution_channel.
+# Convert character variables to factor.
+# Drop arrival_date_week_number variable.
+clean_booking_data <- booking_data %>%
+  filter(distribution_channel != "Undefined",
+         market_segment != "Undefined") %>%
+  mutate_if(is.character, as.factor) %>%
+  select (-arrival_date_week_number)
+
+summary(clean_booking_data)
+```
+
+So, we have `r nrow(clean_booking_data)` observations and `r ncol(clean_booking_data)` columns after cleaning the data.
+
+Are there any variables that require mutation to be usable in your analysis stream? For example, do you need to calculate new values in order to graph them? Can string values be represented numerically? Do you need to turn any variables into factors and reorder for ease of graphics and visualization?
+
+There are three independent variables for arrival_date_year, arrival_date_month, arrival_date_day_of_month which is unnecessary. Hence, they can be combined to one variable arrival_date. But we will preserve arrival_year to show some interesting visualizations. Also, variables like is_canceled, is_repeated_guest have to be converted to Boolean instead of integer for readability. We will be left with `r ncol(clean_booking_data)-1` columns after this step.
+
+```{r}
+#| label: tidy
+
+# combine day, month and year columns to date column.
+# Remove arrival_date_week_number_column.
+booking_data_tidy <- clean_booking_data %>%
+  mutate(arrival_date = as.Date(paste(arrival_date_month,
+                                      arrival_date_day_of_month,
+                                      arrival_date_year, sep = "-"),
+                                format="%B-%d-%Y"),
+         is_repeated_guest = as.logical(is_repeated_guest),
+         is_canceled = as.logical(is_canceled)) %>%
+  select(-arrival_date_month,
+         -arrival_date_day_of_month)
+
+head(booking_data_tidy)
+```
+
+So, we have `r nrow(booking_data_tidy)` observations and `r ncol(booking_data_tidy)` columns after combing all the date related variables to "arrival_date" variable.
+
+## Time Dependent Visualization
+
+```{r}
+#| label: time_plot
+
+total_hotel_bookings_by_year <- clean_booking_data %>%
+  group_by(hotel, arrival_date_year) %>%
+  summarise(no_bookings = n())
+
+ggplot(total_hotel_bookings_by_year,
+       aes(x= arrival_date_year, y = no_bookings, colour = hotel)) + 
+  geom_line() +
+  scale_x_continuous(breaks = c(2015, 2016, 2017),
+                     labels = c("2015", "2016", "2017")) +
+  theme_linedraw()+
+  labs(title = "Bookings of hotels across years",
+       x = "Year",
+       y = "Number of bookings")
+```
+
+## Visualizing Part-Whole Relationships
+
+```{r}
+#| label: part-whole_plot
+
+(distribution_channel_data <- clean_booking_data %>%
+  group_by(hotel, distribution_channel) %>%
+  summarise(count = n()) %>%
+  mutate(percent = count * 100 / sum(count),
+         id = LETTERS[row_number()]))
+
+# pie chart of above room distribution data
+ggplot(distribution_channel_data, 
+       aes(x = "", y = percent,
+           fill = paste(id,' - ',distribution_channel,'(',round(percent,2),'%)'))) +
+  geom_bar(width = 10, stat = "identity", color = "black") +
+  geom_text(aes(x = 2.5, label = id), 
+            position = position_stack(vjust=0.5),
+            color = "black") +
+  coord_polar("y", start = 0) +
+  theme(axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),) +
+  facet_wrap(~hotel) +
+  theme_void() +
+  labs(title = "Distribution channel of Hotels",
+       fill = "Channel")
+```
+
