@@ -60,7 +60,7 @@ Read in one (or more) of the following datasets, using the correct R package and
   
 
 ```{r}
-# Function call to read a csv file
+# Function call to read a excel file
 debt_df <- read_excel('_data/debt_in_trillions.xlsx')
 debt_df
 ```
