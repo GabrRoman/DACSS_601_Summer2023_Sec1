@@ -11,11 +11,8 @@ format:
     code-tools: true
 categories:
   - challenge_3
-  - animal_weights
-  - eggs
   - australian_marriage
-  - usa_households
-  - sce_labor
+  - srujan_kagitala
 ---
 
 ```{r}
@@ -41,11 +38,7 @@ Today's challenge is to:
 
 Read in one (or more) of the following datasets, using the correct R package and command.
 
--   animal_weights.csv ⭐
--   eggs_tidy.csv ⭐⭐ or organiceggpoultry.xls ⭐⭐⭐
 -   australian_marriage\*.xls ⭐⭐⭐
--   USA Households\*.xlsx ⭐⭐⭐⭐
--   sce_labor_chart_data_public.xlsx 🌟🌟🌟🌟🌟
 
 ```{r}
 #| label: read

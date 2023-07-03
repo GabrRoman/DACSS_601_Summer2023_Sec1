@@ -11,11 +11,8 @@ format:
     code-tools: true
 categories:
   - challenge_4
-  - abc_poll
-  - eggs
-  - fed_rates
   - hotel_bookings
-  - debt
+  - srujan_kagitala
 ---
 
 ```{r}
@@ -41,11 +38,7 @@ Today's challenge is to:
 
 Read in one (or more) of the following datasets, using the correct R package and command.
 
--   abc_poll.csv ⭐
--   poultry_tidy.xlsx or organiceggpoultry.xls⭐⭐
--   FedFundsRate.csv⭐⭐⭐
 -   hotel_bookings.csv⭐⭐⭐⭐
--   debt_in_trillions.xlsx ⭐⭐⭐⭐⭐
 
 ```{r}
 #| label: read
