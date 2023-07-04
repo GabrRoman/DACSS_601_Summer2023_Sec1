@@ -1,0 +1,20 @@
+{
+  "hash": "f1d4a883dd3f5cc580bd70c807760da0",
+  "result": {
+    "markdown": "---\ntitle: \"Challenge 9 Instructions\"\nauthor: \"Danny Holt\"\ndescription: \"Creating a function\"\ndate: \"7/4/2023\"\nformat:\n  html:\n    df-print: paged\n    toc: true\n    code-copy: true\n    code-tools: true\ncategories:\n  - challenge_9\n---\n\n::: {.cell}\n\n```{.r .cell-code}\nlibrary(tidyverse)\nlibrary(ggplot2)\n\nknitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)\n```\n:::\n\n\nFor this challenge, I have written a function to create a scatter plot. \n\n\n::: {.cell}\n\n```{.r .cell-code}\n# Function to plot a scatter plot\nscatter <- function(data, x, y, title) {\n  # Convert x and y to symbols\n  x <- substitute(x)\n  y <- substitute(y)\n  \n  # Create the scatter plot using ggplot2\n  plot <- ggplot(data, aes(x = !!x, y = !!y)) +\n    geom_point() +\n    labs(title = title, x = deparse(x), y = deparse(y)) +\n    theme_minimal()\n  \n  # Print the scatter plot\n  print(plot)\n}\n```\n:::\n\n\nWe define a function called `plot_scatter` that takes four arguments: `data`, `x`, `y`, and `title`. The `data` argument represents the data frame containing the x and y variables, `x` and `y` are the column names of the variables to be plotted on the x and y axes, and title is the `title` of the scatter plot. Inside the function, we use the `ggplot` function to create the scatter plot. Finally, we print the scatter plot using the `print` function.\n\n\n## Example\nIn the example below, we create a sample data frame with two columns (x and y) and call the plot_scatter function to generate the scatter plot with the specified column names and title.\n\n\n::: {.cell}\n\n```{.r .cell-code}\n# Example:\n# Create a  data frame\nsample <- data.frame(\n  a = c(1, 2, 3, 4, 5),\n  b = c(1, 10, 20, 30, 40)\n)\n\n# Call the function to plot the scatter plot\nscatter(sample, a, b, \"Scatter Plot Example\")\n```\n\n::: {.cell-output-display}\n![](dannyholt_challenge9_files/figure-html/unnamed-chunk-3-1.png){width=672}\n:::\n:::",
+    "supporting": [
+      "dannyholt_challenge9_files"
+    ],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {
+      "include-in-header": [
+        "<link href=\"../site_libs/pagedtable-1.1/css/pagedtable.css\" rel=\"stylesheet\" />\n<script src=\"../site_libs/pagedtable-1.1/js/pagedtable.js\"></script>\n"
+      ]
+    },
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}
