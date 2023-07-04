@@ -436,7 +436,7 @@ laptime_changes %>%
   filter(!is.na(difference)) %>%
   mutate(street_circuit = ifelse(gp_name %in% street_circuits, TRUE, FALSE))  %>%
   ggplot(aes(x= reorder(gp_name, difference), y = difference, fill = street_circuit)) + geom_col() + coord_flip()  +
-  scale_fill_manual(values = c("gray85", "royalblue")) +
+  scale_fill_manual(values = c("gray85", "royalblue"), name = "Circuit Type", labels = c("Purpose-Built Race Track", "Street Circuit")) +
   xlab("GP Name") + ylab("Avg Lap Time Difference") + ggtitle("Difference in Avg Lap Time, Pre- and Post- 2022 Rules Change", subtitle = "Street circuits vs purpose-built circuits") +
   theme_minimal() 
 
@@ -470,7 +470,7 @@ percent_status
 
 ```{r}
 percent_status%>%
-  ggplot(aes(x=year, y=count, fill=status)) + geom_area(position = "fill", color = "black") + scale_fill_brewer(palette = "Set1") +
+  ggplot(aes(x=year, y=count, fill=status)) + geom_area(position = "fill", color = "black") + scale_fill_brewer(palette = "Set1", name = "Driver Status", labels = c("Disqualified", "Retired", "Finished")) +
   xlab("Season") + ylab("Proportion of Cars") + ggtitle("Proportion of Cars Finished vs Retired vs DSQ, 2016-2022") +
   geom_vline(xintercept = 2021) +
   theme_minimal() +
@@ -594,7 +594,7 @@ team_colors <- c(
 
 mechanical_failures %>%
   filter(year == 2022, status %in% c("Engine", "Power Unit", "Hydraulics", "Gearbox")) %>%
-  ggplot(aes(x=constructor_name, y = count, fill = constructor_name)) + geom_col() + facet_wrap(~status) + coord_flip() + theme_minimal() + xlab(NULL) + ylab("# of Retirements") + ggtitle("# of Retirements By Team for Top 4 Mechanical Issues In 2022") + scale_y_continuous(breaks = c(0, 1, 2)) + scale_fill_manual(values = team_colors[unique(mechanical_failures$constructor_name)])
+  ggplot(aes(x=constructor_name, y = count, fill = constructor_name)) + geom_col() + facet_wrap(~status) + coord_flip() + theme_minimal() + xlab(NULL) + ylab("# of Retirements") + ggtitle("# of Retirements By Team for Top 4 Mechanical Issues In 2022") + scale_y_continuous(breaks = c(0, 1, 2)) + scale_fill_manual(name = "Constructor", values = team_colors[unique(mechanical_failures$constructor_name)])
 ```
 
 We now see that issues varied dramatically across teams. McLaren and Red Bull only faced gearbox issues. Aston Martin and Alpine only faced Engine issues (and made up the majority), Williams only had Hydraulics issues, and Alpha Tauri only had power unit issues. The only team with none of these four issues was Mercedes, who appeared to have the best reliability overall.
@@ -642,7 +642,7 @@ constructors_ranked %>%
   xlab("Season") +
   ylab("Constructors' Championship Points") +
   ggtitle("Points Earned In The Constructors' Championship, 2016-2022", subtitle = "Using Current Team Names") +
-  scale_color_manual(values = team_colors[unique(constructors_ranked$constructor_name)]) +
+  scale_color_manual(name = "Constructor", values = team_colors[unique(constructors_ranked$constructor_name)]) +
   scale_x_continuous(breaks = 2016:2022)
 ```
 
@@ -682,8 +682,8 @@ summary(wins_podiums$podiums)
 
 ```{r}
 wins_podiums %>%
-  ggplot(aes(x = year, y = wins, col = constructor_name)) + geom_line() + theme_minimal() + ggtitle("Wins Per Season, 2016-2022") + geom_vline(xintercept = 2021) +
-    scale_color_manual(values = team_colors[unique(wins_podiums$constructor_name)]) +
+  ggplot(aes(x = year, y = wins, col = constructor_name)) + geom_line() + theme_minimal() + ggtitle("Wins Per Season By Constructor, 2016-2022", subtitle = "Using Current Team Names") + geom_vline(xintercept = 2021) +
+    scale_color_manual(name = "Constructor",values = team_colors[unique(wins_podiums$constructor_name)]) +
   ylab("# of Wins") + xlab("Season") +
   scale_x_continuous(breaks = 2016:2022)
 
@@ -693,9 +693,9 @@ We see that looking at Wins, Mercedes took a big dip and Red Bull and Ferrari to
 
 ```{r}
 wins_podiums %>%
-  ggplot(aes(x = year, y = podiums, col = constructor_name)) + geom_line() + theme_minimal() + ggtitle("Podiums Per Season, 2016-2022", subtitle = "Where a Podium Here Includes 1st-3rd Place") + 
+  ggplot(aes(x = year, y = podiums, col = constructor_name)) + geom_line() + theme_minimal() + ggtitle("Podiums Per Season By Constructor, 2016-2022", subtitle = "Where a Podium Is 1st-3rd Place (Includes Wins)") + 
   geom_vline(xintercept = 2021) +
-  scale_color_manual(values = team_colors[unique(wins_podiums$constructor_name)]) +
+  scale_color_manual(name = "Constructor", values = team_colors[unique(wins_podiums$constructor_name)]) +
   ylab("# of Podiums") + xlab("Season") +
   scale_x_continuous(breaks = 2016:2022)
 ```
@@ -707,9 +707,9 @@ Finally, we can look at average finishing position to get a better sense of what
 
 ```{r}
 wins_podiums %>%
-  ggplot(aes(x = year, y = avg_finish, col = constructor_name)) + geom_line() + theme_minimal() + ggtitle("Avg Finishing Position Per Season, 2016-2022") + 
+  ggplot(aes(x = year, y = avg_finish, col = constructor_name)) + geom_line() + theme_minimal() + ggtitle("Avg Finishing Position Per Season By Constructor, 2016-2022", subtitle = "Using Current Team Names") + 
   geom_vline(xintercept = 2021) +
-  scale_color_manual(values = team_colors[unique(wins_podiums$constructor_name)]) +
+  scale_color_manual(name = "Constructor", values = team_colors[unique(wins_podiums$constructor_name)]) +
   ylab("Avg Finish Position") + xlab("Season") + scale_y_reverse() +
   scale_x_continuous(breaks = 2016:2022)
 ```
@@ -774,7 +774,7 @@ overall_results %>%
   group_by(code, surname, constructor_name, year) %>%
   summarize(retirements = sum(retired == 1)) %>%
   mutate(year = factor(year)) %>%
-  ggplot(aes(x = surname, y = retirements, fill =year)) + geom_col(position = "dodge") + facet_wrap(~constructor_name, scales = "free_x") + xlab(NULL) + ylab("# of Retirements") + ggtitle("ALL Retirements (Driver and Non-Driver Caused)", subtitle = "For Driver Pairings That Raced in both 2021 and 2022") + scale_fill_manual(values = c("gray", "orange1"))
+  ggplot(aes(x = surname, y = retirements, fill =year)) + geom_col(position = "dodge") + facet_wrap(~constructor_name, scales = "free_x") + xlab(NULL) + ylab("# of Retirements") + ggtitle("ALL Retirements (Driver and Non-Driver Caused)", subtitle = "For Driver Pairings That Raced in both 2021 and 2022") + scale_fill_manual(name = "Season", labels = c("2021 (Pre-Change)", "2022 (Post-Change)"), values = c("gray", "orange1"))
 ```
 
 From this graph, we can see a few patterns: - Drivers that did better (fewer retirements) than their teammates in 2022 were: Verstappen (vs Perez), Norris (vs Ricciardo), Leclerc (vs Sainz), Ocon (vs Alonso), and Gasly (vs Tsunoda). - Stroll and Vettel did similarly in 2022. - In terms of change from 2021 to 2022, Verstappen and Ocon are the only two drivers that improved in terms of retiring less than the year before. Vettel, Perez, and Gasly retired the same amount. Tsunoda, Alonso, Leclerc, Sainz, Norris, and Ricciardo all retired more in 2022 than 2021.
@@ -797,7 +797,7 @@ overall_results %>%
   filter(retired == 1, status %in% c("Accident", "Collision", "Collision damage", "Spun off")) %>%
   group_by(code, surname, constructor_name, year, status) %>%
   summarize(n = n()) %>%
-  ggplot(aes(x = surname, y = n, fill = status)) + geom_col() + facet_grid(rows = vars(constructor_name), cols = vars(year), scales = "free_y") + coord_flip() + scale_fill_brewer(palette = "Set1") +
+  ggplot(aes(x = surname, y = n, fill = status)) + geom_col() + facet_grid(rows = vars(constructor_name), cols = vars(year), scales = "free_y") + coord_flip() + scale_fill_brewer(name = "Reason for Retirement", palette = "Set1") +
     theme(strip.text.y.right = element_text(angle = 0)) + ggtitle("Driver-Related Retirements For 2021-22 Driver Pairs") + xlab(NULL) + ylab("# of Retirements")
 
 ```
@@ -848,7 +848,7 @@ team_plot <- function(team_name, color1, color2) {
   team_gaps %>%
   filter(constructor_name == team_name) %>%
   ggplot(aes(x=round, y = gap, fill = surname)) + geom_area(color = "black") + facet_wrap(~year) +
-  scale_fill_manual(values = c(color1, color2)) +
+  scale_fill_manual(name = "Driver", values = c(color1, color2)) +
   ggtitle(paste0("Championship Points Gap Between ", team_name, " Drivers, 2021-2022")) +
   xlab("Race # In Season") + ylab("Points Gap") + theme_minimal()
 }
@@ -909,7 +909,7 @@ team_boxplot <- function(team_name, color1, color2) {
   overall_results %>%
   filter(constructor_name == team_name) %>%
   ggplot(aes(x=surname, y = qualifying_position, fill = surname)) + geom_boxplot() + facet_wrap(~year) +
-  scale_fill_manual(values = c(color1, color2)) + scale_y_reverse() +
+  scale_fill_manual(name = "Driver", values = c(color1, color2)) + scale_y_reverse() +
   ggtitle(paste0("Distribution of Qualifying Positions For ", team_name, " Drivers, 2021-2022")) +
   xlab(NULL) + ylab("Qualifying Position") + theme_minimal()
 }
@@ -987,7 +987,7 @@ Of course, it's hard to compare drivers across teams to one another. We can plot
 
 ```{r}
 highest_qualifying %>%
-  ggplot(aes(x = surname, fill = highest_qualifying)) + geom_bar(position = "fill") + facet_grid(rows = vars(constructor_name), cols = vars(year), scales = "free_y") + coord_flip() + scale_fill_brewer(palette = "Set1") +
+  ggplot(aes(x = surname, fill = highest_qualifying)) + geom_bar(position = "fill") + facet_grid(rows = vars(constructor_name), cols = vars(year), scales = "free_y") + coord_flip() + scale_fill_brewer(name = "Best Session Achieved", palette = "Set1") +
     theme(strip.text.y.right = element_text(angle = 0)) + ggtitle("Frequency of Highest Qualifying Session Made By Each Driver, 2021-2022") + xlab(NULL) + ylab("Proportion of Qualifying Sessions")
 ```
 
