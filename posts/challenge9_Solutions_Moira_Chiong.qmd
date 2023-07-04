@@ -46,6 +46,7 @@ calculate_percent_employed <- function(y1_ipedscount, y1_gradsearn)
     (df1$y1_gradsearn)/(df1$y1_ipedscount)
 }
 calculate_percent_employed()
+View(pseo_ma_SANDBOX)
 ```
 
 
