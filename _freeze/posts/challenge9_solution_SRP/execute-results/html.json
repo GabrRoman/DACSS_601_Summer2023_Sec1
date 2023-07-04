@@ -1,0 +1,18 @@
+{
+  "hash": "af633b956bf3813e5fb57c62541bd2a1",
+  "result": {
+    "markdown": "---\ntitle: \"Challenge 9 Solution\"\nauthor: \"Susannah Reed Poland\"\ndescription: \"Creating a function\"\ndate: \"5/30/2023\"\nformat:\n  html:\n    df-print: paged\n    toc: true\n    code-copy: true\n    code-tools: true\ncategories:\n  - challenge_9\n  - Susannah Reed Poland\n---\n\n::: {.cell}\n\n```{.r .cell-code}\nlibrary(tidyverse)\nlibrary(ggplot2)\nlibrary(lubridate)\n\nknitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)\n```\n:::\n\n\n## Create a function that reads in and cleans a dataset\n\nI chose to create a function that performs the \n\n\n::: {.cell}\n\n```{.r .cell-code}\n#create a function called \"read_debt\", f is the file name and by default is false\nread_debt<-function(f){\n#read in the data file\n  d<-read_excel(f)%>%\n#change the \"year and quarter\" to a date format\n    mutate(date_orig = parse_date_time(`Year and Quarter`, orders=\"yq\"))%>%\n  select(-`Year and Quarter`)\n}\n```\n:::\n\n::: {.cell}\n\n```{.r .cell-code}\n#read in dataset\ndebt_orig<-read_excel(\"_data/debt_in_trillions.xlsx\")\n```\n\n::: {.cell-output .cell-output-error}\n```\nError in read_excel(\"_data/debt_in_trillions.xlsx\"): could not find function \"read_excel\"\n```\n:::\n\n```{.r .cell-code}\n#apply function\ndebt_date<-debt_orig%>%\n  read_debt()\n```\n\n::: {.cell-output .cell-output-error}\n```\nError in read_excel(f): could not find function \"read_excel\"\n```\n:::\n\n```{.r .cell-code}\n#check it out! \ndebt_date%>%\n  head()\n```\n\n::: {.cell-output .cell-output-error}\n```\nError in eval(expr, envir, enclos): object 'debt_date' not found\n```\n:::\n:::\n",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {
+      "include-in-header": [
+        "<link href=\"../site_libs/pagedtable-1.1/css/pagedtable.css\" rel=\"stylesheet\" />\n<script src=\"../site_libs/pagedtable-1.1/js/pagedtable.js\"></script>\n"
+      ]
+    },
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}
