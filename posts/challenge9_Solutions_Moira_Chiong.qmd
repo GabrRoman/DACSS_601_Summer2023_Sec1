@@ -28,11 +28,11 @@ knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
 
 library(readxl)
 setwd("C:/Users/chion/OneDrive/Desktop/DACSS 601/DACSS_601_Summer2023_Sec1/posts")
-read_excel("datafolderMoiraChiong/pseo_ma_SANDBOX.xlsx")
+pseo_ma_SANDBOX <- read_excel("datafolderMoiraChiong/pseo_ma_SANDBOX.xlsx")
 View(pseo_ma_SANDBOX)
 ```
 
-
+## Function Code
 ```{r}
 pseo_ma_SANDBOX
 y1_ipedscount<- as.numeric(pseo_ma_SANDBOX$y1_ipeds_count)
