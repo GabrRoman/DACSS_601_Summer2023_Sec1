@@ -1,0 +1,128 @@
+---
+title: "Homework 2"
+author: "Prasann Desai"
+description: "Reading in Data"
+date: "7/3/2023"
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    toc-title: Contents
+    toc-location: left
+    number-sections: true
+    number-depth: 2
+    code-copy: true
+    code-tools: true
+categories:
+  - hw2
+  - Prasann Desai
+  - worldfootballR
+---
+
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+#| include: false
+
+library(tidyverse)
+library(purrr)
+library(ggplot2)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+
+# to allow us to install packages from github and eventually install/load up the dataset.
+# install.packages("devtools")
+# devtools::install_github("JaseZiv/worldfootballR", ref = "main")
+library(worldfootballR)
+```
+
+## Introduction
+
+Until a decade and a half ago, recording data points regarding key events in soccer was a manual process. This limited the range of analysis and the variety of data attributes. Today, with the usage of advanced technology, hundreds of attributes describing a game are being recorded in real-time. This has enabled a wide range of research in the field of soccer analytics and led to the emergence of various soccer data aggregators like StatsBomb, FBref, Understat, Fotmob, etc. In this project, we will be using the data from these aggregators using the *worldfootballR* package in R. This package has been created by Jason Zivkovic that enables users to conveniently access data belonging to the above-mentioned aggregators in R. 
+
+The goal of the project will be to find attributes that best predict success in the game. We would want to see the following aspects: 
+
+- What are the best teams/players good at? We will compare their aggregate statistics like goals, assists, xG, xA, Goal difference, etc.
+- Is xG a good indicator of success? Any trends over years?
+- Which team has been the most unlucky? Here, we will analyse the difference between XG and Actual goals to see which teams couldn't secure points despite performing well.
+
+## Data
+
+This dataset allows us to obtain soccer game/team/player data with various attributes. The attributes are both categorical and numerical. The attributes describing a game are goals scored by the home/away team, assists, game result, corners taken, shots attempted, etc. Similar attributes are also recorded at a team and player level. The dataset also contains some advanced attributes like xG and xA that are widely accepted in the soccer analytics industry to describe the quality of actions of players/teams in quantitative terms. We will be making use of xG and related stats to determine if it is a good indicator of success (better points earned in the league, more goals scored, etc.). For simplicity, we will be using the stats of the 1st tier of English Premier League Football for our analysis.
+
+
+```{r}
+# This is a sample dataset call. Further in the project, we could change a couple of parameters in the dataset call for comparative analysis, etc.
+prem_2023_shooting <- fb_season_team_stats(country = "ENG", gender = "M", season_end_year = "2023", tier = "1st", stat_type = "shooting")
+```
+
+```{r}
+nrow(prem_2023_shooting)
+```
+```{r}
+table(prem_2023_shooting$Team_or_Opponent)
+```
+
+
+### Attribute Information
+
+1)  Competition_Name (str, categorical): Name of the Competition
+2)  Gender (str, categorical): Gender category of the competition
+3)  Country (str, categorical): Country of the competition
+4)  Season_End_Year (int, numerical): Year of end of the competition season
+5)  Squad (str, categorical): Name of the team
+6)  Team_or_Opponent (str, categorical): Takes only two values - 'team' and 'opponent'. If the record is a 'team' record, then the stats are scored by the Squad, else, the stats are scored against the Squad.
+7)  Num_Players (int, numerical): Number of players registered in that season
+8)  Mins_Per_90 (int, numerical): Games played per season
+9)  Gls_Standard (int, numerical): Goals scored in a season
+10) Sh_Standard (int, numerical): Shots taken in a season
+11) SoT_Standard (int, numerical): Shots on target in a season
+12) SoT_percent_Standard (int, numerical): Ratio of SoT_Standard/Sh_Standard
+13) Sh_per_90_Standard (int, numerical): Sh_Standard per 90 mins
+14) SoT_per_90_Standard (int, numerical): SoT_Standard per 90 mins
+15) G_per_Sh_Standard (int, numerical): Gls_Standard/Sh_Standard
+16) G_per_SoT_Standard (int, numerical): Gls_Standard/SoT_Standard
+17) Dist_Standard (int, numerical): Distance travelled by the team in the season. (Running distance)
+18) FK_Standard (int, numerical): Free kicks taken in a season
+19) PK_Standard (int, numerical): Penalty kicks scored in a season
+20) PKatt_Standard (int, numerical): Penalty kicks awarded in a season
+21) xG_Expected (int, numerical): Expected Goals scored in a season
+22) npxG_Expected (int, numerical): non-penalty Expected Goals scored in a season
+23) npxG_per_Sh_Expected (int, numerical): non-penalty Expected Goals per shot in a season
+24) G_minus_xG_Expected (int, numerical): Difference between actual goals scored and Expected goals scored
+25) np:G_minus_xG_Expected (int, numerical): Difference between actual non-penalty goals scored and non-penalty Expected goals scored
+
+
+```{r}
+# Sample analysis
+# Pre-processing
+# selecting the required columns
+prem_2023_shooting_1 <- select(prem_2023_shooting, Squad, Team_or_Opponent, npxG_Expected)
+prem_2023_shooting_1 <- mutate(prem_2023_shooting_1, Squad = case_when(str_detect(Squad, "vs ") ~ str_split(Squad, "vs ", simplify = TRUE)[,2],
+                                                                     TRUE ~ as.character(Squad)
+                                                                     ))
+# Using the pivot_wider function to pivot the dataset
+prem_2023_shooting_pivoted <- pivot_wider(prem_2023_shooting_1, names_from = "Team_or_Opponent", values_from = "npxG_Expected")
+prem_2023_shooting_pivoted <- rename(prem_2023_shooting_pivoted, xG_For = team, xG_Against = opponent)
+prem_2023_shooting_pivoted
+```
+
+```{r fig.width = 10}
+# Building a scatter plot of xG_For and xG_Against
+
+ggplot(prem_2023_shooting_pivoted,
+       aes(x = xG_For,
+           y = xG_Against,
+           col = Squad
+           )) +
+  geom_text(aes(y = xG_Against - 1, label = Squad), size = 3) + 
+  geom_point(size = 2.5, alpha = 0.8) + 
+  labs(x = "Expected Goals Scored",
+       y = "Expected Goals Conceded",
+       title = "xG_For vs. xG_Against",
+       subtitle = "xG For vs. Against comparison of all Premier league teams for season of 2022-2023") +
+  theme(legend.position = "none")
+```
+
