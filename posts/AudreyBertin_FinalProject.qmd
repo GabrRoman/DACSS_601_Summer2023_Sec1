@@ -1,0 +1,1118 @@
+---
+title: "Final Project -- Formula 1 Rule Change Analysis"
+author: "Audrey Bertin"
+description: "How did the 2022 F1 Rule Change Affect the Sport?"
+date: "7/13/2023"
+format:
+  html:
+    df-print: paged
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - final_project
+  - formula_1
+  - audrey_bertin
+
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+This project focuses on the sport of Formula 1 racing, one which I have actively watched and enjoyed over the past few years. Between the 2021 and 2022 seasons there was a significant rule change that--purely observationally--appears to have shifted things up in the sport. It is not clear entirely how much or in what ways so I wanted to dig into the data to see if I could come to some evidence-based conclusions.
+
+## F1: A Primer
+
+Formula 1 (F1) is the top class of single-seater motorsport racing. "Formula" refers to the set of rules to which all participants' cars must conform. For example, Formula 2 has different rules about car design and racing than Formula 1.
+
+An F1 season consists of a series of races, known as Grands Prix (GP), which take place around the world on purpose-built racing circuits as well as public roads (termed "street circuits"). The number and location of races per season has varied significantly across the years.
+
+There are currently 10 teams in Formula 1, officially termed "Constructors". Like the races, the number of teams (and names) has varied significantly over time. Each team has *two* drivers who race for them each season (as well as a driver on standby in case one of the primary drivers get sick/injured). 
+
+Each Constructor is responsible for designing their own car each season within a shared set of regulations that restrict the design across all teams (e.g. a minimum weight, certain aerodynamic requirements, etc.). Some Constructors are known as "works teams". These teams design and construct the engines for their cars *in addition* to the aerodynamic components. The rest of the teams are called "customer teams". They design the aerodynamic parts of their car, but *purchase* their engines from one of the works teams instead of designing it themselves. For example, currently, the Mercedes *works* team uses their engines for their own car and  *also* provides engines to the Williams and McLaren teams. 
+
+There is also the concept of "junior teams", where one company essentially has ownership over multiple teams in F1. They have one primary, A-team, and then a B-team that they can use to develop talent for their A-team. For example, currently Red Bull owns both the Red Bull Racing *and* Alpha Tauri teams, and regularly promote their drivers from Alpha Tauri to Red Bull Racing. For the purposes of the championship, however, these are considered *separate* constructors.
+
+Because each Constructor designs their own car, cars can vary quite dramatically across teams, so there tends to be a somewhat clear hierarchy. The "worst" car often has nearly zero chance of winning a race, and the "best" cars almost always end up on the podium. In formula 1 lingo, teams are broken into three categories:
+
+- "top" teams -- these teams win most of the races / usually make up the podium
+- "midfield" teams -- these teams are not as fast as the top teams but often still place reasonably well and can, on occasion, end up on the podium or even (in rare cases) win a race
+- "backmarker" teams -- these teams are significantly slower than the others, with *almost no* chance of ending up on the podium, and usually finish near the back of the pack
+
+Due to this team hierarchy, it can be difficult to compare a driver from one team to a driver on another. Just because one driver always has faster lap times or finishes in a better position does not mean that they are necessarily a better driver, and could just mean that they have a better car. Since both teammates on a given team drive the same car, driver skill is often judged more-so based on how well a driver does compared to their teammates. 
+
+In each season, there are two separate championships up for grabs -- a **Drivers Championship** and a **Constructors Championship**. The Drivers Championship is considered more prestigious and awards the individual driver who received the most points throughout the season. The Constructors Championship is awarded to the *team* with the most *combined* points across their two drivers. 
+
+Teams and drivers have the chance to earn points at each Grand Prix (note that there are also points available in what are called "Sprint races", but these are a new feature in F1 and we'll be excluding them for the purposes of this analysis in order to simplify things).
+
+Each GP occurs over one weekend is broken up into two segments: qualifying (typically on Saturday) and the race (typically on Sunday). In qualifying, drivers try to put together the *fastest* lap. Lap times then determine the order that the cars will start for the race.
+
+Within the race, cars are required to make *at least one* pit stop to change which type of tires they are using (there are hard, medium, and soft tires available for each race, each of which have different pros and cons). Depending on how much a given track damages the tires, along with other factors such as if a car is involved in a collision, additional pitstops may take place to change tires or swap out parts.
+
+At the end of the race, points are awarded based on drivers' finishing position. Additionally, the driver who records the fastest single lap throughout the race is awarded an extra point in addition to their points for finishing position. 
+
+The current points distribution is as follows:
+
+- 1st place: 25 pts
+- 2nd place: 18 pts
+- 3rd place: 15 pts
+- 4th place: 12 pts
+- 5th place: 10 pts
+- 6th place: 8 pts
+- 7th place: 6 pts
+- 8th place: 4 pts
+- 9th place: 2 pts
+- 10th place: 1 pt
+- Fastest Lap: 1 pt 
+- 11th-20th place: 0 pts
+
+Points are cumulative across a season, and the championships are awarded to the team and driver with the highest point totals.
+
+## Dataset
+
+Data on Formula 1 is available through Kaggle at the following link. This is the source of all data for this project:
+https://www.kaggle.com/datasets/rohanrao/formula-1-world-championship-1950-2020
+
+It contains F1 race data from the series' start in 1950 to the present season, which is currently in-progress and will run until November. This data was almost certainly scraped from the official F1 website, which publishes detailed information after every race, and so it is likely to be accurate and official.
+
+There are 14 separate files within this dataset that store different types of information:
+
+- `circuits.csv` contains information about the different tracks the drivers race on (a row here is a track). There are 77 total circuits raced on since 1950.
+- `constructor_standings.csv` contains information about how many points each team has after each race (a row here is a single team at a single race). We have 12,941 data points for the standings.
+- `constructors.csv` stores the names and nationalities of teams (a row here is a team). There have been 211 total teams since 1950, and there are currently 10 active teams.
+- `driver_standings.csv` stores information about how many points each driver was awarded at each race (a row here is a single driver at a single race). We have 33,902 records on drivers standings across all of the races. 
+- `drivers.csv` stores the names and nationalities of drivers (a row here is a driver). There are 857 recorded drivers.
+- `lap_times.csv` stores the lap times for every driver on every lap of each race (a row here is a single lap for a single driver at a single race). We have 538,121 lap times.
+- `pit_stops.csv` stores information about every pit stop taken during each race (a row here is a single pit stop taken by a single driver at a single race). We have 9,634 recorded pit stops.
+- `qualifying.csv` stores qualifying lap times for each driver from each GP (a row here is a single driver in a single GP, and each row contains all qualifying lap times across multiple sessions). We have 9,575 observations here.
+- `races.csv` contains information about each GP, e.g. track name, date, etc. (a row here is a single GP). There are 1102 recorded races here.
+- `results.csv` contains all of the finishing results for each race, e.g. driver finishing positions, # laps completed, fastest lap (a row here is a single driver at a single race). There are 25,840 observations.
+- `seasons.csv` contains the years and urls for wikipedia pages associated with each season (a row here is a season). There are 74 seasons, covering 1950-2023.
+- `sprint_results.csv` same as results.csv but for sprint races, which we'll be excluding as they are currently just a new feature that F1 is testing (a row here is a single sprint race). There are 120 recorded observations, a very small number since there have only been a handful of these.s
+- `status.csv` contains the encodings of a `status` variable that is referenced in the results files (a row here is a status). There are 139 unique statuses.
+
+We complete a cleaning of these datasets below. See the [associated homework 2 blog post](https://dacss.github.io/DACSS_601_Summer2023_Sec1/posts/AudreyBertin_Homework2.html) for more details on these modifications and what each dataset looked like before and after.
+
+The main goals of these data cleaning steps are to:
+
+1. Remove any unclear variables
+2. Get any time related variables into an easily usable format (seconds) and convert any other variables that are not in a correct format
+3. Rename variables to avoid duplicates when joining tables and to make each variable's meaning more clear
+
+There is no pivoting involved in this step. Instead, this will be done as needed during the analysis of each research question (based on the question at hand and whether such reshaping is appropriate).
+
+
+```{r message=FALSE, warning=FALSE}
+# Circuits
+circuits <- readr::read_csv("_data/formula1/circuits.csv")
+circuits <- circuits %>%
+  rename(circuit_name = name) %>%
+  select(-alt)
+
+# Constructors Standings
+constructor_standings <- readr::read_csv("_data/formula1/constructor_standings.csv")
+constructor_standings <- constructor_standings %>%
+  select(-positionText)
+
+# Constructors
+constructors <- readr::read_csv("_data/formula1/constructors.csv")
+constructors <- constructors %>%
+  rename(constructor_name = name)
+
+# Drivers Standings
+driver_standings <- readr::read_csv("_data/formula1/driver_standings.csv")
+driver_standings <- driver_standings %>%
+  select(- positionText)
+
+# Drivers
+drivers <- readr::read_csv("_data/formula1/drivers.csv")
+drivers <- drivers %>%
+  mutate(number = na_if(number, "\\N"))
+
+# Lap Times
+lap_times <- readr::read_csv("_data/formula1/lap_times.csv")
+lap_times <- lap_times %>%
+  mutate(laptime_seconds = milliseconds/1000) %>%
+  select(-c(time, milliseconds))
+
+# Pit Stops
+pit_stops <- readr::read_csv("_data/formula1/pit_stops.csv")
+
+# Qualifying
+qualifying <- readr::read_csv("_data/formula1/qualifying.csv")
+qualifying <- qualifying %>%
+  select(-number) %>%
+  mutate(across(q1:q3, ~ period_to_seconds(ms(na_if(.x, "\\N"))))) %>%
+  rename(q1_time_s = q1, q2_time_s = q2, q3_time_s = q3)
+
+# Races
+races <- readr::read_csv("_data/formula1/races.csv")
+races <- races %>%
+  select(raceId:name) %>%
+  rename(gp_name = name)
+
+# Results
+results <- readr::read_csv("_data/formula1/results.csv")
+results <- results %>%
+  mutate(
+    disqualified = as_factor(ifelse(positionText == "D", 1, 0)),
+    retired = as_factor(ifelse(positionText == "R", 1, 0)),
+    fastestLap = as.numeric(fastestLap),
+    rank = as.numeric(rank),
+    fastestLapTime = period_to_seconds(ms(na_if(fastestLapTime, "\\N"))),
+    fastestLapSpeed = as.numeric(fastestLapSpeed),
+    finishTimeSeconds = as.numeric(na_if(milliseconds, "\\N"))/1000) %>%
+  rename(start_position = grid, finish_position = positionOrder) %>%
+  select(-c(number, position, positionText, time, milliseconds)) 
+
+# Seasons
+seasons <- readr::read_csv("_data/formula1/seasons.csv")
+
+# Status
+status <- readr::read_csv("_data/formula1/status.csv")
+
+```
+
+## Research Questions
+
+Using this data, I'd like to investigate how Formula 1 has shifted before and after the most recent regulation change between 2021 an 2022.
+
+This change shifted how F1 cars look and perform, with new engine requirements, weight requirements, and aerodynamic guidelines. See the links in the bibliography at the end of this post for more information on the changes from 2021-2022. Just by watching (and not looking at any data) this change seems to have shaken things up considerably, finally ending the Mercedes' team's dominant win streak in the Constructors championship and seeing Red Bull take first place instead. 
+
+I'm interested in using this dataset to take a deeper look into how things have changed since the regulations shift -- comparing the previous era to the new era, which started in 2022. 
+
+There are a few different aspects of this this comparison that are of interest:
+
+1. The new regulations were designed to make it easier for cars to follow one another, theoretically making passing easier. How has this translated in reality? Is it easier now than before for "top" cars that start out of position to make up positions? Being "out of position" here means starting the race from a position worse than would be expected based on their car's performance due to a qualifying mistake, mechanical failure, etc.
+
+2. How have lap times changed? Are the new cars getting faster/slower overall? Is this change the same across all race tracks?
+
+3. How has car reliability changed? Are mechanical failures in races more common or less common than before? Are certain types of failures popping up that we didn't see much of before (or the opposite)?
+
+4. How did the regulations shake up the order in the Constructors championships? Did any teams go from dominant to mediocre? Did anyone suddenly shoot up?
+
+5. Which drivers did the best job adapting to the regulations? 
+
+We will look at these questions one by one.
+
+**Notes**: The previous era prior to the regulation change, called the Turbo Hybrid era, technically started in 2014. However, due to a shift in qualifying formats in 2016, we will ignore 2014/15 and just look at 2016-2021 ("Before") and 2022 ("After") as our two comparison periods. We will also exclude the 2023 season as it is still not complete and data is not properly updated yet.
+
+We also need to take another consideration into account: shifting team names. From 2016 - 2022, even though only 10 teams raced at any given time, there are quite a few different team names recorded in the data:
+
+```{r}
+constructor_standings %>%
+  inner_join(constructors, by = 'constructorId') %>%
+  filter(raceId >= 948) %>%
+  select(constructor_name) %>%
+  unique()
+```
+
+
+Although these teams all have separate names and designations, some of them are actually the *same* team, just in different years. For example, the current "Alpha Tauri" team used to be called "Toro Rosso". In order to keep the teams joined together through name changes, we can re-categorize the team names as just their current name. 
+
+Additionally, we are interested in comparing things before and after the rules change in 2022. This is impossible for teams that no longer existed in any form in 2022. The only team fitting in this category is "Manor Marussia". We will remove this team from our data before conducting any analysis.
+
+
+```{r}
+constructors_renamed <- constructors %>%
+  filter(constructor_name %in% c("AlphaTauri", "Toro Rosso", "Alfa Romeo", "Sauber", "Alpine F1 Team", "Renault", "Aston Martin", "Racing Point", "Force India", "Haas F1 Team", "Ferrari", "McLaren", "Mercedes", "Red Bull", "Williams")) %>%
+  mutate(constructor_name = 
+           case_when(
+             constructor_name %in% c("AlphaTauri", "Toro Rosso") ~ "Alpha Tauri",
+             constructor_name %in% c("Alfa Romeo", "Sauber") ~ "Alfa Romeo",
+             constructor_name %in% c("Alpine F1 Team", "Renault") ~ "Alpine",
+             constructor_name %in% c("Aston Martin", "Racing Point", "Force India") ~ "Aston Martin",
+             constructor_name == "Haas F1 Team" ~ "Haas",
+             TRUE ~ constructor_name #everyone else has remained the same name
+             
+         )) 
+```
+
+
+
+## Analysis
+
+
+### **Q1: Is it easier to pass?**
+
+For this data, we need to look at the `results` dataset and capture start position, finish position, and overall positions changed for the time period in question. 
+
+```{r}
+positions_gained <- results %>%
+  filter(raceId >= 948) %>%
+  select(raceId, driverId, constructorId, statusId, start_position, finish_position) %>%
+  mutate(positions_gained = start_position - finish_position)
+```
+
+We then join this information to the race info, as well as driver and constructor names:
+
+```{r}
+positions_clean <- positions_gained %>%
+  inner_join(drivers %>% select(driverId, code, surname), by = 'driverId') %>%
+  inner_join(constructors_renamed %>% select(constructorId, constructor_name), by = 'constructorId') %>%
+  inner_join(races %>% select(raceId, year, gp_name), by = 'raceId') %>%
+  select(code, surname, constructor_name, year, gp_name, start_position, finish_position, positions_gained, statusId)
+  
+positions_clean %>% head(5)
+```
+
+Taking a quick look at our new positions gained variable, we can get some basic descriptive statistics:
+
+```{r}
+summary(positions_clean$positions_gained)
+```
+
+The max number of positions lost is 22 (not sure how that is possible as there are only 20 spots on the grid?). Max gained is 18, which is very impressive. On average, people lose 0.3 places.
+
+In order to see if it is easier to pass, we can look into how much the average # of positions gained per race has changed over time (specifically for those who finished the race):
+
+```{r}
+positions_clean %>%
+  filter(statusId == 1) %>%
+  group_by(year) %>%
+  summarize(avg_gain = mean(positions_gained)) %>%
+  mutate(post_rules_change = ifelse(year == 2022, TRUE, FALSE)) %>%
+  ggplot(aes(x = year, y = avg_gain, fill = post_rules_change)) + 
+  geom_col() +
+  ylab("Average Positions Gained") +
+  xlab("Season") + 
+  ggtitle("Avg Positions Gained For Drivers Who Finished, 2016-2022") + 
+  geom_vline(xintercept = 2021.5) +
+  scale_fill_manual(values = c("gray", "orange"), name = "Season", labels = c("Pre-Change (2016-2021)", "Post-Change (2022)")) +
+  theme_minimal() +
+  scale_x_continuous(breaks = 2016:2022)
+```
+Overall, we see a jump from 2021 (before the rules change) to 2022 (after), but it is very small and doesn't seem to be part of a larger trend.
+
+What if we just look at cars that started out of position (different place than expected based on average performance)? For this analysis, we will define a car that was "out of position" as one that **started at least 2 places away the average starting position of their team that year**. For teams that started 2+ places *behind* where they would be expected, we'll classify them as "Worse than expected". For those starting 2+ places ahead, we'll classify them as "Better than expected". Everyone else will be "Expected", signifying they qualified close to what was expected.
+
+We can calculate average start position for each team each year and use that to identify who is starting out of position:
+
+```{r}
+avg_start <- positions_clean %>%
+  group_by(year, constructor_name) %>%
+  summarize(avg_start = mean(start_position))
+
+out_of_position <- positions_clean %>%
+  inner_join(avg_start, by = c('year', 'constructor_name')) %>%
+  mutate(out_of_position = case_when(
+    start_position - avg_start >= 2 ~ "Worse",
+    start_position - avg_start <= -2 ~ "Better",
+    TRUE ~ "Expected"))
+           
+  
+out_of_position %>%
+  group_by(year, out_of_position) %>%
+  summarise(avg_gain = mean(positions_gained)) %>%
+  mutate(post_rules_change = ifelse(year == 2022, TRUE, FALSE)) %>%
+  ggplot(aes(x = year, y = avg_gain, fill = out_of_position)) + 
+  geom_col(position = "dodge") +
+  geom_hline(yintercept = 0) + 
+  ylab("Average Positions Gained") +
+  xlab("Season") + 
+  ggtitle("Avg Positions Gained Based on Out Of Position Start, 2016-2022") + 
+  scale_fill_manual(values = c("gray", "lightgreen", "orangered"), name = "Start Position", labels = c("Worse Than Expected", "Expected", "Better Than Expected")) +
+  geom_vline(xintercept = 2021.5) +
+  theme_minimal() +
+  scale_x_continuous(breaks = 2016:2022)
+```
+We see now that drivers who started in expected position on average *lost* positions, but not as many positions as drivers who started in a *better* than expected position. Drivers who started behind their expected position on average *gained* somewhere between 2-3 positions. This makes sense logically. When a fast car starts the race behind where they should, they can more easily pass. If a car starts at its average position or even higher, then it is surrounded by other cars that are at least as good, and so it's much easier to be passed and much harder to pass.
+
+Looking at the trend overall, there does not seem to be a clear change with the 2022 rule change. In 2022, the average number of positions gained for cars starting out of position (worse) was higher than 2021, but is more so part of a continuing upward trend than an outlier, particularly as we note that both 2017-2019 all have higher average positions gained.
+
+For cars starting in average position, we see a similar trend of changing times, going slightly downward. There doesn't seem to be a clear association with the rule change though as 2022 is not a historical peak. However for drivers starting ahead of position, 2022 seems to be the peak in terms of positions lost. It is possible that starting ahead of expectations left drivers more vulnerable than in past years. In other words, just because they started at the front does not mean that a faster car behind could not pass, when before, passing was quite difficult even if the car behind was quick.
+
+
+### **Q2: How have lap times changed?**
+
+Next, we'll look at lap times to see if there were any noticeable changes. To look at how lap times changed before and after the rules change, we need to consider the shifting calendar. The races that happen each year are not always the same. For example, 2021 had a Grand Prix in Russia, but this race was cancelled in 2022 due to the war in Ukraine and a ban on Russian participation in motorsport racing.
+
+In order to look at changes over time, we will just look at the races that happened in 2022 and look at how those specific tracks changed, ignoring races in the previous years on tracks that were not used in 2022.
+
+Since there are so many tracks, we can start by selecting a random set of 5 to look at, and see if we spot any clear patterns worth examining further. In order to make results more consistent, we'll also remove outlier laps over 150 seconds, which is longer than the lap times on the slowest track on the calendar.
+
+```{r}
+tracks_2022 <- races %>%
+  filter(year == 2022) %>%
+  select(gp_name)
+
+selected_laps <- lap_times %>%
+  inner_join(drivers %>% select(driverId, code, surname), by = 'driverId') %>%
+  inner_join(races %>% select(raceId, year, gp_name), by = 'raceId') %>%
+  filter(raceId >= 948, gp_name %in% c(tracks_2022$gp_name)) %>%
+  mutate(post_rules_change = ifelse(year == 2022, TRUE, FALSE))
+```
+
+```{r}
+set.seed(4)
+races_list <- sample(tracks_2022$gp_name,5)
+
+selected_laps %>%
+  filter(gp_name %in% races_list, laptime_seconds < 150) %>%
+  ggplot(aes(x = laptime_seconds, fill = post_rules_change)) + geom_histogram(alpha = 0.7) + 
+  facet_wrap(~gp_name, scales = "free_y") +
+  scale_fill_manual(values = c("gray", "orange"), name = "Season", labels = c("Pre-Change (2016-2021)", "Post-Change (2022)")) + theme_minimal() +
+  xlab("Lap Time (s)") + ggtitle("Lap Time Distributions For Select GPs, Pre and Post 2022 Rule Change")
+```
+We can see that there is no clear pattern that is consistent across all 5 of our randomly selected tracks.
+
+For the Australian GP, lap times appear to be significantly slower after the rules change than prior. The French GP seems to be slightly faster, as does the Austrian GP. The US Grand Prix times seem pretty much the same. So it is possible that the regulations may have made lap times change differently on different tracks. 
+
+This indicates that there may not be a universal pattern. However, this is only a handful of tracks. What if we look at the data for all the tracks at once and see if there is a pattern *independent* of the track we are looking at.
+
+We can conduct a quick T-test to see if, controlling for track, we see a difference in track times before and after the rules change:
+
+```{r}
+model <- lm(laptime_seconds ~ post_rules_change + gp_name, data = selected_laps)
+summary(model)
+```
+
+Here, controlling for the race name, we see the following information for the rules change variable:
+
+> post_rules_changeTRUE  ||  Estimate: 1.2066  ||  P-value: 0.0437 *  
+
+The p-value of < 0.05 indicates the presence of a potential relationship between lap times and the rules change. Since the estimate is positive, this means that statistically, the lap times seem to be *slightly longer* after the rules change than before, controlling for the track. About 1.2 seconds longer on average.
+
+We can also do some further analysis to determine which tracks had the greatest change in lap time by looking at their average lap time before the change and comparing to 2022 times. We display the 5 tracks with the greatest **increase** in lap times, followed by the 5 with the greatest **decrease**, again removing outlier laps over 150 seconds which would indicate some sort of car or weather related issue:
+
+```{r}
+laptime_changes <- selected_laps %>%
+  filter(laptime_seconds < 150) %>%
+  group_by(gp_name, post_rules_change) %>%
+  summarize(avg_lap = mean(laptime_seconds)) %>%
+  mutate(post_rules_change = ifelse(post_rules_change == TRUE, "after_change", "before_change")) %>%
+  pivot_wider(names_from = post_rules_change, values_from = avg_lap) %>%
+  mutate(difference = after_change-before_change, direction = ifelse(difference < 0, "Faster", "Slower"))
+
+
+laptime_changes %>%
+  filter(direction == "Faster") %>%
+  arrange(difference) %>%
+  head(5)
+
+laptime_changes %>%
+  filter(direction == "Slower") %>%
+  arrange(desc(difference)) %>%
+  head(5)
+```
+
+We can also plot this on ggplot to get a sense overall:
+
+```{r}
+laptime_changes %>%
+  filter(!is.na(difference)) %>%
+  ggplot(aes(x= reorder(gp_name, difference), y = difference, fill = direction)) + geom_col() + coord_flip() + scale_fill_manual(values = c( 'lightgreen', 'tomato'),  name = "AFTER rules change") +
+  xlab("GP Name") + ylab("Avg Lap Time Difference") + ggtitle("Difference in Avg Lap Time, Pre- and Post- 2022 Rules Change", subtitle = "Calculated as post-change avg time - pre-change avg time") +
+  theme_minimal()
+```
+Here we can see that more tracks had *slower* lap times than had *faster*. We can also see that in the "Faster" direction, the Abu Dhabi GP is an outlier, and most tracks only got *slightly* faster if they did at all. In the "Slower" direction, there were 3 tracks (Japan, Singapore, Monaco) that were > 5 seconds slower. 
+
+There are several different types of tracks in F1: street tracks (where the cars race on city streets) and traditional circuits (purpose built for racing). They tend to have very different characteristics from one another, and drivers often excel at one or the other. Given this, we can further classify the tracks on our graph above into street vs traditional to see if one type has changed more than the other.
+
+The following tracks in the list above are classified as street tracks:
+
+- Australian GP
+- Azerbaijan GP
+- Monaco GP
+- Canadian GP
+- Saudi Arabian GP
+- Singapore GP
+
+We can add this classification to our data:
+
+```{r}
+street_circuits <- c("Australian Grand Prix", "Azerbaijan Grand Prix", "Monaco Grand Prix", "Candian Grand Prix", "Saudi Arabian Grand Prix", "Singapore Grand Prix")
+
+
+laptime_changes %>%
+  filter(!is.na(difference)) %>%
+  mutate(street_circuit = ifelse(gp_name %in% street_circuits, TRUE, FALSE))  %>%
+  ggplot(aes(x= reorder(gp_name, difference), y = difference, fill = street_circuit)) + geom_col() + coord_flip()  +
+  scale_fill_manual(values = c("gray85", "royalblue"), name = "Circuit Type", labels = c("Purpose-Built Race Track", "Street Circuit")) +
+  xlab("GP Name") + ylab("Avg Lap Time Difference") + ggtitle("Difference in Avg Lap Time, Pre- and Post- 2022 Rules Change", subtitle = "Street circuits vs purpose-built circuits") +
+  theme_minimal() 
+
+```
+
+We can see here that two of the three tracks that ended up the slowest were street circuits. However, there are also two street tracks that were faster. There does not seem to be a clear pattern based on whether the track was a street track or purpose built and how the lap times changed.
+
+
+### **Q3: How has reliability changed?**
+
+Next, we can look at reliability, where here "reliability" refers to each car's ability to finish a full race without breaking down in some way (engine problems, some other mechanical failure, etc.). When a driver starts a race, but has to quit the race early or simply cannot continue--often due to some sort of mechanical failure or crash with another car--this is called a "retirement." This is different from "disqualified", which typically means that a driver could not successfully start the race for some reason. 
+
+Within our results data, we have some basic status information built in that shows us who finished, retired, and was disqualified.
+
+By calculating the proportion of each of these per year, we can get a sense of overall trends in terms of how many cars are falling into each condition.
+
+```{r}
+percent_status <- results %>%
+  inner_join(races, by='raceId') %>%
+  mutate(finished = as_factor(ifelse(statusId == 1, 1, 0))) %>%
+  select(raceId, year, disqualified, retired, finished) %>%
+  pivot_longer(disqualified:finished, names_to = "status", values_to = "status_met") %>%
+  filter(status_met == 1, raceId >= 948) %>%
+  group_by(year, status) %>%
+  summarize(count = n()) %>%
+  mutate(status= factor(status, levels = c("disqualified", "retired", "finished"))) 
+
+
+percent_status
+```
+
+```{r}
+percent_status%>%
+  ggplot(aes(x=year, y=count, fill=status)) + geom_area(position = "fill", color = "black") + scale_fill_brewer(palette = "Set1", name = "Driver Status", labels = c("Disqualified", "Retired", "Finished")) +
+  xlab("Season") + ylab("Proportion of Cars") + ggtitle("Proportion of Cars Finished vs Retired vs DSQ, 2016-2022") +
+  geom_vline(xintercept = 2021) +
+  theme_minimal() +
+  scale_x_continuous(breaks = 2016:2022)
+```
+
+
+We can see that disqualifications are very rare in modern Formula 1. We also see that on average, around 75% of cars have finished each race since 2016. There seems to be a slow overall trend of more cars finishing per year. However, we see no change from 2021 to 2022 when the rule change was implemented. 
+
+However, this graph doesn't give us information about *why* cars are retiring. Just because the number of retirements has not changed dramatically does not necessarily mean that the cars have not become more reliable. This is because there are many different potential reasons for retirement. They *could* retire due to a car reliability issue (e.g. an engine failure) but they could *also* retire due to an incident that involved driver area (e.g. a crash with another driver, spinning off the road, etc.). 
+
+The `races` data has another variable that can help with this: status ID:
+
+```{r}
+results %>%
+  select(resultId, raceId, driverId, constructorId, start_position, finish_position, statusId)
+```
+
+The `status` table contains the encodings for this table. For example, the first 5 status IDs in the table above are all 1, which indicates "Finished", while the two people with status 5 had "Engine" issues.
+
+We can quickly see how common each status is in our time period, specifically for drivers who retired:
+
+```{r message = FALSE}
+results_status <- results %>%
+  filter(raceId >= 948) %>%
+  inner_join(races, by = "raceId") %>%
+  inner_join(status,by="statusId") %>%
+  inner_join(constructors_renamed %>% select(constructorId, constructor_name), by = "constructorId") %>%
+  select(raceId, year, driverId, constructor_name, disqualified, retired, status)
+  
+
+retirements <- results_status %>%
+  filter(retired ==1)
+
+table(retirements$status)
+```
+
+There are a ton of different statuses here. To help with our analysis, we can define which ones are obviously associated with a mechanical car failure. There are a few that are ambiguous (e.g. rear wing/front wing often have to do with damage versus failure), so we'll ignore those:
+
+```{r}
+mechanical_failures <- c("Battery", "Brakes", "Cooling system", "Differential", "Driveshaft", "Electrical", "Electronics", "Engine", "Exhaust", "Fuel leak", "Fuel pressure", "Fuel pump", "Gearbox", "Hydraulics", "Mechanical", "Oil leak", "Oil pressure", "Overheating", "Power loss", "Power Unit", "Radiator", "Spark plugs", "Steering", "Suspension", "Transmission", "Turbo", "Undertray", "Water leak", "Water pressure", "Water pump", "Wheel", "Wheel nut")
+```
+
+```{r}
+retirements <- retirements %>%
+  mutate(mechanical_failure = ifelse(status %in% mechanical_failures, TRUE, FALSE))
+```
+
+We can now create a similar graph to last time, but just looking at mechanical vs non-mechanical retirements:
+
+```{r}
+retirements %>%
+  group_by(year, mechanical_failure) %>%
+  summarize(count = n()) %>%
+  ggplot(aes(x=year, y=count, fill=mechanical_failure)) + geom_area(position = "fill", color = "black") + scale_fill_brewer(name = "Reason for Retirement", labels = c("Non-Mechanical", "Mechanical"), palette = "Set1") +
+  xlab("Season") + ylab("Proportion of Cars") + ggtitle("Proportion of Cars Retiring For Mechanical vs Other Failure, 2016-2022") +
+  geom_vline(xintercept = 2021) +
+  theme_minimal() +
+  scale_x_continuous(breaks = 2016:2022)
+```
+
+We can see here that there was a strong change in direction in terms of increased mechanical failures after the rule change. In 2021, less than half of retirements were related to mechanical issues, but in 2022, it was over 50%. It seems like cars were previously getting more and more reliable in the years prior to the rule change, but this changed with the institution of the change. 
+
+Given this jump from 2021 to 2022, it would be interesing to look into whether this was universal across all types of mechanical failures or if the new regulations caused some types of failures to increase while others decreased.
+
+We start by calculating the number of failures across each of these types (and by team, which we will look into shortly).
+
+```{r}
+mechanical_failures <- retirements %>%
+  filter(year %in% c(2021, 2022), mechanical_failure == TRUE) %>%
+  group_by(year, constructor_name, status) %>%
+  summarize(count = n()) 
+
+mechanical_failures
+```
+
+We then plot the change in # of mechanical failures by type to see if we can get a sense of whether certain types of failures happened more/less often in 2022:
+
+```{r}
+mechanical_failures %>%
+  pivot_wider(names_from = year, values_from = count) %>%
+  mutate_all(~replace(., is.na(.), 0)) %>%
+  mutate(change = `2022` - `2021`) %>%
+  group_by(status) %>%
+  summarize(change = sum(change)) %>%
+  mutate(direction = ifelse(change > 0, "more", "less"))  %>% 
+  ggplot(aes(x = reorder(status, change), y=change, fill = direction)) +
+  geom_col() +
+  theme_minimal() +
+  xlab(NULL) +
+  ylab("Change in # of Retirements") +
+  ggtitle("# of Retirements For Different Mechanical Related Issues", subtitle = "2021 (Pre-Rule Change) vs 2022 (Post-Change)") +
+  scale_fill_manual(values = c( 'lightgreen', 'tomato'), name = "AFTER rules change", labels = c("Fewer Issues", "More Issues")) +
+  coord_flip()
+ 
+```
+
+This plot gives us a lot more information than we had previously. We can now see that patterns vary significantly across different types of mechanical issues. Engines, for example, had a HUGE increase in number of related retirements. 2022 had 5 more engine related retirements than 2021! This makes sense as a big part of 2022 was a change in engine design, and often a new year of engine design means that there are still some kinks to be worked out.
+
+We also see a big increase in power unit related failures, as well as water related issues. 
+
+There are a few areas where we saw fewer incidents in 2022 than 2021. These are: wheel nuts, suspension, electrical, and brake issues.
+
+Next, we can look at whether these mechanical issues that arose in 2022 were universal (across all teams) or whether some teams faced them more than others. The four issues that were most prevalent in 2022 were engine, power unit, gearbox, and hydraulic failures. We can look at each of these by team:
+
+```{r}
+team_colors <- c(
+"Williams" = "#00A0DE",
+"Red Bull" = "#FDD900",
+"McLaren" = "#FF8000",
+"Haas" = "#000000",
+"Ferrari" = "#ED1C24",
+"Aston Martin" = "#00594F",
+"Alpine" = "#FD4BC7",
+"Alpha Tauri" = "#20394C",
+"Alfa Romeo" = "#A42134",
+"Mercedes" = "#00A19B")
+
+
+
+
+mechanical_failures %>%
+  filter(year == 2022, status %in% c("Engine", "Power Unit", "Hydraulics", "Gearbox")) %>%
+  ggplot(aes(x=constructor_name, y = count, fill = constructor_name)) + geom_col() + facet_wrap(~status) + coord_flip() + theme_minimal() + xlab(NULL) + ylab("# of Retirements") + ggtitle("# of Retirements By Team for Top 4 Mechanical Issues In 2022") + scale_y_continuous(breaks = c(0, 1, 2)) + scale_fill_manual(name = "Constructor", values = team_colors[unique(mechanical_failures$constructor_name)])
+```
+
+We now see that issues varied dramatically across teams. McLaren and Red Bull only faced gearbox issues. Aston Martin and Alpine only faced Engine issues (and made up the majority), Williams only had Hydraulics issues, and Alpha Tauri only had power unit issues. The only team with none of these four issues was Mercedes, who appeared to have the best reliability overall.
+
+
+
+### **Q4: How did the regulation change shake up the championship?**
+
+For this question, we will look at the Constructors Standings.
+
+Do we see a significant change in the lineup of teams before and after the change? To determine this, we can create a timeseries plot showing how team placings changed season by season from 2016-2022.
+
+We start by joining the constructors and races tables together:
+
+```{r}
+# Join constructor results table to more information on constructors and races
+constructor_results <- constructor_standings %>% 
+  inner_join(constructors_renamed, by = 'constructorId') %>%
+  inner_join(races, by = 'raceId')
+
+head(constructor_results)
+```
+
+We can then filter this to the years and columns relevant to us, and group by/summarize to find the total number of points each team got each season:
+
+```{r, message = FALSE}
+constructors_ranked <- constructor_results %>%
+  filter(year >= 2016 & year < 2023)  %>%
+  select(year, raceId, position, points, constructor_name) %>%
+  group_by(year, constructor_name) %>%
+  summarize(final_points = max(points))
+```
+
+Using the same historic team name update as we have done previously, we will use reconfigured team names (which use the most recent name to reference all iterations of the team) to make it easier to compare each team's performance over time. We also include a vertical line to show the point where the transition occurred. The line and to the left are before the transition. To the right is after.
+
+Although these teams all have separate names and designations, some of them are actually the *same* team, just in different years. For example, the current "Alpha Tauri" team used to be called "Toro Rosso". In order to keep the teams joined together through name changes, we can recategorize the team names as just their current name and also remove the teams that no longer existed in the 2022 season. This helps make our graph easier to follow so we can better trace the changes over time.
+
+
+```{r}
+constructors_ranked %>%
+  ggplot(aes(x = year, y = final_points, color = constructor_name)) + 
+  geom_line() + 
+  geom_vline(xintercept = 2021) + 
+  theme_minimal() +
+  xlab("Season") +
+  ylab("Constructors' Championship Points") +
+  ggtitle("Points Earned In The Constructors' Championship, 2016-2022", subtitle = "Using Current Team Names") +
+  scale_color_manual(name = "Constructor", values = team_colors[unique(constructors_ranked$constructor_name)]) +
+  scale_x_continuous(breaks = 2016:2022)
+```
+
+As we can see here, relative rankings in the championship remained pretty steady for a good part of the old regulations, with Mercedes dominant, Ferrari having a few good years, and Red Bull close behind. 
+
+After the regulations change, Mercedes dropped from 1st to 3rd place and Red Bull and Ferrari had massive spikes in points. However, note that they were on the up-swing before the change was put in place (in 2021) so it could be unrelated. McLaren did not seem to take the change well. They were previously on an upward points scoring trend and shot down in 2022. We see the same trend with Alpha Tauri. Meanwhile, Hass and Alfa Romeo, who in previous years had struggled to score any points did see a small jump in points and a positive shift in their overall rankings.
+
+It is hard to tell fully, without a few more years worth of data, but it does appear that the regulation change did switch the team rankings up and some teams (Red Bull/Ferrari) adapted better than others (Alpha Tauri, McLaren).
+
+We can also look at the number of wins and podiums by each team, where here we define podiums as a 1st, 2nd or 3rd place finish (which includes the 1st place finishes from the wins column).
+
+```{r message=FALSE}
+wins_podiums <- constructor_standings %>% 
+  inner_join(constructors_renamed, by = 'constructorId') %>%
+  inner_join(races, by = 'raceId') %>%
+  inner_join(results, by = c('raceId', 'constructorId')) %>%
+  select(constructor_name, year, gp_name, finish_position) %>%
+  filter(year >= 2016 & year < 2023) %>%
+  group_by(constructor_name, year) %>%
+  summarize(wins = sum(finish_position == 1), podiums = sum(finish_position %in% c(1, 2, 3)), avg_finish =mean(finish_position))
+
+wins_podiums %>%
+  arrange(desc(podiums))
+```
+
+Looking at a summary of each of these new variables we see that for wins, the most we had recorded was 19 in a season. The average was 2 wins per team.
+
+```{r}
+summary(wins_podiums$wins)
+```
+
+For podiums, the max was 33 across both drivers, with an average of 6 per team.
+
+```{r}
+summary(wins_podiums$podiums)
+```
+
+```{r}
+wins_podiums %>%
+  ggplot(aes(x = year, y = wins, col = constructor_name)) + geom_line() + theme_minimal() + ggtitle("Wins Per Season By Constructor, 2016-2022", subtitle = "Using Current Team Names") + geom_vline(xintercept = 2021) +
+    scale_color_manual(name = "Constructor",values = team_colors[unique(wins_podiums$constructor_name)]) +
+  ylab("# of Wins") + xlab("Season") +
+  scale_x_continuous(breaks = 2016:2022)
+
+```
+
+We see that looking at Wins, Mercedes took a big dip and Red Bull and Ferrari took a big jump, while most of the other teams remained pretty steady after the rule change.
+
+```{r}
+wins_podiums %>%
+  ggplot(aes(x = year, y = podiums, col = constructor_name)) + geom_line() + theme_minimal() + ggtitle("Podiums Per Season By Constructor, 2016-2022", subtitle = "Where a Podium Is 1st-3rd Place (Includes Wins)") + 
+  geom_vline(xintercept = 2021) +
+  scale_color_manual(name = "Constructor", values = team_colors[unique(wins_podiums$constructor_name)]) +
+  ylab("# of Podiums") + xlab("Season") +
+  scale_x_continuous(breaks = 2016:2022)
+```
+
+Looking at podiums, we see a similar trend. Red Bull and Ferrari doing much beter, Mercedes doing much worse. These teams seemed to take up a majority of the podiums, leaving the other teams earning fewer in 2022 than they did before.
+
+Finally, we can look at average finishing position to get a better sense of what is happening in the midfield and backmarker teams, as these teams don't often podium/win, or even score points, so it can be hard to track them.
+
+
+```{r}
+wins_podiums %>%
+  ggplot(aes(x = year, y = avg_finish, col = constructor_name)) + geom_line() + theme_minimal() + ggtitle("Avg Finishing Position Per Season By Constructor, 2016-2022", subtitle = "Using Current Team Names") + 
+  geom_vline(xintercept = 2021) +
+  scale_color_manual(name = "Constructor", values = team_colors[unique(wins_podiums$constructor_name)]) +
+  ylab("Avg Finish Position") + xlab("Season") + scale_y_reverse() +
+  scale_x_continuous(breaks = 2016:2022)
+```
+
+Looking here, we again see the same pattern at the top. Mercedes are finishing slightly worse than before, and both Ferrari and Red Bull had better average finishing positions in 2022. With this graph, though, we get a better sense of what was happening with the lower scoring teams. For example, we can see that McLaren on average finished several places behind where thehy finished in 2021, while Haas made a big jump forward from finishing at the back, to finishing closer to 14th on average. Alfa Romeo, Aston Martin, Alpine, and Williams were all relatively stable between 2021 and 2022 in terms of average finishing position.
+
+
+### **Q5: Which drivers adapted best to the regulations?**
+
+Next, we'll look at drivers to see who did the best job adapting to the regulations. To do so, we'll look at how drivers performed relative to their teammates, rather than overall, since differences across teams could easily be attributed to differences in cars.
+
+Since which drivers are in the sport changes all the time, let's just look at the driver pairings that stayed the same in both 2021 and 2022 (same team/same drivers in both years) . Those drivers pairings are:
+
+- Max Verstappen / Sergio Perez: Red Bull 
+- Charles Leclerc / Carlos Sainz: Ferrari
+- Daniel Ricciardo / Lando Norris: McLaren
+- Fernando Alonso / Esteban Ocon: Alpine 
+- Yuki Tsunoda / Pierre Gasly: Alpha Tauri 
+- Sebastian Vettel / Lance Stroll: Aston Martin 
+
+
+All other drivers that only drove one of these two seasons are excluded from this analysis.
+
+We pull these drivers below and their relevant results and qualifying data:
+
+```{r}
+drivers_21_22 <- drivers %>%
+  filter(driverRef %in% c("max_verstappen", "perez", "sainz", "leclerc","ricciardo", "norris", "alonso", "ocon", "tsunoda", "gasly", "vettel", "stroll"))
+
+
+race_results <- results %>%
+  inner_join(races, by = "raceId") %>%
+  filter(driverId %in% drivers_21_22$driverId, year %in% c(2021, 2022)) %>%
+  inner_join(drivers_21_22, by = "driverId") %>%
+  inner_join(constructors_renamed, by = "constructorId") %>%
+  mutate(fastest_lap = ifelse(rank == 1, TRUE, FALSE)) %>%
+  inner_join(status, by = 'statusId') %>% 
+  inner_join(driver_standings %>% select(driverId, raceId, points) %>% rename(drivers_points=points), by = c("driverId", "raceId")) %>%
+  inner_join(constructor_standings %>% select(constructorId, raceId, points) %>% rename(constructors_points=points)) %>%
+  select(code, surname, constructor_name, year, gp_name, round, start_position, finish_position, status, retired, points, drivers_points, constructors_points)
+
+qualifying_results <- qualifying %>%
+  inner_join(races, by = "raceId") %>%
+  filter(driverId %in% drivers_21_22$driverId, year %in% c(2021, 2022)) %>%
+  inner_join(drivers_21_22, by = "driverId") %>%
+  inner_join(constructors_renamed, by = "constructorId") %>%
+  select(code, surname, constructor_name, year, gp_name, position, q1_time_s, q2_time_s, q3_time_s) %>%
+  rename(qualifying_position = position)
+  
+
+overall_results <- race_results %>%
+  inner_join(qualifying_results, by = c("code", "surname", "constructor_name", "year", "gp_name"))
+
+overall_results %>% head(5)
+```
+Let's start by looking at retirements. First, we'll look at *all* retirements, then only at those that were the driver's vault.
+
+Looking at all retirements, we see the following for our driver pairings.
+
+```{r}
+overall_results %>%
+  group_by(code, surname, constructor_name, year) %>%
+  summarize(retirements = sum(retired == 1)) %>%
+  mutate(year = factor(year)) %>%
+  ggplot(aes(x = surname, y = retirements, fill =year)) + geom_col(position = "dodge") + facet_wrap(~constructor_name, scales = "free_x") + xlab(NULL) + ylab("# of Retirements") + ggtitle("ALL Retirements (Driver and Non-Driver Caused)", subtitle = "For Driver Pairings That Raced in both 2021 and 2022") + scale_fill_manual(name = "Season", labels = c("2021 (Pre-Change)", "2022 (Post-Change)"), values = c("gray", "orange1"))
+```
+
+From this graph, we can see a few patterns: - Drivers that did better (fewer retirements) than their teammates in 2022 were: Verstappen (vs Perez), Norris (vs Ricciardo), Leclerc (vs Sainz), Ocon (vs Alonso), and Gasly (vs Tsunoda). - Stroll and Vettel did similarly in 2022. - In terms of change from 2021 to 2022, Verstappen and Ocon are the only two drivers that improved in terms of retiring less than the year before. Vettel, Perez, and Gasly retired the same amount. Tsunoda, Alonso, Leclerc, Sainz, Norris, and Ricciardo all retired more in 2022 than 2021.
+
+
+Next, we look only at retirements that were the driver's fault, and not due to a mechanical issue with their car. This can give us a quick overview of the number of "mistakes" each driver is making throughout the season and can help us get a sense of whether some drivers are just getting unlucky or whether their number of retirements is performance related.
+
+Below are the unique values of the `status` variable (which stores more detail on the outcome of the race) for retirements by our subset of drivers from 2021-2022. 
+
+```{r}
+overall_results %>%
+ filter(retired == 1) %>%
+  select(status) %>%
+  table()
+```
+Those that are most clearly related to driver error are "Accident", "Collision", "Collision damage", "Spun off", so we will filter just for these accident types.
+
+```{r}
+overall_results %>%
+  filter(retired == 1, status %in% c("Accident", "Collision", "Collision damage", "Spun off")) %>%
+  group_by(code, surname, constructor_name, year, status) %>%
+  summarize(n = n()) %>%
+  ggplot(aes(x = surname, y = n, fill = status)) + geom_col() + facet_grid(rows = vars(constructor_name), cols = vars(year), scales = "free_y") + coord_flip() + scale_fill_brewer(name = "Reason for Retirement", palette = "Set1") +
+    theme(strip.text.y.right = element_text(angle = 0)) + ggtitle("Driver-Related Retirements For 2021-22 Driver Pairs") + xlab(NULL) + ylab("# of Retirements")
+
+```
+
+From this graph, we can see a few things:
+- Drivers that had *more* driver-related retirements after the regulations change were: Tsunoda (Alpha Tauri), Alonso (Alpine),  Sainz (Ferrari), and Ricciardo (McLaren). Sainz seemed to have the worst year overall in the new season with four different driver-related retirements. 
+- Drivers who had *fewer* driver-error issues in 2022 were Ocon (Alpine), Verstappen (Red Bull) and Perez (Red Bull). Ocon and Verstappen were the only drivers from the six teams we looked at here that had zero driver-related retirements (if any, they were related to car failure and not a driver issue). 
+- Several drivers remained the same in terms of driver errors from 2021 to 2022. These drivers were Gasly (Alpha Tauri), Vettel (Aston Martin), Leclerc (Ferrari), and Norris (McLaren).
+
+Next, we can look at the *proportion* of points each driver earned for their team. We take the total constructors championship points and cumulative drivers championship points for each driver to calculate the gap between each of our driver pairs.
+
+```{r}
+team_gaps <- overall_results %>%
+  select(surname, constructor_name, year, round, drivers_points, constructors_points) %>%
+  mutate(teammate_points = constructors_points - drivers_points, gap = drivers_points - teammate_points, percentage_points = drivers_points/constructors_points * 100)
+
+team_gaps
+```
+
+We can then find the maximum gap to see which pair was the most unevenly matched:
+
+```{r}
+team_gaps %>%
+  arrange(desc(abs(gap))) %>%
+  head(2)
+```
+The largest recorded gap in our data was in 2021, of Verstappen over Perez. Perez earned only 190 (34%) of Red Bull's 585.5 points, for a gap of 205.5, which is huge! 
+
+**Note:** Half points were awarded for a race this year that was cut short due to rain and flooding, which is why the points don't match up with the standard expected values.
+
+We can also calculate the average gap:
+
+```{r}
+single_gap_per_team <- team_gaps %>%
+  mutate(abs_gap = abs(gap)) %>%
+  distinct(abs_gap, .keep_all = TRUE) %>%
+  arrange(desc(abs_gap))
+
+mean(single_gap_per_team$abs_gap)
+```
+
+The average gap between teammates was ~55.
+
+We can also plot the gap between each pair of teammates over time:
+
+```{r}
+team_plot <- function(team_name, color1, color2) {
+  team_gaps %>%
+  filter(constructor_name == team_name) %>%
+  ggplot(aes(x=round, y = gap, fill = surname)) + geom_area(color = "black") + facet_wrap(~year) +
+  scale_fill_manual(name = "Driver", values = c(color1, color2)) +
+  ggtitle(paste0("Championship Points Gap Between ", team_name, " Drivers, 2021-2022")) +
+  xlab("Race # In Season") + ylab("Points Gap") + theme_minimal()
+}
+```
+
+Looking at Red Bull, the overall gap between Verstappen and Perez got closer in 2022, though Verstappen was still very dominant overall.
+
+```{r}
+team_plot("Red Bull", "#E30118", "#000B8D")
+
+```
+Looking at McLaren, Lando Norris significantly increased his gap over Daniel Ricciardo from 2021 to 2022. Ricciardo seemed to really struggle with the new cars and lost to Norris almost every race, as we can see by the nearly always increasing points gap. This is not surprising to see, as 2022 was the year that Ricciardo was not offered a new contrac and lost his spot in the sport.
+
+```{r}
+team_plot("McLaren", "#47C7FC", "#FF8000")
+```
+
+Looking at Ferrari, Leclerc and Sainz were extremely back in forth in 2021. Essentially, equally matched. This is very different from 2022, where Leclerc had a points lead over Sainz across the entirety of the season. However, this was not as dominant a performance as Verstappen over Perez, since Leclerc's points lead only peaked at just over 60, compared to > 100 for Perez. Leclerc, though, seemed to transition better to the new cars.
+
+```{r}
+team_plot("Ferrari", "#ED1C24", "#FFF200")
+```
+Looking at Aston Martin, Vettel seemed to have the lead over Stroll in both years, though his biggest points gap was achieved in 2022.
+
+```{r}
+team_plot("Aston Martin", "#00594F", "#CEDC00")
+```
+For Alpha Tauri, Gasly clearly outperformed Tsunoda in 2021, but the story was very different in 2022. Tsunoda and Gasly were very evenly matched. This huge decrease in gap indicates either that Tsunoda made a big step forward, Gaslly a step back, or both, with the new regulations.
+
+```{r}
+team_plot("Alpha Tauri", "#00293F", "#F1F3F4")
+
+```
+
+2021 was a very back and forth year for Alpine, with Alonso and Ocon swapping spots in the championship several times. In 2022, however, Ocon maintained a lead over Alonso for the entire season, though the points gap was never super large. Ocon's dominance in 2022 may be in part due to the large number of retirements and mechanical issues that Alonso had throughout the season, since each DNF in a race means 0 points.
+
+```{r}
+team_plot("Alpine", "#0078C1", "#FD4BC7")
+```
+
+
+Finally, we look at qualifying. Let's look at each teammate pair to see how their qualifying records compared from 2021-2022.
+
+First we look at some summary statistics on qualifying position:
+
+```{r}
+overall_results %>%
+  select(surname, constructor_name, year, round, gp_name, qualifying_position) %>%
+  group_by(surname, constructor_name, year) %>% arrange(qualifying_position, .by_group = TRUE) %>% summarise(best_qual=first(qualifying_position), worst_qual=last(qualifying_position), avg_qual = mean(qualifying_position)) %>%
+  arrange(avg_qual)
+```
+Arranging by average qualifying position, Verstappen had the best average in both 2021 and 2022 of any driver in our list, followed by Leclerc and Sainz in 2022. The worst qualifying pair was Stroll and Vettel in 2022, with an average position of 15.77 and 14.35 respectively. Norris ('21), Leclerc ('21, '22), Perez ('22), Sainz ('22), and Verstappen ('21, '22) are the only drivers in our list to qualify in Pole Position. Verstappen ('21), Ocon ('20), Tsunoda ('21, '22), Stroll ('21, '22) and Vettel ('22) are the only drivers to qualify last.
+
+Graphing the distributions, we can get a better sense of the relative gap between teammates:
+
+```{r}
+team_boxplot <- function(team_name, color1, color2) {
+  overall_results %>%
+  filter(constructor_name == team_name) %>%
+  ggplot(aes(x=surname, y = qualifying_position, fill = surname)) + geom_boxplot() + facet_wrap(~year) +
+  scale_fill_manual(name = "Driver", values = c(color1, color2)) + scale_y_reverse() +
+  ggtitle(paste0("Distribution of Qualifying Positions For ", team_name, " Drivers, 2021-2022")) +
+  xlab(NULL) + ylab("Qualifying Position") + theme_minimal()
+}
+```
+
+Looking at Red Bull's Perez vs Verstappen, Perez seemed to close the qualifying gap from 2021 to 2022.
+
+```{r}
+team_boxplot("Red Bull", "#E30118", "#000B8D")
+
+```
+For McLaren, Ricciardo's average qualifying position got worse in 2022, while Norris had a wider distribution. Overall, the gap seems to have increased.
+
+```{r}
+team_boxplot("McLaren", "#47C7FC", "#FF8000")
+```
+Looking at Ferrari, Leclerc's best qualifying position was better than Sainz in both 2021 and 2022, but not his median. Leclerc seemed to take a step forward in terms of qualifying better than his teammate in 2022, though both drivers improved their qualifying significantly (likely due to the Ferrari performing very well in 2022). It is interesting to note that although Sainz had a lower overall limit on qualifying in 2021 (worse lows), he still ended up with more points than Leclerc in that season.
+
+```{r}
+team_boxplot("Ferrari", "#ED1C24", "#FFF200")
+```
+With Aston, Vettel did better than Stroll both years and the gap between median position remained pretty consistent. Vettel's qualifying seemed to get less consistent from 2021 - 2022, though.
+
+```{r}
+team_boxplot("Aston Martin", "#00594F", "#CEDC00")
+```
+
+For Alpha Tauri, Gasly qualified better than Tsunoda consistently in 2021, but this gap significantly closed in 2022. This looks more to do with Gasly performing *worse* than Tsunoda necessarily performing *better*, since Tsunoda's qualifying position distribution looks relatively similar over time.
+
+```{r}
+team_boxplot("Alpha Tauri", "#00293F", "#F1F3F4")
+
+```
+Finally, with Alpine, Alonso and Ocon seem to be our closest matched teammates overall. They qualified almost identically in 2021. In 2022, Alonso was more consistent, but both drivers seemed to have their moments of success and failure.
+
+```{r}
+team_boxplot("Alpine", "#0078C1", "#FD4BC7")
+
+```
+
+Finally, we can look at how many times each driver qualified for each qualifying session. When watching the Formula 1 broadcast, this is often referenced as a statistic around driver performance, e.g. "This is the first time that Charles Leclerc has been eliminated in Q1 all season, what a shocker of a result!"
+
+We start by finding the highest qualifying session each driver made it to per race:
+
+```{r}
+highest_qualifying <- overall_results %>%
+  select(surname, constructor_name, year, q1_time_s, q2_time_s, q3_time_s) %>%
+  mutate(made_Q1 = ifelse(!is.na(q1_time_s), TRUE, FALSE),
+         made_Q2 = ifelse(!is.na(q2_time_s), TRUE, FALSE),
+         made_Q3 = ifelse(!is.na(q3_time_s), TRUE, FALSE),
+         highest_qualifying = case_when(
+           made_Q3 == TRUE ~ "Q3",
+           made_Q2 == TRUE ~ "Q2",
+           made_Q1 == TRUE ~ "Q1",
+           TRUE ~ "None"
+         ))
+
+highest_qualifying
+```
+
+We can then count up how many times each driver was eliminated in each of the three sessions. Looking at this data, we can rank the drivers by how often they made it to Q3, the final qualifying session which includes the 10 best drivers. Max Verstappen had the most impressive performance of all, making Q3 100% of the time in 2022 and 95% of the time in 2021, followed by Leclerc (2022) and Norris (2021) with about 90% of the time.
+
+The driver who made Q3 the least was Stroll (2022), with making Q3 about 10% of the time.
+
+```{r}
+highest_qualifying %>%
+  group_by(surname, constructor_name, year) %>%
+  summarize(
+    out_Q1 = sum(highest_qualifying == "Q1", na.rm=TRUE)/n(),
+    out_Q2 = sum(highest_qualifying == "Q2", na.rm=TRUE)/n(),
+    out_Q3 = sum(highest_qualifying == "Q3", na.rm=TRUE)/n()) %>%
+  arrange(desc(out_Q3))
+```
+Of course, it's hard to compare drivers across teams to one another. We can plot these results by team to get a better sense of comparison.
+
+```{r}
+highest_qualifying %>%
+  ggplot(aes(x = surname, fill = highest_qualifying)) + geom_bar(position = "fill") + facet_grid(rows = vars(constructor_name), cols = vars(year), scales = "free_y") + coord_flip() + scale_fill_brewer(name = "Best Session Achieved", palette = "Set1") +
+    theme(strip.text.y.right = element_text(angle = 0)) + ggtitle("Frequency of Highest Qualifying Session Made By Each Driver, 2021-2022") + xlab(NULL) + ylab("Proportion of Qualifying Sessions")
+```
+
+Looking at this, we can quickly get a sense of how well each driver (and team) did at qualifying in 2021 and 2022. Note that *None* here means that a driver does not have a qualifying time recorded. This is potentially due to a crash or mechanical failure of some kind.
+
+We see overall that Verstappen is dominant. The only other drivers that come close to matching how often he made Q3 in 2022 were his teammate Perez, and Ferrari's Sainz and Leclerc. In 2021, the closest drivers were Perez, Norris, Leclerc, and Gasly (of Alpha Tauri). 
+
+Looking at changes from 2021 to 2022 we can see a few interesting things as well:
+- For Alpha Tauri, both Tsunoda and Gasly had much more trouble making it to late qualifying sessions (Q2/Q3) in 2022, but this seemed to affect Gasly much more, with a huge fall off in performance. He got eliminated in Q1 quite a few times in 2022, which is pretty poor.
+- In 2021, Ocon and Alonso (Alpine) seemed to make qualifying sessions at similar rates, but in 2022, Alonso jumped forward and made Q3 significantly more often.
+- The closest overall recorded teammate match in this data was Sainz and Leclerc in 2022, who made each qualifying session at almost equal rates, with the exception of Leclerc going out in Q1. Ocon and Alonso in 2021 were also very close.
+- Ricciardo (McLaren) had a huge fall of in how often he made Q3, particularly compared with his teammate Norris.
+- Red Bull as a team appear to be the most consistent in making Q3 for both years.
+
+
+
+## Critical Reflection
+
+### Summary
+
+We summarize our conclusions to each of the research questions below:
+
+**Is it easier to pass?**
+- For drivers who finished races, the average number of positions gained has remained relatively constant.
+- When looking at drivers who started out of position (2 or more places behind where their team started on average), these drivers gained slightly more positions on average post-rule change than pre-change. However, when looking at historical trends, 2022 does not clearly stand out. Drivers starting in position or ahead of expectation, however, appeared to get passed more easily in 2022 than any other year (at least, since 2016).
+- The rule change appears to have made it *slightly* harder to hold one's position, but not much more, and the change is not significant enough to say anything definitive.
+
+**How have lap times changed?**
+- For some tracks, times seem to have increased with the rule change, while for others they seem to have decreased. Some lap times changed dramatically while others changed only slightly. There does not seem to be any pattern regarding street circuits vs purpose built.
+- Overall, however, there is a statistically significant indication that lap times *increased* slightly on average (about 1.2 seconds) after the 2022 rule change, holding track constant.
+
+
+**How has reliability changed?**
+- In terms of the overall number of cars finishing each race vs retiring, there seems to be no change associated with the rule change.
+- However, the proportion of *mechanical* related failures seems to have increased significantly, reversing a historic trend of improving reliability. This indicates that there were potential reliability issues introduced with the new engine design. It is possible that in 2023 onward, reliability issues will decrease compared with 2022.
+- The types of mechanical issues that increased the most were related to the engine and power unit, so these are likely where reliability issues were introduced. Wheel nut, suspension, electrical, and brake issues were less prevalent after the rule change.
+
+**How did the regulation change shake up the championship?**
+- Team rankings in the constructors championship changed significantly between 2021 and 2022. After the rules change, Mercedes dropped from 1st to 3rd, both Red Bull and Aston Martin won way more points, and McLaren and Alpha Tauri fell off considerably. Some of the small teams that had been struggling before (Alfa Romeo, Haas), earned more points than in previous years. 
+- In 2022, it seems like the top teams took *more* of the podiums than in previous years, so all of the midfield and backmarker teams seemed to earn fewer podiums than in previous years. At the back, though, Haas made a big step forward in 2022 with a sigificant improvement in average finishing position.
+
+
+**Which drivers adapted best to the regulations?**
+- Looking at retirements, Verstappen and Ocon were the only two drivers from our consistent 2021-2022 driver pairs to not have any driver-error related retirements in 2022. Sainz had by far the worst year of the drivers we considered, with four driver-error retirements in 2022. Clearly he did not seem to get along well with the new cars.
+- Looking at points gaps overall, the largest gap recorded from 2021 to 2022 was Verstappen over Perez, for a whopping 205.5 point difference. The average gap at a given race between any of our 6 pairs of teammates was about 55.
+- For points gaps over time, Norris clearly improved his lead over Ricciardo (McLaren) in 2022, as did Leclerc over Sainz (Ferrari) and Ocon over Alonso (Alpine). Tsunoda was trailing Gasly (Alpha Tauri) significantly in 2021, but their performances were much closer in 2022.
+- Looking at qualifying positions between teammates, Verstappen significantly outperformed Perez in both 2021/2022. Same with Norris over Ricciardo, with again the gap widening in 2022. Both Leclerc and Sainz saw huge improvements in average qualifying position from 2021-2022, with Leclerc qualifying better overall. Of our driver pairs, Stroll/Vettel (Aston Martin) and Alonso/Ocon (Alpine), were the only two pairs who qualified relatively similarly in 2021 and 2022. The driver with the biggest dropoff between 2021 and 2022 was Pierre Gasly (Alpha Tauri) who was previously qualifying mostly in the top 10, but post-rules-change, qualified primarily in the 10-15 range. Gasly previously qualified much better than his teammate Tsunoda, but they were relatively equal in 2022.
+- Verstappen was by far the most dominant and consistent driver in terms of making it to Q3 in qualifying and his team (Red Bull) was overall most reliable at making Q3 across both drivers. Gasly and Ricciardo had the biggest fall off in performance relative to their teammates. The Aston Martin team also seemed to struggle a lot with the new regulations, being eliminated in Q1/Q2 quite frequently in 2022 compared with 2021.
+
+From this, we can see that overall, there *do* appear to have been some changes introduced with the rules shift in 2022. Cars seem to be slightly slower overall and less reliable. Teammate pairings have shifted a bit in terms of relative gap, as have the championship rankings.
+
+### Limitations
+
+Of course, this analysis comes with quite a few limitations.
+
+One thing I learned pretty quickly is just how hard it is to get a bigger picture on changes happening over time--in large part due to the constantly changing nature of F1. We don't have the same race tracks, same drivers, or even same teams year over year, so finding things that are *consistent* enough to not have a bunch of confounding variables is quite difficult and results in limited data. We have to sort of pick and choose some things, which ends up leaving others out, so it's very difficult to get the full picture. Rather, we have to settle for getting close.
+
+Another issue I anticipated before even looking at the data was the difficulty of comparing drivers across different teams. Since teams are all in very different cars, just because one driver always finishes ahead of another driver does not mean they are better, and could just mean they have a better car. This made it so that, for our final research questions about driver adaptation, the only way this could reasonably be addressed was by limiting the research to just the driver pairings that stayed the same from 2021-2022, which unfortunately meant that we left out more than half the drivers. 
+
+Since we were comparing before and after, this also meant that there were certain drivers and some tracks in our data that we had to leave out, because they were only present in 2021 OR 2022 and not both. For example, there were several rookie drivers in 2022 that I did not analyze any data for because there was no data from the year before to compare with.
+
+Additionally, F1 is a very complex sport with a lot of moving parts. It is hard for us to conclude that any changes we saw in the data were actually due to the rules change. Other things shifted between 2021 and 2022. For example, some drivers got sick and had to miss some races, which may have affected our data. Other races may have had weather related issues that slightly messed with lap times. Some drivers were moving from their 2nd-3rd year versus 9th-10th, which typically means a different marginal skill improvement rate. If a driver closed the gap with their teammate, it could just be because they were still new to the sport and had a lot more they could learn from 2021-2022 than someone who'd already learned it all. 
+
+It's hard to really say anything for sure, but it is certainly fascinating to see the anecdotal changes from watching on TV appear in the data.
+
+Finally, there is the larger issue of not enough data. It is hard to get *much* of a picture of Formula 1 post-rules-change since we only have one year's worth of data to summarize the "After", compared with 6 to summarize the "Before". It is possible that most of the trends we saw here (such as reliability issues) will stabilize over time, as will the gaps between teams. Often, a rule change can shake up a championship temporarily (if a team gets lucky and starts with a good design), but then other teams will continue to develop their designs and start to catch up. 
+
+### Future Work
+
+Thankfully, this data issue is one that will be resolved with time. It would be really interesting to go back in a few years time (before the next regulations change in 2026), and look at *all* the data from the new regulations change to see if anything from 2022 was just an outlier or if there were clearer patterns.
+
+There are a few other areas where it might be interesting to dig in as well:
+
+- One thing I noticed in this analysis as well is that for the previous regulations change, the longer it went on, car reliability seemed to improve over time. Then, with the new rules change, reliability issues spiked up again. It would be interesting to investigate this pattern further to see if the same slow, steady improvement followed by big spike occurs with each new regulations cycle. 
+
+- We did not get to cover any of the F1 rookies from 2022. It would be interesting to do analysis to see if we could identify (based on comparison to teammates potentially), which rookie did the best job adapting in their first year with the new regulations.
+
+- On a larger scale, an analysis comparing how rookie and veteran drivers (or maybe the "greats" who have a ton of wins and podiums) react to regulations changes differently would be an interesting angle. One could imagine that the best of the best drivers are very good at adapting to change and learning quickly the first year after a regulations shift, while rookie drivers might have more difficulty adapting. 
+
+- When there is a regulations change, teams tend to update their cars more frequently with new design changes/improvements as they learn more about what works and what doesn't. It would be really interesting to see, right after a regulations change, how frequently teams swap positions throughout the season in terms of performance (As in, Red Bull is the fastest week 1, then week 4 Mercedes has upgrades and they suddenly jump to first, etc.) and how much performance improves each week. How many seconds separate the finishing times of all the different teams? Are they getting closer together or further apart?
+
+There are a huge number of interesting questions to look into and the analysis for this project only scratched the surface. Hopefully, as more data comes out, this is something I can look into further!
+
+## References
+
+#### Datasets
+
+Rao, R. (2023). Formula 1 World Championship Data: 1950-2023. *Kaggle*.
+<https://www.kaggle.com/datasets/rohanrao/formula-1-world-championship-1950-2020>
+
+Formula 1 (2023). Formula 1 Race Result Archive. *Formula 1*.
+<https://www.formula1.com/en/results.html>
+
+
+#### Overview of F1
+
+Federation International de l'Automobile (FIA). (2023). Regulations: FIA Formula One World Championship. 
+<https://www.fia.com/regulation/category/110>
+
+Tippett, B. (2021). The Complete Guide To Understanding Formula 1. *Defector*.
+<https://defector.com/the-complete-guide-to-understanding-formula-1>
+
+Kanal, S. (2023). The beginner's guide to...the Formula 1 Grand Prix Weekend. *Formula 1*.
+<https://www.formula1.com/en/latest/article.the-beginners-guide-to-the-formula-1-grand-prix-weekend.20OGbgZCWKj9ML79gBzfoX.html>
+
+F1 Chronicle Media Team (2020). The Complete Beginners Guide to Formula 1. *F1 Chronicle*.
+<https://f1chronicle.com/a-beginners-guide-to-formula-1/>
+
+#### 2021-2022 Rule Changes
+
+Medland, C. (2022). 7 key rule changes for the 2022 season. *Formula 1*.
+<https://www.formula1.com/en/latest/article.7-key-rule-changes-for-the-2022-season.2E7JH9MywymU8xxw6r5yDS.html>
+
+Masdea, M. (2022). Tech Explained: 2022 F1 Technical Regulations. *Racecar Engineering*.
+<https://www.racecar-engineering.com/articles/tech-explained-2022-f1-technical-regulations/> 
+
+
+#### Techincal / Software
+
+Wickham, H., & Grolemund, G. (2016). R for data science: Visualize, model, transform, tidy, and import data. 
+<https://r4ds.had.co.nz> 
+
+R Core Team (2023). _R: A Language and Environment for Statistical Computing_. R Foundation for Statistical Computing, Vienna,
+  Austria. <https://www.R-project.org/>.
+
+
+
+
