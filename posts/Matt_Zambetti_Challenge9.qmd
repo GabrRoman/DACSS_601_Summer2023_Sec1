@@ -1,0 +1,56 @@
+---
+title: "Challenge 9 Submission"
+author: "Matt Zambetti"
+description: "Creating a function"
+date: "7/4/2023"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_9
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(ggplot2)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge
+
+For Challenge 9, I created a function that would take in two variables from a data frame and create a histogram from it.
+
+I have also added an example on how to use it.
+
+```{r}
+
+plot_histogram <- function(df, varx, vary, title, xlabel, ylabel) {
+  df %>%
+    ggplot(aes(x={{varx}}, y={{vary}})) +
+    geom_histogram(stat='identity') +
+    theme(axis.text.x = element_text(angle = 45)) +
+    ggtitle(title) +
+    labs(y = ylabel, x = xlabel)
+}
+
+cereal_tidy = read_csv("_data/cereal.csv")
+cereal_tidy
+plot_histogram(cereal_tidy, Cereal, Sugar, 'Sugar per Brand of Cereal', 'Brand', 'Sugar')
+
+```
+
+
+
+
+
+
+
+
+
