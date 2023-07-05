@@ -2,7 +2,7 @@
 title: "Challenge 1 Solutions"
 author: "Tenzin Latoe"
 description: "Reading in data and creating a post"
-date: "06/20/2023"
+date: "07/04/2023"
 format:
   html:
     toc: true
@@ -13,8 +13,6 @@ categories:
   - challenge_1
   - Tenzin Latoe
   - railroads
-  - faostat
-  - wildbirds
 ---
 
 ```{r}
@@ -37,28 +35,32 @@ Today's challenge is to
 
 ## Read in the Data
 
-Read in one (or more) of the following data sets, using the correct R package and command.
-
 -   railroad_2012_clean_county.csv ⭐
--   birds.csv ⭐⭐
--   FAOstat\*.csv ⭐⭐
--   wild_bird_data.xlsx ⭐⭐⭐
--   StateCounty2012.xls ⭐⭐⭐⭐
-
-Find the `_data` folder, located inside the `posts` folder. Then you can read in the data, using either one of the `readr` standard tidy read commands, or a specialized package such as `readxl`.
 
 ```{r}
-x <- c(1,2,2,2)
-x
+railroad <- read_csv("_data/railroad_2012_clean_county.csv")
 ```
 
-Add any comments or documentation as needed. More challenging data sets may require additional code chunks and documentation.
+```{r}
+railroad
+```
+
 
 ## Describe the data
 
-Using a combination of words and results of R commands, can you provide a high level description of the data? Describe as efficiently as possible where/how the data was (likely) gathered, indicate the cases and variables (both the interpretation and any details you deem useful to the reader to fully understand your chosen data).
+The data consists of 2930 rows and 3 columns, which represent State, county, and total employees. 
 
 ```{r}
-#| label: summary
-
+#Preview: railroad
+head(railroad)
 ```
+Head function used to preview the first 5 rows of the dataframe
+
+```{r}
+colnames(railroad)
+```
+```{r}
+#Filter Massachusetts from railroad
+filter(railroad, `state` == "MA")
+```
+To look specifically at MA, we can can filter the data by searching specific states. I selected MA from the current railroad dataset. 
