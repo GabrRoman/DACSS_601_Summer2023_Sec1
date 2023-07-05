@@ -1,8 +1,8 @@
 ---
-title: "Homework 2 - Susannah"
+title: "Homework 3 - Susannah"
 author: "Susannah Reed Poland"
 description: "Gender and Education in Bhutan"
-date: "6/27/2023"
+date: "7/3/2023"
 format:
   html:
     df-print: paged
