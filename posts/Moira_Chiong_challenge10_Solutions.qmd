@@ -25,7 +25,6 @@ library(tidyverse)
 library(dplyr)
 library(ggplot2)
 pseo_ma_SANDBOX <- read_excel("datafolderMoiraChiong/pseo_ma_SANDBOX.xlsx")
-pseo_ma_SANDBOX
 
 knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
 ```
