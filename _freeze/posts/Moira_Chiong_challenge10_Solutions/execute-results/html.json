@@ -1,0 +1,14 @@
+{
+  "hash": "68911d833f704e9ef6d86f98c9c825ce",
+  "result": {
+    "markdown": "---\ntitle: \"Challenge 10 Solutions\"\nauthor: \"Moira Chiong\"\ndescription: \"purrr\"\ndate: \"7/6/2023\"\nformat:\n  html:\n    toc: true\n    code-copy: true\n    code-tools: true\ncategories:\n  - challenge_10\n---\n\n\n\n\n## Mutate\n\n::: {.cell}\n\n```{.r .cell-code}\ny1_p25_earnings<- as.numeric(pseo_ma_SANDBOX$y1_p25_earnings)\ny1_p50_earnings<- as.numeric(pseo_ma_SANDBOX$y1_p50_earnings)\ny1_p75_earnings<- as.numeric(pseo_ma_SANDBOX$y1_p75_earnings)\n\ndf1 <-data.frame(y1_p25_earnings, y1_p50_earnings, y1_p75_earnings)\n```\n:::\n\n## Purrr Function\n\n::: {.cell}\n\n```{.r .cell-code}\nmap_dbl(list(df1$y1_p25_earnings, df1$y1_p50_earnings, df1$y1_p75_earnings),mean,na.rm=T)\n```\n\n::: {.cell-output .cell-output-stdout}\n```\n[1] 30412.00 41256.48 53811.20\n```\n:::\n:::\n",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}
