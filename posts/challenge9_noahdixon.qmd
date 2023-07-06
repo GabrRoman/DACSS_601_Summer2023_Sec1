@@ -1,0 +1,62 @@
+---
+title: "Challenge 9"
+author: "Noah Dixon"
+description: "Creating a function"
+date: "7/4/2023"
+format:
+  html:
+    df-print: paged
+    toc: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_9
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(ggplot2)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Read Data
+
+Using the read.csv function we can read the railroad_2012_clean_county data into a data frame.
+
+```{r}
+#| label: read data
+railroad <- read.csv("_data/railroad_2012_clean_county.csv")
+railroad
+```
+
+## Create Function
+
+Now, we can create a function to calculate summary statistics for a variable.
+
+```{r}
+#| label: create function
+statsFunction <- function(x) {
+  print(paste0("Summary Statistics:"))
+  print(paste0("Maximum: ", max(x)))
+  print(paste0("Minimum: ", min(x)))
+  print(paste0("Mean: ", mean(x, na.rm = TRUE)))
+  print(paste0("Median: ", median(x, na.rm = TRUE)))
+  print(paste0("Standard Deviation: ", sd(x, na.rm = TRUE)))
+}
+```
+
+Using this function we can print summary statistics for the total_employees column of the railroad data frame.
+
+```{r}
+#| label: use function
+statsFunction(railroad$total_employees)
+```
+
+
+
+
