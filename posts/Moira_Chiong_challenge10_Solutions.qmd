@@ -1,0 +1,49 @@
+---
+title: "Challenge 10 Solutions"
+author: "Moira Chiong"
+description: "purrr"
+date: "7/6/2023"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_10
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+#| include: false
+
+
+setwd("C:/Users/chion/OneDrive/Desktop/DACSS 601/DACSS_601_Summer2023_Sec1/posts")
+library(readxl)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+pseo_ma_SANDBOX <- read_excel("datafolderMoiraChiong/pseo_ma_SANDBOX.xlsx")
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Mutate
+```{r}
+y1_p25_earnings<- as.numeric(pseo_ma_SANDBOX$y1_p25_earnings)
+y1_p50_earnings<- as.numeric(pseo_ma_SANDBOX$y1_p50_earnings)
+y1_p75_earnings<- as.numeric(pseo_ma_SANDBOX$y1_p75_earnings)
+
+df1 <-data.frame(y1_p25_earnings, y1_p50_earnings, y1_p75_earnings)
+```
+## Purrr Function
+```{r}
+map_dbl(list(df1$y1_p25_earnings, df1$y1_p50_earnings, df1$y1_p75_earnings),mean,na.rm=T)
+```
+
+  
+
+
+
+
