@@ -1,0 +1,121 @@
+---
+title: "Challenge 6"
+author: "Gabrielle Roman"
+description: "Visualizing Time and Relationships"
+date: "7/4/2023"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_6
+  - hotel_bookings
+  - air_bnb
+  - fed_rate
+  - debt
+  - usa_households
+  - abc_poll
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to:
+
+1)  read in a data set, and describe the data set using both words and any supporting information (e.g., tables, etc)
+2)  tidy data (as needed, including sanity checks)
+3)  mutate variables as needed (including sanity checks)
+4)  create at least one graph including time (evolution)
+   - try to make them "publication" ready (optional)
+   - Explain why you choose the specific graph type
+5)  Create at least one graph depicting part-whole or flow relationships
+   - try to make them "publication" ready (optional)
+   - Explain why you choose the specific graph type
+
+[R Graph Gallery](https://r-graph-gallery.com/) is a good starting point for thinking about what information is conveyed in standard graph types, and includes example R code.
+
+(be sure to only include the category tags for the data you use!)
+
+## Read in data
+
+Read in one (or more) of the following datasets, using the correct R package and command.
+
+  - debt  ⭐
+  - fed_rate ⭐⭐
+  - abc_poll ⭐⭐⭐
+  - usa_hh ⭐⭐⭐
+  - hotel_bookings ⭐⭐⭐⭐
+  - AB_NYC ⭐⭐⭐⭐⭐
+
+  
+
+```{r}
+fed_rate<-read.csv("_data/FedFundsRate.csv")
+glimpse(fed_rate)`
+```
+```
+
+### Briefly describe the data
+The data appears to show a series of rates and changes in the economy as evaluated by the federal reserve on different dates between 1/7/1954 and 3/16/2017. Not all dates between these two points are accounted for, and there are multiple entries for every year. It appears that no federal data was collected for multiple of the observed dates, and there are 3196 NA signifiers (checked using "sum(is.na(fed_rate))") in the dataset as a result.
+
+## Tidy Data (as needed)
+
+I have trouble quantifying what "needs" to be changed in order to meet tidy requirements, but I think this dataset's year, month, and day columns could be consolidated into one, so I'll do that below.
+
+```{r}
+fed_rate$Date<-as.Date(with(fed_rate, paste(Year,Month,Day,sep="-")),"%Y-%m-%d")
+fed_rate<-fed_rate[-c(1:3)]
+view(fed_rate)
+
+```
+
+Are there any variables that require mutation to be usable in your analysis stream? For example, do you need to calculate new values in order to graph them? Can string values be represented numerically? Do you need to turn any variables into factors and reorder for ease of graphics and visualization?
+
+Document your work here.
+
+```{r}
+fed_rate<-fed_rate%>%
+  pivot_longer(cols=-Date,
+               names_to = "variable",
+               values_to = "value")
+colnames(fed_rate)[2] ="Variable"
+colnames(fed_rate)[3] ="Value"
+
+
+glimpse(fed_rate)
+fed_rate
+```
+
+## Time Dependent Visualization
+The following is the federal rates displayed over time.
+
+```{r}
+fed_rate%>%
+  filter(str_detect(Variable, "Federal"))%>%
+  ggplot(., aes(x = Date, y = Value, color = Variable)) +
+  geom_line() +
+  scale_y_continuous(labels = scales::label_percent(scale = 0.5))+
+  labs(title = "Federal Reserve Rates", x = "Date", y = "Rate")
+```
+
+## Visualizing Part-Whole Relationships
+
+
+```{r}
+ggplot(fed_rate, aes(x = Date, y = Value, fill = Variable))+
+geom_area()+
+labs(title = "Federal Reserve Rates", x = "Year", y = "Rate")
+
+```
