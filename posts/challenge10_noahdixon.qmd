@@ -1,0 +1,71 @@
+---
+title: "Challenge 10"
+author: "Noah Dixon"
+description: "purrr"
+date: "7/6/2023"
+format:
+  html:
+    df-print: paged
+    toc: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_10
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+#| include: false
+
+library(tidyverse)
+library(ggplot2)
+
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Read Data
+
+Using the read.csv function we can read the cereal.csv data into a data frame.
+
+```{r}
+#| label: read data
+cereal <- read.csv("_data/cereal.csv")
+cereal
+```
+
+
+Next, we will split the cereal dataframe based on cereal type.
+
+```{r}
+#| label: split dataframe 
+cereal_types <- split(cereal, cereal$Type)
+cereal_types
+```
+
+Now, we will recreate my function from challenge 9 to calculate summary statistics for a variable. We will alter the function slightly to accept the column name as an argument along with the data frame.
+
+```{r}
+#| label: create function
+statsFunction <- function(df, col_name) {
+  column <- df[[col_name]]
+  print(paste0("Summary Statistics:"))
+  print(paste0("Maximum: ", max(column)))
+  print(paste0("Minimum: ", min(column)))
+  print(paste0("Mean: ", mean(column, na.rm = TRUE)))
+  print(paste0("Median: ", median(column, na.rm = TRUE)))
+  print(paste0("Standard Deviation: ", sd(column, na.rm = TRUE)))
+}
+```
+
+
+Finally, we will use the map function from the purrr package to apply this function to the Sugar column of both data frames in the cereal_types list.
+
+```{r}
+#| label: apply function to data frames
+result <- map(cereal_types, ~statsFunction(.x, "Sugar"))
+```
+
+
