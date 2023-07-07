@@ -1,0 +1,45 @@
+---
+title: "Challenge 10 Submission"
+author: "Matt Zambetti"
+description: "purrr"
+date: "7/6/2023"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_10
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+#| include: false
+
+library(tidyverse)
+library(ggplot2)
+library(purrr)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## The challenge  
+
+I utilized the `purrr` package to carry out a task I completed in Challenge 7 differently. In challenge 7 I chose to create the cost of a minimum stay at AirBnbs by multiplying the cost per night by the minimum number of nights. Below we can see this performed by using the user defined function `multiply`.
+
+```{r}
+multiply <- function(cost, num_days) {
+  return(cost*num_days)
+}
+
+ab_nyc_2019 <- read_csv("_data/AB_NYC_2019.csv")
+
+min_cost <- map2_int(ab_nyc_2019$price, ab_nyc_2019$`minimum_nights`, multiply)
+head(min_cost)
+```
+
+
+
+
