@@ -1,0 +1,18 @@
+{
+  "hash": "f02765755e173fea7e690acbb4b6fc72",
+  "result": {
+    "markdown": "---\ntitle: \"Challenge 10 Submission\"\nauthor: \"Suyash Bhagwat\"\ndescription: \"purrr\"\ndate: \"07/06/2023\" \nformat:\n  html:\n    df-print: paged\n    toc: true\n    code-copy: true\n    code-tools: true\ncategories:\n  - challenge_10\n  - debt_in_trillions\n---\n\n\n\n\n## Challenge Overview\n\nThe [purrr](https://purrr.tidyverse.org/) package is a powerful tool for functional programming. It allows the user to apply a single function across multiple objects. It can replace for loops with a more readable (and often faster) simple function call. \n\nFor example, we can draw `n` random samples from 10 different distributions using a vector of 10 means.  \n\n\n::: {.cell}\n\n```{.r .cell-code}\nn <- 100 # sample size\nm <- seq(1,10) # means \nsamps <- map(m,rnorm,n=n) \n```\n:::\n\n\nWe can then use `map_dbl` to verify that this worked correctly by computing the mean for each sample.  \n\n\n::: {.cell}\n\n```{.r .cell-code}\nsamps %>%\n  map_dbl(mean)\n```\n\n::: {.cell-output .cell-output-stdout}\n```\n [1] 0.890460 1.921804 2.978067 3.920082 5.087384 5.849617 7.044267 8.037781\n [9] 9.087611 9.813258\n```\n:::\n:::\n\n\n`purrr` is tricky to learn (but beyond useful once you get a handle on it). Therefore, it's imperative that you complete the `purr` and `map` readings before attempting this challenge.  \n\n## The challenge  \n\nUse `purrr` with a function to perform *some* data science task. What this task is is up to you. It could involve computing summary statistics, reading in multiple datasets, running a random process multiple times, or anything else you might need to do in your work as a data analyst. You might consider using `purrr` with a function you wrote for challenge 9.  \n\n**Ans:** For challenge 10, I'll be using the debt_in_trillions.xlsx dataset to calculate the mean of all the numerical columns using the map function. The code for that is given below:\n\n\n::: {.cell}\n\n```{.r .cell-code}\ndebt <- read_excel(\"_data/debt_in_trillions.xlsx\")\nglimpse(debt)\n```\n\n::: {.cell-output .cell-output-stdout}\n```\nRows: 74\nColumns: 8\n$ `Year and Quarter` <chr> \"03:Q1\", \"03:Q2\", \"03:Q3\", \"03:Q4\", \"04:Q1\", \"04:Q2…\n$ Mortgage           <dbl> 4.942, 5.080, 5.183, 5.660, 5.840, 5.967, 6.210, 6.…\n$ `HE Revolving`     <dbl> 0.242, 0.260, 0.269, 0.302, 0.328, 0.367, 0.426, 0.…\n$ `Auto Loan`        <dbl> 0.641, 0.622, 0.684, 0.704, 0.720, 0.743, 0.751, 0.…\n$ `Credit Card`      <dbl> 0.688, 0.693, 0.693, 0.698, 0.695, 0.697, 0.706, 0.…\n$ `Student Loan`     <dbl> 0.2407000, 0.2429000, 0.2488000, 0.2529000, 0.25980…\n$ Other              <dbl> 0.4776, 0.4860, 0.4773, 0.4486, 0.4465, 0.4231, 0.4…\n$ Total              <dbl> 7.2313, 7.3839, 7.5551, 8.0655, 8.2893, 8.4600, 8.8…\n```\n:::\n:::\n\n::: {.cell}\n\n```{.r .cell-code}\nmap_dbl(list(debt$Mortgage, debt$`HE Revolving`, debt$`Auto Loan`, debt$`Credit Card`, debt$`Student Loan`, debt$Other, debt$Total),mean)\n```\n\n::: {.cell-output .cell-output-stdout}\n```\n[1]  8.2739865  0.5160662  0.9308703  0.7565176  0.9188575  0.3830770 11.7793751\n```\n:::\n:::\n",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {
+      "include-in-header": [
+        "<link href=\"../site_libs/pagedtable-1.1/css/pagedtable.css\" rel=\"stylesheet\" />\n<script src=\"../site_libs/pagedtable-1.1/js/pagedtable.js\"></script>\n"
+      ]
+    },
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}
