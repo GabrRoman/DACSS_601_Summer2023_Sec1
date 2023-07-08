@@ -564,7 +564,7 @@ Our multivariate regression analysis provided key insights into the determinants
 
 While our model explained approximately 79.65% of the variance in happiness scores, the remainder indicates the presence of other influential factors yet to be explored.
 
-`GDP_per_Capita & Life_Expectancy`
+
 
 ```{r}
 # Fit a multiple linear regression model with interaction term
