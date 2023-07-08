@@ -1,7 +1,7 @@
 ---
 title: "Final_Project:World Happiness Report"
 author: "Zhongyue Lin"
-description: "Final Project_World Happiness Reprot"
+description: "Final Project:World Happiness Reprot"
 date: "7/13/2023"
 format:
   html:
