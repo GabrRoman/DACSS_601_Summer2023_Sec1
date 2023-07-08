@@ -42,7 +42,7 @@ library(worldfootballR)
 
 Until a decade and a half ago, recording data points regarding key events in soccer was a manual process. This limited the range of analysis and the variety of data attributes. Today, with the usage of advanced technology, hundreds of attributes describing a game are being recorded in real-time. This has enabled a wide range of research in the field of soccer analytics and led to the emergence of various soccer data aggregators like StatsBomb, FBref, Understat, Fotmob, etc. In this project, we will be using the data from these aggregators using the *worldfootballR* package in R. This package has been created by Jason Zivkovic that enables users to conveniently access data belonging to the above-mentioned aggregators in R. 
 
-The goal of the project will be to find attributes that best predict success in the game. We would want to see the following aspects: 
+The goal of the project will be to find performance attributes that best predict success in the game. We would want to see the following aspects: 
 
 - What are the best teams/players good at? We will compare their aggregate statistics like goals, assists, xG, xA, Goal difference, etc.
 - Is xG a good indicator of success? Any trends over years?
@@ -55,14 +55,14 @@ This dataset allows us to obtain soccer game/team/player data with various attri
 
 ```{r}
 # This is a sample dataset call. Further in the project, we could change a couple of parameters in the dataset call for comparative analysis, etc.
-prem_2023_shooting <- fb_season_team_stats(country = "ENG", gender = "M", season_end_year = "2023", tier = "1st", stat_type = "shooting")
+prem_team_2023_shooting <- fb_season_team_stats(country = "ENG", gender = "M", season_end_year = "2023", tier = "1st", stat_type = "shooting")
 ```
 
 ```{r}
-nrow(prem_2023_shooting)
+nrow(prem_team_2023_shooting)
 ```
 ```{r}
-table(prem_2023_shooting$Team_or_Opponent)
+table(prem_team_2023_shooting$Team_or_Opponent)
 ```
 
 
