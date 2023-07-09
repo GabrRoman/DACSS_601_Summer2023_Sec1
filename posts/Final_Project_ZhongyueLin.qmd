@@ -945,7 +945,7 @@ J, A. (2018, March 2). Developed and Developing Countries: World Bank Classifica
 
 Sustainable Development Solutions Network. (2023). World Happiness Report. Worldhappiness.report. <https://worldhappiness.report/>
 
-**Technical References**
+### Technical References
 
 Kieran Healy. (2019). Data visualization : a practical introduction. Princeton University Press.
 
