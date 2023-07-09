@@ -1,0 +1,107 @@
+---
+title: "Challenge 3 Solution"
+author: "Shreya Varma"
+description: "Tidy Data: Pivoting"
+date: "5/30/2023"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_3
+  - animal_weights
+  - eggs
+  - australian_marriage
+  - usa_households
+  - sce_labor
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to:
+
+1.  read in a data set, and describe the data set using both words and any supporting information (e.g., tables, etc)
+2.  identify what needs to be done to tidy the current data
+3.  anticipate the shape of pivoted data
+4.  pivot the data into tidy format using `pivot_longer`
+
+## Read in data
+
+Read in one (or more) of the following datasets, using the correct R package and command.
+
+-   animal_weights.csv ⭐
+-   eggs_tidy.csv ⭐⭐ or organiceggpoultry.xls ⭐⭐⭐
+-   australian_marriage\*.xls ⭐⭐⭐
+-   USA Households\*.xlsx ⭐⭐⭐⭐
+-   sce_labor_chart_data_public.xlsx 🌟🌟🌟🌟🌟
+
+```{r}
+eggs_tidy <- read_csv("_data/eggs_tidy.csv")
+eggs_tidy
+glimpse(eggs_tidy)
+summary(eggs_tidy)
+
+```
+
+### Briefly describe the data
+
+Describe the data, and be sure to comment on why you are planning to pivot it to make it "tidy"
+
+This dataset contains the data of type of eggs sold every month from 2004 to 2013. We can use pivot longer to reduce the number of columns and increase the number of rows. Thus the type of eggs can turn into columns and the egg value can become one column. Thus will result in 4 columns of dataset only and tidy it. 
+
+
+## Anticipate the End Result
+
+There are 120 rows and 6 columns in this dataset. Out of these 4 columns represent type of eggs which can become one column and its value can go into value column. Thus we should expect 120*4 = 480 rows in the pivoted dataframe. 
+
+
+### Challenge: Describe the final dimensions
+
+
+```{r}
+
+df<-eggs_tidy
+df
+
+#existing rows/cases
+nrow(df)
+
+#existing columns/cases
+ncol(df)
+
+#expected rows/cases
+nrow(df) * 4
+
+# expected columns 
+ncol(df) -4 + 2
+```
+
+
+## Pivot the Data
+
+Now we will pivot the data, and compare our pivoted data dimensions to the dimensions calculated above as a "sanity" check.
+
+
+### Challenge: Pivot the Chosen Data
+
+
+```{r}
+eggs_tidy_pivoted <- pivot_longer(eggs_tidy, col = large_half_dozen:extra_large_dozen, names_to = "eggs_type", values_to = "number")
+
+eggs_tidy_pivoted
+
+```
+
+Thus we have pivoted the data to get 480 rows.
