@@ -1,0 +1,164 @@
+---
+title: "Homework 3"
+author: "Shreya Varma"
+description: "Exploratory data analysis"
+date: "07/08/2023"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - hw3
+  - shreya
+  - hotel_bookings.csv
+---
+
+```{r}
+#| label: setup
+#| warning: false
+
+library(tidyverse)
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Read in the dataset
+
+I will be using the Hotel Bookings dataset for my Homework. I have imported it using the read_csv() function and will use the glimpse() function the see the columns it has. On a high level it seems to have the information of hotel type and its customer data like arrival departure information, number of people, their booking details, payment type and reservation details. The data has 119,390 rows and 32 columns. To get more insights I will use the summary() function. From the summary we can see the data captured is from 2015 to 2017. 
+
+
+
+```{r}
+
+hotel_bookings <- read_csv("_data/hotel_bookings.csv")
+head(hotel_bookings)
+glimpse(hotel_bookings)
+summary(hotel_bookings)
+
+```
+
+## Clean the dataset
+
+We can now start cleaning the dataset. I will be checking if any columns have duplicate values, missing values, null values and remove irrelavent columns. I will also use data visualization to understand the data better.
+
+1. Duplicate values: I see that the data has duplicate rows thus I will drop it using the unique() function. Now the new data has 87,392 rows.
+
+```{r}
+duplicate_rows <- hotel_bookings[duplicated(hotel_bookings) | duplicated(hotel_bookings, fromLast = TRUE), ]
+duplicate_rows
+
+hotel_bookings <- unique(hotel_bookings)
+
+glimpse(hotel_bookings)
+
+```
+
+2. Missing and Null values: We see that there are no missing values in the rows we have 
+
+```{r}
+count_missing <- sum(is.na(hotel_bookings))
+count_missing
+```
+
+3. Removing irrelevant data: Since 82k rows in Company column does not contain any data I am dropping the column.
+
+```{r}
+
+head(hotel_bookings)
+table(hotel_bookings$company)
+hotel_bookings <- hotel_bookings[, -which(names(hotel_bookings) == "company")]
+glimpse(hotel_bookings)
+```
+## Data visualization
+
+From the summary we can see that mean lead time is 104 days which means that people book their stays approximately 3 to 3.5 months in advance. We can also check if the lead time is higher for Resort hotels vs for City hotels. My hypothesis is that it should be higher for Resort hotels since people book their vacations in advance but City hotels can be booked due to office work or immediate need basis too. 
+
+We can see that my hypothesis is not correct and the lead time for City hotels is slightly higher infact. This could also be due to the fact that we have more data of City hotels than Resort hotel. Almost twice. This could skew the lead time thus we cannot say for sure about lead time or analysis related to Hotel type.  
+
+```{r}
+
+lead_time_summary <- hotel_bookings %>% 
+  group_by(hotel) %>% 
+  summarize('mean_lead_time' = mean(lead_time), 'max_lead_time' = max(lead_time), 'min_lead_time' = min(lead_time))
+
+
+ggplot(data = lead_time_summary, aes(x = mean_lead_time, y = hotel)) +
+  # Specify the type of plot and customize it as needed
+  geom_col(fill = "blue") +
+  labs(title = "Hotel type vs Lead Time", x = "Lead time", y = "Hotel type")
+
+hotel_type_summary <- hotel_bookings %>% 
+  group_by(hotel) %>% count()
+
+hotel_type_summary
+```
+
+We can instead check if Lead time is affected by people having children. It is possible that people with more children have a higher lead time. Thus I created the plot of children vs lead time. However we can see that people with 0 children have higher lead time. Thus the hypothesis is false. 
+
+```{r}
+ggplot(data = hotel_bookings, aes(x = lead_time, y = children)) +
+  geom_point() +
+  labs(title = "Children vs Lead time", x = "Lead time", y = "Children")
+
+meal_counts <- table(hotel_bookings$meal)
+
+
+pie(meal_counts, labels = names(meal_counts))
+
+
+```
+
+
+I also created a pie chart of meal types and most people opt only for bed and breakfast in hotels. This could also be because many hotels provide complimentary breakfast. This category is followed by HB (Half board) and SC(self catering). Thus some people also opt for breakfast and dinner in hotel and self catering meaning that they make their own arrangments. Very rarely people opt for all meals in hotel. This could help the hotels in making arrangements accordingly for respective meals and minimize food wastage.
+
+We can also check top 5 which countries most people travel from to these hotels to market accordingly. We can see that most number of travellers are from PRT - Portugal followed by GBR - United Kingdom.
+
+
+```{r}
+
+country_data <- hotel_bookings %>% group_by(country) %>% count()
+
+country_data <- head(arrange(country_data, desc(n)),5)
+
+ggplot(data = country_data, aes(x = country, y = n,  fill = country)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Top 5 countries", x = "Country", y = "Number of travellers")
+
+```
+We see that most of the bookings comes from the market segment Online TA followed by Offline TA/TO. Thus most people book through travel agents or tour operators. 
+
+```{r}
+
+hotel_bookings %>% 
+  ggplot(mapping = aes(x=hotel, fill = market_segment)) + geom_bar()
+
+
+is_categorical <- class(hotel_bookings$is_canceled) == "factor" || is.character(hotel_bookings$is_canceled)
+
+# Convert to categorical if not already
+if (!is_categorical) {
+  hotel_bookings$is_canceled <- as.factor(hotel_bookings$is_canceled)
+}
+
+hotel_bookings%>%
+  ggplot(aes(x=arrival_date_year,fill=is_canceled)) + geom_bar()
+```
+
+I also created a plot of cancellations per year and we can see that 2016 had the most number of cancellations as well as bookings.
+
+```{r}
+
+month_counts <- table(hotel_bookings$arrival_date_month)
+barplot(month_counts, names.arg = month.name, col = 'pink')
+```
+
+To check which months see most number of tourists I created a frequency bar plot of all months. February and June seem to have the highest number of tourists.    
+
+
+## Limitations of Data Visualization
+
+1. The marketing strategies that can be used to improve the inflow of tourists in hotels is still unanswered and I plan to cover that as part of my final project. I plan to do deeper analysis of the distribution channels and market segment data to develop better marketing.
+
+2. A deeper analysis of hotel cancellations and trying to minimize / take some extra bookings based on that is something that is unanswered. I want to check if cancellations are related to hotel type, average daily rate, deposit type and other variables. I will be taking this up in my final project.  
+    

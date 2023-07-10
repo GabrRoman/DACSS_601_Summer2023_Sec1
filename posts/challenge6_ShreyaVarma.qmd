@@ -1,0 +1,131 @@
+---
+title: "Challenge 6 Solution"
+author: "Shreya Varma"
+description: "Visualizing Time and Relationships"
+date: "6/9/2023"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge 6
+  - hotel_bookings
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(ggplot2)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to:
+
+1)  read in a data set, and describe the data set using both words and any supporting information (e.g., tables, etc)
+2)  tidy data (as needed, including sanity checks)
+3)  mutate variables as needed (including sanity checks)
+4)  create at least one graph including time (evolution)
+   - try to make them "publication" ready (optional)
+   - Explain why you choose the specific graph type
+5)  Create at least one graph depicting part-whole or flow relationships
+   - try to make them "publication" ready (optional)
+   - Explain why you choose the specific graph type
+
+[R Graph Gallery](https://r-graph-gallery.com/) is a good starting point for thinking about what information is conveyed in standard graph types, and includes example R code.
+
+(be sure to only include the category tags for the data you use!)
+
+## Read in data
+
+Read in one (or more) of the following datasets, using the correct R package and command.
+
+  - debt  ⭐
+  - fed_rate ⭐⭐
+  - abc_poll ⭐⭐⭐
+  - usa_hh ⭐⭐⭐
+  - hotel_bookings ⭐⭐⭐⭐
+  - AB_NYC ⭐⭐⭐⭐⭐
+
+  
+
+```{r}
+
+hotel_bookings <- read_csv("_data/hotel_bookings.csv")
+head(hotel_bookings)
+glimpse(hotel_bookings)
+summary(hotel_bookings)
+
+```
+
+### Briefly describe the data
+
+
+I will be using the Hotel Bookings dataset for my Homework. I have imported it using the read_csv() function and will use the glimpse() function the see the columns it has. On a high level it seems to have the information of hotel type for City Hotels and Resort Hotels and its customer data like arrival departure information, number of people, their booking details, payment type and reservation details. The data has 119,390 rows and 32 columns. To get more insights I will use the summary() function. From the summary we can see the data captured is from 2015 to 2017. 
+
+
+## Tidy Data (as needed)
+
+We can see that there are separate columns for arrival day of month, month and year. I will combine month and year to get a single monthly column for every year which is easier to read and I can plot the number of reservations date wise from 2015 to 2017. If I include day in this it will become too granular and the graph will be very congested and not readable. For this purpose I will change the month name to number and then mutate the two columns of month and year.
+
+```{r}
+hotel_bookings <- hotel_bookings %>%
+                  mutate(arrival_date_month = case_when(
+                    arrival_date_month == "January" ~ 1,
+                    arrival_date_month == "Febuary" ~ 2,
+                    arrival_date_month == "March" ~ 3,
+                    arrival_date_month == "April" ~ 4,
+                    arrival_date_month == "May" ~ 5,
+                    arrival_date_month == "June" ~ 6,
+                    arrival_date_month == "July" ~ 7,
+                    arrival_date_month == "August" ~ 8,
+                    arrival_date_month == "September" ~ 9,
+                    arrival_date_month == "October" ~ 10,
+                    arrival_date_month == "November" ~ 11,
+                    arrival_date_month == "December" ~ 12
+                  ))
+
+hotel_bookings <- hotel_bookings %>%
+                mutate(
+                  arrival_date = make_date(arrival_date_year, arrival_date_month)
+                ) 
+
+hotel_bookings <- select(hotel_bookings,-c(arrival_date_month, arrival_date_year))
+
+hotel_bookings
+
+```
+
+
+## Time Dependent Visualization
+
+I plotted a line graph of booking reservation trend month wise. From this we can see that the overall booking trend has increased over the period of three years. A line graph best depicts the variation in something with time thus I chose it.
+
+```{r}
+
+date_reservation <- hotel_bookings %>% group_by(arrival_date) %>% count()
+
+date_reservation
+
+ggplot(data = date_reservation, aes(x = arrival_date, y = n)) +
+  geom_line() +
+  labs(title = "Time-based Graph", x = "Arrival Date", y = "Number of reservations")
+
+```
+
+
+## Visualizing Part-Whole Relationships
+
+I created a graph of market segment based reservations over the months. We can see that Online TA remains to be the constant market segment with highesy reservations. There is no change in market segment trend over the months and Online TA is followed by Offline TA/TO.
+
+```{r}
+ggplot(data = hotel_bookings, aes(x = arrival_date, fill = market_segment)) +
+  geom_bar() +
+  labs(title = "Market segment based resevations over Time", x = "Month", y = "Number of reservations")
+```
