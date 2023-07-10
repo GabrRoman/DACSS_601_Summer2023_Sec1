@@ -1,0 +1,86 @@
+---
+title: "Challenge 2 Solutions"
+author: "Tenzin Latoe"
+description: "Data wrangling: using group() and summarise()"
+date: "07/06/2023"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_2
+  - Tenzin Latoe
+  - railroads
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(readxl)
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to
+
+1)  read in a data set, and describe the data using both words and any supporting information (e.g., tables, etc)
+2)  provide summary statistics for different interesting groups within the data, and interpret those statistics
+
+## Read in the Data
+
+Read in one (or more) of the following data sets, available in the `posts/_data` folder, using the correct R package and command.
+
+-   railroad\*.csv or StateCounty2012.xls ⭐
+
+```{r}
+railroad <- read.csv("_data/railroad_2012_clean_county.csv")
+railroad
+```
+
+For Challenge 2, I will be using the Roadroad CSV file data. 
+
+## Describe the data
+
+```{r}
+#Number of columns
+ncol(railroad)
+#Number of rows
+nrow(railroad)
+```
+
+Railroad data had 3 columns and 2,930 rows of data. The 3 columns are: state, country, and total employees and the rows represent the data collected from different states in the US. 
+
+```{r}
+#Number of states represented
+unique(railroad$state)
+```
+
+There are 54 different states included in the data set, when there are only 50 states. The function above shows AE, WI, DC, and AP which are not official US states. The total employees from each state are represented by breaking down the number of employees from each county within a state. For example, there are data from 12 counties within Massachusetts. 
+
+## Provide Grouped Summary Statistics
+
+```{r}
+railroad %>% 
+  group_by(state) %>% 
+  summarise(Mean = mean(total_employees), 
+            Median = median(total_employees),
+            Min = min(total_employees),
+            #Mode = mode(total_employees), 
+            Max = max(total_employees),
+            Standard_Deviation = sd(total_employees),
+            IQR = IQR(total_employees),
+            Total=sum(total_employees))
+```
+Shown above are the mean,median,min,max, standard deviation, IQR, and the total sum of the data set for the number of total employees grouped by state. 
+
+
+### Explain and Interpret
+
+Larger states, and high population states Texas, California, Illinois, New York ranked high in total employees; while smaller/low density population states like Hawaii, Alaska, and Vermont ranked the lowest.The state with the highest total sum of employees Hawaii with 4 employees, while Texas had the highest with 19,839 employees. This makes sense when considering according to a report by the Association of American Railroads, the state with the highest total rail miles was Texas with 10,506 miles, and the lowest was Hawaii with 0 miles. Link: https://www.aar.org/wp-content/uploads/2019/05/AAR-State-Rankings-2017.pdf
+
