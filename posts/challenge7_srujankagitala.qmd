@@ -1,0 +1,193 @@
+---
+title: "Challenge 7 - Air BNB"
+author: "Srujan Kagitala"
+description: "Visualizing Multiple Dimensions"
+date: "6/30/2023"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_7
+  - air_bnb
+  - srujan_kagitala
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(ggplot2)
+library(ggExtra)
+library(treemap)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to:
+
+1)  read in a data set, and describe the data set using both words and any supporting information (e.g., tables, etc)
+2)  tidy data (as needed, including sanity checks)
+3)  mutate variables as needed (including sanity checks)
+4)  Recreate at least two graphs from previous exercises, but introduce at least one additional dimension that you omitted before using ggplot functionality (color, shape, line, facet, etc) The goal is not to create unneeded [chart ink (Tufte)](https://www.edwardtufte.com/tufte/), but to concisely capture variation in additional dimensions that were collapsed in your earlier 2 or 3 dimensional graphs.
+   - Explain why you choose the specific graph type
+5) If you haven't tried in previous weeks, work this week to make your graphs "publication" ready with titles, captions, and pretty axis labels and other viewer-friendly features
+
+[R Graph Gallery](https://r-graph-gallery.com/) is a good starting point for thinking about what information is conveyed in standard graph types, and includes example R code. And anyone not familiar with Edward Tufte should check out his [fantastic books](https://www.edwardtufte.com/tufte/books_vdqi) and [courses on data visualizaton.](https://www.edwardtufte.com/tufte/courses)
+
+(be sure to only include the category tags for the data you use!)
+
+## Read in data
+
+Read in one (or more) of the following datasets, using the correct R package and command.
+
+  - air_bnb  ⭐⭐⭐
+
+Used the same dataset as in challenge 5. Building on top of it.
+```{r}
+#| label: read
+
+stay_data <- read_csv("_data/AB_NYC_2019.csv")
+head(stay_data)
+```
+
+### Briefly describe the data
+
+```{r}
+#| label: describe_1
+
+area_wise_stays <- stay_data %>%
+  group_by(neighbourhood_group, room_type) %>%
+  summarise(count = n())
+```
+
+The AB_NYC_2019 provides information on Airbnb stays in New York in 2019. There are details about `r nrow(stay_data)` stays. They are distributed across `r unique(area_wise_stays$neighbourhood_group)` neighbourhoods. The below table shows the number of stay options across New York neighbourhood.
+
+```{r}
+#| label: describe_2
+
+area_wise_stays
+```
+
+Each stay option has information about `r names(stay_data)`.
+
+## Tidy Data (as needed)
+
+Is your data already tidy, or is there work to be done? Be sure to anticipate your end result to provide a sanity check, and document your work here.
+
+Variables like id and host_id are int but they are actually categorical. So, they have to be converted to factor. We can drop one of the columns out of "host_id" and "name" for exploratory analysis as they only act as primary keys. "last_review" column has to be converted to date format to represent the true data format. All character columns like neighbourhood_group, neighbourhood, etc have to be converted to factor to get better insights on using summary. After this step, summary will give value counts for categorical variables and there will be `r ncol(stay_data)-1` columns.
+
+```{r}
+#| label: clean_1
+
+stay_data <- stay_data %>%
+  select(-name) %>%
+  mutate_if(is.character, as.factor) %>%
+  mutate(id = as.factor(id),
+         host_id = as.factor(host_id),
+         last_review = as.Date(last_review, format = "%Y-%m-%d"))
+
+summary(stay_data)
+```
+
+Cleaned data has `r ncol(stay_data)` columns. Summary shows value counts of categorical variables. The class of "last_review" is `r class(stay_data$last_review)`.
+
+Are there any variables that require mutation to be usable in your analysis stream? For example, do you need to calculate new values in order to graph them? Can string values be represented numerically? Do you need to turn any variables into factors and reorder for ease of graphics and visualization?
+
+"price" and "number_of_reviews" variables should be normalized to find the correlation between them. Also, drop na values for price and number_of_reviews columns. After this step, we will have `r ncol(stay_data)+2` columns and less than or equal to `r nrow(stay_data)` rows.
+
+```{r}
+#| label: clean_2
+
+stay_data <- stay_data %>%
+  drop_na(price, number_of_reviews) %>%
+  mutate(price_normal = (price - min(price))/(max(price) - min(price)),
+         no_reviews_normal =(number_of_reviews - min(number_of_reviews))/(max(number_of_reviews) - min(number_of_reviews)))
+```
+
+Number of columns = `r ncol(stay_data)`
+Number of rows = `r nrow(stay_data)`
+
+## Visualization with Multiple Dimensions
+
+```{r}
+#| label: plot_1
+
+#Plot for prices vs number of reviews by room type
+plot <- ggplot(stay_data,
+                       mapping = aes(x = no_reviews_normal,
+                                     y = price_normal,
+                                     color=room_type)) +
+  geom_point(size = 3, alpha = 0.5) +
+  theme_minimal() +
+  labs(title = "prices vs number of reviews",
+       y = "price (normalized)",
+       x = "Number of reviews (normalized)",
+       color = "Room Type") +
+  theme(legend.position = "bottom")
+
+#To plot marginal histograms along the axes
+ggMarginal(p = plot, type = "histogram", bins=500, groupColour=TRUE, groupFill = TRUE)
+
+#Plot for prices vs number of reviews across New York
+ggplot(stay_data,
+       mapping = aes(x = no_reviews_normal,
+                     y = price_normal,
+                     color=room_type)) +
+  geom_point(size = 3, alpha = 0.5) +
+  theme_minimal() +
+  facet_wrap(~neighbourhood_group) +
+  labs(title = "prices vs number of reviews (variation across New York)",
+       y = "price (normalized)",
+       x = "Number of reviews (normalized)",
+       color = "Room Type") +
+  theme(legend.position = "bottom")
+
+#Plot for prices vs number of reviews by room type
+ggplot(stay_data,
+       mapping = aes(x = no_reviews_normal,
+                     y = price_normal,
+                     color = neighbourhood_group)) +
+  geom_point(size = 3, alpha = 0.6) +
+  theme_minimal() +
+  facet_wrap(~room_type) +
+  labs(title = "prices vs number of reviews (variation among room type)",
+       y = "price (normalized)",
+       x = "Number of reviews (normalized)",
+       color = "Area") +
+  theme(legend.position = "bottom")
+```
+
+From the above plots, we can observe that, reviews directly didn't play a significant role in the prices. But stays with lesser reviews have higher standard deviation in prices. There is significant variation in prices of Entire home/apt and private room compared to shared room. If we look at area wise distibution, Brooklyn and Manhattan had higher standard deviation in prices compared to Bronx, Queens and Staten Island.
+
+```{r}
+#| label: plot_2
+
+neighbourhood_distr <- stay_data %>%
+  group_by(neighbourhood_group, neighbourhood) %>%
+  summarise(count = n())
+
+# plot another plot of neighbourhood as treemap.
+treemap(neighbourhood_distr,
+        index = c("neighbourhood_group", "neighbourhood"),
+        vSize = "count",
+        type = "index",
+        fontsize.labels = c(35,50),
+        fontcolor.labels = c("black", "white"),
+        bg.labels=c("transparent"),
+        align.labels=list(
+          c("center", "center"), 
+          c("center", "centre")),
+        overlap.labels=0.5,
+        inflate.labels=F,
+        palette = "Set1",
+        title="Tree Map of Stays across New York",
+        fontsize.title=12)
+```
+
