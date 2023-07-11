@@ -1,0 +1,233 @@
+---
+title: "Matt Zambetti: Final Project Submission"
+author: "Matt Zambetti"
+date: "2023-07-05"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - Final_Project
+---
+# Final Project
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(purrr)
+
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Choosing the Data Set
+
+The data set that I chose pertains to salary data for various careers, education levels, gender, and experience. I am interested in investigating this data, as it would allow people to see how their salary compares to people with similar age, job titles, education and experience level.
+
+Looking into the authors' process to gathering this data, they do not provide much. They state that this data is gathered from surveys, job posting sites, and "other publicly available sources". These sources can come with uncertainty as people could lie on surveys as they could be uncomfortable with sharing their real salary. We also do not know what is included in "publicly available sources". But assuming that these sources are trust worthy, pairing this with job posting sites can be very useful in creating numerous data points. Another area this source is lacking is the type of companies they are sampling from, again another assumption is that they are surveying people from various companies and the data from job posting websites contains multiple employers/types of employers so we have a breadth of data.
+
+When looking into what region this data came from, I could not find anything. So, I looked and compared this to the salaries of similar jobs with similar experience in the United States, and they were similar. With that, I believe that although this may not be perfect, it is certainly sufficient for someone to use this data in the US to compare their salary to.
+
+I gathered the data at: (https://www.kaggle.com/datasets/mohithsairamreddy/salary-data?resource=download)
+
+```{r}
+
+workers_tidy <- read_csv("_data/Salary_Data.csv")
+
+workers_tidy
+```
+
+## Cleaning the Data Set
+
+Originally, I did not find anything wrong with the data in terms of tidying it up or formatting it. But when doing further analysis I found that some entries in `Education Level` were recorded as 'phD' instead of 'PhD', so I went ahead and fixed that.
+
+```{r}
+workers_tidy$`Education Level`[workers_tidy$`Education Level`=='phD'] <- 'PhD'
+
+```
+
+## Narrative About the Data Set
+
+If we want to look deeper into this data set to see what it contains, we can examining each variable represented and their domains.
+
+```{r}
+max(workers_tidy$Age, na.rm=TRUE)
+min(workers_tidy$Age, na.rm=TRUE)
+```
+
+The first variable is `Age`, which is simply the age of the employee, this variable is quite self explanatory so I will leave it at that. From above we can see the minimum age is 21, and the maximum age is 62.
+
+```{r}
+mean(workers_tidy$`Years of Experience`, na.rm=TRUE)
+```
+
+Second, we have `Experience Level`, which is pretty similar to age, just that this is the number of years someone has been working. By simple analysis we can see that the average is around 8 years.
+
+```{r}
+table(workers_tidy$`Gender`)
+```
+
+Next, `Gender` is split into three categories: Male, Female, or Other. Above we can see the exact count for both, with it coming out to be around 54% for males, and 45% for females and 0.2% for Other.
+
+```{r}
+table(workers_tidy$`Education Level`)
+```
+
+`Education Level` is spread out between High School Diploma, Bachelor's, Master's and PhD. Similarly we can see that distribution above.
+
+```{r}
+length(unique(workers_tidy$`Job Title`))
+
+title_count = table(workers_tidy$`Job Title`)
+title_count <- title_count[order(title_count, decreasing = TRUE)]
+head(title_count)
+```
+
+The final variable `Job Title` is where we can start to see more variance. From the above command, we see that there are around 194 different jobs represented out of the 6700 total samples. From the analysis above, we can see that Software Engineer, Data Scientist, Software Engineer Manager, Data Analyst, Senior Project Engineer, and Product Engineer are the six most popular jobs in the data set.
+
+## Research Questions
+
+This data has plenty to offer in terms of analysis. I want to focus on how Age and Experience affect the salary of an individual. First, I will look into the entire data set of all professions. Then I will look into how this compares to jobs in my field (Computer Science, Data Science, etc.). In addition to focusing on jobs, I will also focus on those with advanced degrees (Master's and PhDs) as I will come out of school with one of those.
+
+### General Analysis
+
+As aforementioned, the first two plots will showcase any correlation between Age and Salary, and Years of Experience and Salary. From my general understanding of salaries, I predict that there will be a positive correlation between both of these variables and salaries, but I will be curious to see if there are any points in one's career that this plateaus.
+
+```{r}
+workers_tidy %>% ggplot(aes(x=`Years of Experience`, y=`Salary`)) +
+  geom_point(color='Blue') + 
+  geom_smooth(color='Red')
+
+```
+From the plot above, we can see some very interesting points. If we focus on zero to twenty years of experience we see a fairly steady growth of salary. Another interesting point about this section is that there are a large range of salaries for people with the same years of experience, the difference is that the majority of salaries are increasing in this area.
+
+```{r}
+count_years <- as.data.frame(table(workers_tidy$`Years of Experience`))
+count_years$Var1 <- as.numeric(as.character(count_years$Var1))
+total <- sum(count_years[which(count_years$Var1 > 20),2])
+total
+```
+
+Looking on from twenty years of experience and onward, we notice the curve flattening out. I belive that this is due to multiple factors. The first is that people are not job switching as much, so there is less competition between companies to pay employees better. People are not job hopping as frequently in this age range because they more than likely have a family or are committed to living in a specific area. 
+
+Also, there may not have been enough data gathered on this particular group. From the small snippet above, we can see only 244 entries are for this particular age group. If these jobs were sampled from a similar company/demographic that may be the reason we see such similarities in the data.
+
+```{r}
+workers_tidy %>% ggplot(aes(x=`Age`, y=`Salary`)) +
+  geom_point(color='Blue') + 
+  geom_smooth(color='Red')
+
+```
+In this data we can see a very similar plot as the Years of Experience versus Salary plot. One key difference is that this one seems to plateau around 52 years of age which seems to be a bit later in the distribution than the plateau of the experience plot.
+
+
+```{r}
+count_years2 <- as.data.frame(table(workers_tidy$`Age`))
+count_years2$Var1 <- as.numeric(as.character(count_years2$Var1))
+total <- sum(count_years2[which(count_years2$Var1 > 50),2])
+total
+```
+
+Similarly to the previous plot there are a lot less samples around where this plateau takes place. But there is even a smaller portion of samples for workers over 50. I think this is due to the fact that people are close to retiring and that people are getting promoted less and less as they approach this age. In my experience young professionals are able to make higher increases in pay more quickly the earlier they are in their career, then as they get olders, these promotions are harder to come by.
+
+### Industry Specific Analysis
+
+Now, I want to focus on jobs that pertain to my career. I looked through all the jobs and picked out key words that were related to my career path. Below I have listed all of these.
+
+Key words are:
+- Software
+- Engineer
+- Developer
+- Data
+
+```{r}
+field_jobs <- workers_tidy[grepl("software|engineer|developer|data",tolower(workers_tidy$`Job Title`)),]
+field_jobs
+```
+
+From the results above, we can see that there are plenty of data points in this data set for us to base our analysis on.
+
+Below we will recreate both graphs above. Starting with years of experience.
+
+```{r}
+field_jobs %>% ggplot(aes(x=`Years of Experience`, y=`Salary`)) +
+  geom_point(color='Blue') + 
+  geom_smooth(color='Red')
+
+```
+
+Comparing this graph to the complete data set graph on comparing salary to years of experience, we can see that there salary from 0-20 years of experience is slightly higher for my field, but about the same from onward. Below is a graph overlaying both of these plots
+
+```{r}
+# Mean
+general_mean <- workers_tidy %>%
+  group_by(`Years of Experience`) %>%
+  summarise(Salary=mean(Salary))
+field_mean <- field_jobs %>%
+  group_by(`Years of Experience`) %>%
+  summarise(Salary=mean(Salary))
+
+ggplot(NULL, aes(`Years of Experience`, `Salary`)) +
+  geom_point(data=workers_tidy, color="Red") +
+  geom_line(data=general_mean, color="Red") +
+  geom_point(data=field_jobs, color="Blue") +
+  geom_line(data=field_mean, color="Blue")
+  
+```
+
+Above, in blue we have only the jobs that are in the disciplines I am interested in. In red, we have all jobs (including the ones in blue). The two colored lines correspond with corresponding colored plots.
+
+This plot further confirms that the salary in my field is slightly higher than average, but this seems to be only up until about 15 years of experience. Then it starts to get very close.
+
+Next, we will look at comparing the age of people in the field I'm interested in and their salaries compared to the complete distribution.
+
+First, we will look at the specific field first, so we can get a good understanding of what we're looking at before we compare.
+
+```{r}
+field_jobs %>% ggplot(aes(x=`Age`, y=`Salary`)) +
+  geom_point(color='Blue') + 
+  geom_smooth(color='Red')
+
+```
+
+In this plot, we have a very interesting curve. It seems that throughout one's career in the given fields, the salaries increase, then plateau, and repeat this behavior a few times. My hypothesis for this behavior is that many of the careers in these fields follow the same behavior. This behavior is a promotion every few years, then another promotion after a similar period. If these jobs were sampled from the same company or ones that operate in a similar manner, this would explain the deterministic behavior in the plot.
+
+Now, we will compare these jobs to all the sampled jobs, this plot can be seen below.
+
+```{r}
+# Mean
+general_mean <- workers_tidy %>%
+  group_by(`Age`) %>%
+  summarise(Salary=mean(Salary))
+field_mean <- field_jobs %>%
+  group_by(`Age`) %>%
+  summarise(Salary=mean(Salary))
+
+ggplot(NULL, aes(`Age`, `Salary`)) +
+  geom_point(data=workers_tidy, color="Red") +
+  geom_line(data=general_mean, color="Red") +
+  geom_point(data=field_jobs, color="Blue") +
+  geom_line(data=field_mean, color="Blue")
+  
+```
+
+In this plot, the colors represent the same distributions from the previous combined plot.
+
+## Conclusions
+
+From the two main analysis' of this data, I have found a few interesting points and confirmed a few previous thoughts.
+
+Although I was able to identify some patterns, there was still a lot left on the table to discover.
+
+### What I've Learned
+
+My previous thoughts were (1) people in the Data and Software Fields would make slightly more than the average salary. This was confirmed for most ages and levels of experience, but seems to carry less weight as both age and experience grew. 
+
+### Lingering Discussion
+
+What this data could not provide insight into was the types of companies are these jobs at and what trends can we see there. For example, there could be a software/data science job in a tech company, a finance company, or even an aerospace company and I believe that these would also have a heavy influence on the salary trends. Provided this data, I would use the many similar plots but color coordinate the points to be what category of company was hiring.
+
+This data also cannot provide geographic data. Cost of living for various cities heavily influences salaries in my experience. Having all of these jobs combined into one plot can provide false insights about what job pays better if the higher paying job is mostly found in a city versus the lower paying one in a suburb.
+
+## Bibliography
