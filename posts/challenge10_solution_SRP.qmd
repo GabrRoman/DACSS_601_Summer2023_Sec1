@@ -1,0 +1,63 @@
+---
+title: "Challenge 10 Solution"
+author: "Susannah Reed Poland"
+description: "purrr"
+date: "6/12/2023"
+format:
+  html:
+    df-print: paged
+    toc: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_10
+  - Susannah Reed Poland
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+#| include: false
+
+library(tidyverse)
+library(ggplot2)
+library(purrr)
+library(readxl)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## The challenge  
+
+For my final project, I need to collect the range of groups of values. Therefore, for this challenge, I will practice creating min and max columns and then using map_dbl() to calculate the range between those values. I'll use the 2012 Railroad data as my dataset, and calculate, for each U.S. State/District, the range in number of employees per county.  
+First I will read in the data, skip the 4 rows of metadata, label the empty columns for deletion, and remove the rows which contain summative ("Total") values. I'll then remove the row for "Canada", since its values can not be compared with the US State values, and therefore can not be analyzed together. 
+
+```{r}
+railroadxls<-read_excel("_data/StateCounty2012.xls", skip = 4, col_names= c("state", "delete", "county", "delete", "employees"))%>%
+  select(!contains("delete"))%>%
+  filter(!str_detect(state, "Total"))
+
+railroadxls<-head(railroadxls, -2)%>%
+  mutate(county = ifelse(state=="CANADA", "CANADA", county))
+
+railroadxls
+```
+
+I now have a tidier dataset that can be grouped by State. I will create a tibble with two columns: one with the number of employees in the county of most employees, and another with the number of employees in the county of least employees. (In other words, employee counts for counties that engage the most and the least railroad personnel.)
+
+```{r}
+MaxMin_Employees<-railroadxls%>%
+  group_by(state)%>%
+  summarise(max_employees = max(employees), min_employees=min(employees))%>%
+  arrange(desc(max_employees))
+
+MaxMin_Employees
+```
+
+I can now use map2_dbl() to calculate the range across the max and min columns by subtracting the min from the max. 
+
+```{r}
+map2_dbl(MaxMin_Employees$max_employees, MaxMin_Employees$min_employees, `-`)
+```
+
