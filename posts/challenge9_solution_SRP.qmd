@@ -2,7 +2,7 @@
 title: "Challenge 9 Solution"
 author: "Susannah Reed Poland"
 description: "Creating a function"
-date: "5/30/2023"
+date: "6/12/2023"
 format:
   html:
     df-print: paged
@@ -22,13 +22,14 @@ categories:
 library(tidyverse)
 library(ggplot2)
 library(lubridate)
+library(readxl)
 
 knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
 ```
 
 ## Create a function that reads in and cleans a dataset
 
-I chose to create a function that performs the 
+I chose to create a function that changes a column of year and quarter characters to dates, and removes the old column. 
 
 ```{r}
 #create a function called "read_debt", f is the file name and by default is false
@@ -37,28 +38,22 @@ read_debt<-function(f){
   d<-read_excel(f)%>%
 #change the "year and quarter" to a date format
     mutate(date_orig = parse_date_time(`Year and Quarter`, orders="yq"))%>%
+#remove the old column
   select(-`Year and Quarter`)
+  return(d)
 }
 ```
 
+Now we can apply this to the "Debt in Trillions" dataset: 
 
 ```{r}
-#read in dataset
-debt_orig<-read_excel("_data/debt_in_trillions.xlsx")
-
 #apply function
-debt_date<-debt_orig%>%
-  read_debt()
+debt_date<-read_debt("_data/debt_in_trillions.xlsx")
 
-#check it out! 
-debt_date%>%
-  head()
+#check it out!
+debt_date
 ```
 
-
-
-
-
-
+Et voila! 
 
 
