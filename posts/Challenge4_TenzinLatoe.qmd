@@ -1,0 +1,114 @@
+---
+title: "Challenge 4"
+author: "Tenzin Latoe"
+description: "More data wrangling: pivoting"
+date: "07/07/2023"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_4
+  - Tenzin Latoe
+  - abc_poll
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(lubridate)
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to:
+
+1)  read in a data set, and describe the data set using both words and any supporting information (e.g., tables, etc)
+2)  tidy data (as needed, including sanity checks)
+3)  identify variables that need to be mutated
+4)  mutate variables and sanity check all mutations
+
+## Read in data
+
+-   abc_poll.csv ⭐
+
+```{r}
+abc_poll <- read.csv("_data/abc_poll_2021.csv", na.strings = c("Skipped"))
+glimpse(abc_poll)
+```
+
+### Briefly describe the data
+```{r}
+#names of columns 
+column_names <- colnames(abc_poll)
+print(column_names)
+
+summary(abc_poll)
+```
+
+This appears to be a data set of survey results from 527 respondents. There are 527 rows are 31 columns in the data set.The rows represent the questions asked, and the columns represent the responses provided by each respondent.  Although there are 31 columns representing the questions asked to the respondents, Q1 is actually comprised of 6 parts, making the total 26 questions. 
+
+## Tidy Data (as needed)
+
+```{r}
+#removing columns 1 and 2
+abc_poll <- abc_poll %>% 
+  select(-c(2,3))
+head(abc_poll)
+```
+I removed columns 2 and 3 as it showed the same responses for all participants who spoke English and were qualified for the survey. I felt removing those two columns would lead to a tidier data set. 
+```{r}
+#checking for missing data
+complete.cases(abc_poll)
+```
+
+Checking for missing data with code above shows that there are several NAs in the data set; which are shown above. When loading the data set, I replaced all values that had "skipped" and replaced it with NA. 
+
+```{r}
+#identify where in the data set the missing data is located
+which(is.na(abc_poll), arr.ind = TRUE)
+```
+
+The output shows there are 86 places in the data set where responses are missing, and the exact location with rows and columns are listed. Columns 18, 19, 20, 21, 22, 23, 25, 26, 27, and 28 all have several rows with missing values. There are duplicates where the rows, which represents a participant, have missing values. In total there are 32 respondents, or rows, where there are missing values. 
+
+```{r}
+#removing all rows with NA 
+abc_poll %>% 
+  filter(if_all(everything(), ~ !is.na(.x)))
+```
+
+After using the function above, all rows with missing values were removed. The data set contained 527 rows, but after 32 rows were removed (explained above), a total of 
+495 of rows remain. 
+
+## Identify variables that need to be mutated
+
+```{r}
+#Example of levels to be adjusted
+unique(abc_poll$Q4)
+```
+```{r}
+tt <- abc_poll %>% 
+  mutate(Q4 = factor(Q4, levels = c("Excellent", "Good", "Not so good", "Poor", "NA"))) %>% 
+  pull(Q4)
+
+levels(tt)
+
+```
+
+Arranged levels to Excellent, Good, Not so good, Poor, and NA so that it is arranged properly. 
+
+```{r}
+#Analysis of Education and gender
+table(abc_poll$ppeduc5,abc_poll$ppgender)
+```
+
+```{r}
+#Analysis of States and Political affiliation
+table(abc_poll$ppstaten,abc_poll$QPID)
+```
