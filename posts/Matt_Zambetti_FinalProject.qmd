@@ -32,8 +32,6 @@ Another area this source is lacking is the type of companies they are sampling f
 
 When looking into what region this data came from, I could not find anything. So, I looked and compared this to the salaries of similar jobs with similar experience in the United States, and they were similar. With that, I believe that although this may not be perfect, it is certainly sufficient for someone to use this data in the US to compare their salary to.
 
-I gathered the data at: ()
-
 ```{r}
 workers_tidy <- read_csv("_data/Salary_Data.csv")
 workers_tidy
@@ -92,7 +90,7 @@ ggplot(data=subset(workers_tidy, !is.na(`Years of Experience`)), aes(x=`Years of
   ggtitle("Number of Jobs by Years of Experience")
 ```
 
-Second, we have `Experience Level`, which is pretty similar to age, just that this is the number of years someone has been working. By simple analysis we can see that the average is around 8 years. In addition we can see similar statistics that we represented with age. The graph also shows us that we are very heavily sampled from jobs that are in the begining of one's career.
+Second, we have `Experience Level`, which is pretty similar to age, just that this is the number of years someone has been working. By simple analysis we can see that the average is around 8 years. In addition we can see similar statistics that we represented with age. The graph also shows us that we are very heavily sampled from jobs that are in the beginning of one's career.
 
 ```{r}
 table(workers_tidy$`Gender`)
@@ -141,6 +139,8 @@ In addition to listing the 6 most popular jobs, we graph all jobs where they occ
 
 This data has plenty to offer in terms of analysis. I want to focus on how Age and Experience affect the salary of an individual. First, I will look into the entire data set of all professions. Then I will look into how this compares to jobs in my field (Computer Science, Data Science, etc.). In addition to focusing on jobs, I will also focus on those with advanced degrees (Master's and PhDs) as I will come out of school with one of those.
 
+After analyzing the question listed above, I wanted to look deeper into the industry I am interested in and how roles/fields affect salaries with respect to age. I was curious on how the roles/fields were distributed and if there were certain niches for each or if some were outliers compared to other counterparts.
+
 ### General Analysis
 
 As aforementioned, the first two plots will showcase any correlation between Age and Salary, and Years of Experience and Salary. From my general understanding of salaries, I predict that there will be a positive correlation between both of these variables and salaries, but I will be curious to see if there are any points in one's career that this plateaus.
@@ -151,6 +151,7 @@ ggplot(subset(workers_tidy, !is.na(`Years of Experience`)), aes(x=`Years of Expe
   ggtitle("Years of Experience vs Salary")
 
 ```
+
 From the plot above, we can see some very interesting points. If we focus on zero to twenty years of experience we see a fairly steady growth of salary. Another interesting point about this section is that there are a large range of salaries for people with the same years of experience, the difference is that the majority of salaries are increasing in this area.
 
 Also, we are able to see that around these trends there is a heavier density of points. This shows that the trend line is not only an average, but also very common among the data points.
@@ -171,9 +172,10 @@ workers_tidy %>% ggplot(aes(x=`Age`, y=`Salary`)) +
   ggtitle("Age vs Salary")
 
 ```
+
 In this data we can see a very similar plot as the Years of Experience versus Salary plot. One key difference is that this one seems to plateau around 52 years of age which seems to be a bit later in the distribution than the plateau of the experience plot.
 
-An interesting note about this plot is that the points seem to be evenly distributed for the range of salaries. Unline the expereince graph where we saw a dark band through the center, this one seems a bit more spread out.
+An interesting note about this plot is that the points seem to be evenly distributed for the range of salaries. Unlike the experience graph where we saw a dark band through the center, this one seems a bit more spread out.
 
 
 ```{r}
@@ -191,6 +193,7 @@ workers_tidy %>% ggplot(aes(x=`Age`, y=`Years of Experience`, color=`Education L
   geom_point(size=2, alpha=0.5) + 
   ggtitle("Age vs Years of Experience Grouped by Education Level")
 ```
+
 This plot is extremely interesting as it shows just how much the two are coordinated. We can see that all degree levels follow the trend very closely, except PhD which has a weird branch with around 17 years of experience.
 
 ### Industry Specific Analysis
@@ -224,7 +227,7 @@ ggplot(subset(workers_tidy, marked=='Industry'),aes(x=`Years of Experience`, y=`
 
 ```
 
-Comparing this graph to the complete data set graph on comparing salary to years of experience, we can see that there salary from 0-20 years of experience is slightly higher for my field, but about the same from onward. Below is a graph overlaying both of these plots
+Comparing this graph to the complete data set graph on comparing salary to years of experience, we can see that there salary from 0-20 years of experience is slightly higher for my field, but about the same from onward. Below is a graph overlaying both of these plots.
 
 ```{r}
 
@@ -243,6 +246,7 @@ Next, we will look at comparing the age of people in the field I'm interested in
 First, we will look at the specific field first, so we can get a good understanding of what we're looking at before we compare.
 
 ```{r}
+
 ggplot(subset(workers_tidy, marked=='Industry'),aes(x=`Age`, y=`Salary`)) +
   geom_point(size=2, alpha=0.5) +
   ggtitle("Age vs Salary") 
@@ -273,6 +277,7 @@ In this plot, the colors represent the same distributions from the previous comb
 The final piece of analysis we're going to look at is how the title within the industries I'm interested affects salary. We are going to do this in two separate ways. The first is dividing them based on role, i.e. Developer, Officer, Analyst, Director, etc. and the other is going to be based off of field, i.e. data, software, engineering, etc.
 
 ```{r}
+
 mark_role <- function(entry) {
   job <- tolower(entry)
   if (grepl("manager",tolower(job))) {
@@ -313,12 +318,15 @@ industry_jobs$Role <- map_chr(industry_jobs$`Job Title`, mark_role)
 ggplot(industry_jobs,aes(x=`Age`, y=`Salary`, color=Role)) +
   geom_point(size=2, alpha=0.5) +
   ggtitle("Age vs Salary") 
+
 ```
+
 In this plot we can see that Developer, Engineer, Director and Manager all dominate the plot in terms of quantity. But, what is also interesting and self explanatory is that most of the higher paying roles are Managerial Roles, where the lower paying jobs are developers. One job that follows the positive trend and seems to be evenly distributed is an engineer. It seems that this position is valued through ones career.
 
 Another trend we can see is that Developers are paid less than their counterparts in other rolls. As aforementioned there are many developer jobs, but they seem to be more common for younger individuals, with the salaries being lower than other jobs such as Engineers, Analysts and Scientists.
 
 ```{r}
+
 mark_field <- function(entry) {
   job <- tolower(entry)
   if (grepl("data",tolower(job))) {
@@ -349,7 +357,8 @@ industry_jobs$Field <- map_chr(industry_jobs$`Job Title`, mark_field)
 
 ggplot(industry_jobs,aes(x=`Age`, y=`Salary`, color=Field)) +
   geom_point(size=2, alpha=0.5) +
-  ggtitle("Age vs Salary") 
+  ggtitle("Age vs Salary")
+
 ```
 
 This plot has a very similar look in color distributions as the previous graph. This is self-explanatory as roles and fields somewhat over lap. In the division of this data, I tried to label the most specific fields first, such as Data and Software, and then if a job title did not fit into there I used more general fields such as Developing, Engineering, and others.
@@ -372,7 +381,7 @@ My previous thoughts were that age and experience positively correlate with sala
 
 Going even deeper into each of these plots you notice small trends. For example, in both age and experience for the total distribution you see the trend of salaries plateauing after a certain age/number of years. I listed many possible reasons for this, but it would be interesting to see if the companies that provided these numbers would elaborate on why these trends are present.
 
-The other trend that I found very interesting, was that of the Age vs Salary plot for only industry jobs. If one looks closely to the darker regions of the graph, there is a staircase like behavior to it.
+The other trend that I found very interesting, was that of the Age vs Salary plot for only industry jobs. If one looks closely to the darker regions of the graph, there is a staircase like behavior to it. I noted that this could be due to the progression of ones career with promotions. This would explain why jobs from various companies have similar paths, as careers across various companies as they have various levels of jobs and one progresses through these ranks throughout their career.
 
 Finally, I've learned how the role/field within my industry can influence job choices and even what path I go to as I gain more experience. For example, I see that the demand for certain roles diminishes as a career progresses. For example, it seems that jobs in data have a high entry point, but as one's career progresses it seems that it plateaus. Where as it seems that software has a slightly lower entering salary, but there is constant growth.
 
@@ -386,3 +395,18 @@ This data also cannot provide geographic data. Cost of living for various cities
 
 Reddy, Mohith Sai Ram. “Salary_data.” Kaggle, 18 May 2023,   www.kaggle.com/datasets/mohithsairamreddy/salary-data?resource=download. 
 
+WICKHAM, HADLEY. R for Data Science: Import, Tidy, Transform, Visualize, and Model Data. O’REILLY MEDIA, 2023. 
+
+Wickham H, Henry L (2023). _purrr: Functional Programming Tools_. R package version 1.0.1,
+  <https://CRAN.R-project.org/package=purrr>.
+  
+Wickham H, Averick M, Bryan J, Chang W, McGowan LD, François R, Grolemund G, Hayes A, Henry L,
+  Hester J, Kuhn M, Pedersen TL, Miller E, Bache SM, Müller K, Ooms J, Robinson D, Seidel DP, Spinu V,
+  Takahashi K, Vaughan D, Wilke C, Woo K, Yutani H (2019). “Welcome to the tidyverse.” _Journal of
+  Open Source Software_, *4*(43), 1686. doi:10.21105/joss.01686 <https://doi.org/10.21105/joss.01686>.
+
+```{r}
+tidy_citation <- citation("tidyverse")
+
+purrr_citation <-citation("purrr")
+```
