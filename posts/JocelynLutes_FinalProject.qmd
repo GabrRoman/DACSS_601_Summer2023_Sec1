@@ -1,5 +1,5 @@
 ---
-title: "Food Security and Health Outcomes in U.S. Adults"
+title: "Final Project: Food Security and Health Outcomes in U.S. Adults"
 author: "Jocelyn Lutes"
 description: "An exploratory data analysis using the National Health and Nutrition Examination Survey (2017-2020)"
 date: "07/13/2023"
