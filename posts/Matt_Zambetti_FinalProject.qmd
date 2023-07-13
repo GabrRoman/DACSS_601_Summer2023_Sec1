@@ -51,7 +51,7 @@ workers_tidy$`Education Level`[workers_tidy$`Education Level`=='Bachelor\'s Degr
 
 ## Narrative About the Data Set
 
-If we want to look deeper into this data set to see what it contains, we can examining each variable represented and their domains.
+If we want to look deeper into this data set to see what it contains, we can examine each variable represented and their domains.
 
 ```{r}
 max_age <- max(workers_tidy$Age, na.rm=TRUE)
@@ -70,9 +70,7 @@ ggplot(data=subset(workers_tidy, !is.na(Age)), aes(x=Age)) +
   ggtitle("Number of Jobs by Age")
 ```
 
-The first variable is `Age`, which is simply the age of the employee, this variable is quite self explanatory so I will leave it at that. From above we can see the minimum age is 21, and the maximum age is 62.
-
-Below that table we have a plot of the age, so we can see that many of the jobs are sampled from people early in their career.
+The first variable is `Age`, which is simply the age of the employee, this variable is quite self explanatory so I will leave it at that. From above we can see the minimum age is 21, and the maximum age is 62. Below the table of calculated data, we have a plot that allows the viewing of the complete distribution. It can be noted that either this sample contains more jobs for younger professionals, or there are more jobs available for younger professionals.
 
 ```{r}
 max_exp <- max(workers_tidy$`Years of Experience`, na.rm=TRUE)
@@ -137,7 +135,7 @@ In addition to listing the 6 most popular jobs, we graph all jobs where they occ
 
 ## Research Questions
 
-This data has plenty to offer in terms of analysis. I want to focus on how Age and Experience affect the salary of an individual. First, I will look into the entire data set of all professions. Then I will look into how this compares to jobs in my field (Computer Science, Data Science, etc.). In addition to focusing on jobs, I will also focus on those with advanced degrees (Master's and PhDs) as I will come out of school with one of those.
+This data has plenty to offer in terms of analysis. I want to focus on how Age and Experience affect the salary of an individual. First, I will look into the entire data set of all professions. Then I will look into how this compares to jobs in my field (Computer Science, Data Science, etc.).
 
 After analyzing the question listed above, I wanted to look deeper into the industry I am interested in and how roles/fields affect salaries with respect to age. I was curious on how the roles/fields were distributed and if there were certain niches for each or if some were outliers compared to other counterparts.
 
@@ -198,7 +196,7 @@ This plot is extremely interesting as it shows just how much the two are coordin
 
 ### Industry Specific Analysis
 
-Now, I want to focus on jobs that pertain to my career. I looked through all the jobs and picked out key words that were related to my career path. Below I have listed all of these. In the following code block, we mark all of these jobs with a 0 or 1. 1 denoting they are in the field and zero if not.
+Now, I want to focus on jobs that pertain to my career. I looked through all the jobs and picked out key words that were related to my career path. Below I have listed all of these. In the following code block, we mark all of these jobs with "Industry" or "Not", denoting whether they fall in the given industry.
 
 Key words are:
 - Software
@@ -237,7 +235,7 @@ workers_tidy %>% ggplot(aes(x=`Years of Experience`, y=`Salary`, color=marked)) 
   
 ```
 
-Above, in Red we have only the jobs that are in the disciplines I am interested in. In Blue, we have all jobs (including the ones in blue). The two colored lines correspond with corresponding colored plots.
+Above, in Red we have only the jobs that are in the disciplines I am interested in. In Blue, we have all jobs (including the ones in blue). 
 
 This plot further confirms that the salary in my field is slightly higher than average, but this seems to be only up until about 15 years of experience. Then it starts to get very close as the salaries plateau. I would like to see more non-industry data for 20 years of experience and up as there is not much provided in this plot.
 
@@ -258,13 +256,6 @@ In this plot, we have a very interesting curve. It seems that throughout one's c
 Now, we will compare these jobs to all the sampled jobs, this plot can be seen below.
 
 ```{r}
-# Mean
-general_mean <- workers_tidy %>%
-  group_by(`Age`) %>%
-  summarise(Salary=mean(Salary))
-field_mean <- field_jobs %>%
-  group_by(`Age`) %>%
-  summarise(Salary=mean(Salary))
 
 workers_tidy %>% ggplot(aes(x=`Age`, y=`Salary`, color=marked)) +
   geom_point(size=2, alpha=0.5) +
@@ -317,7 +308,7 @@ industry_jobs$Role <- map_chr(industry_jobs$`Job Title`, mark_role)
 
 ggplot(industry_jobs,aes(x=`Age`, y=`Salary`, color=Role)) +
   geom_point(size=2, alpha=0.5) +
-  ggtitle("Age vs Salary") 
+  ggtitle("Age vs Salary based on Role") 
 
 ```
 
@@ -357,7 +348,7 @@ industry_jobs$Field <- map_chr(industry_jobs$`Job Title`, mark_field)
 
 ggplot(industry_jobs,aes(x=`Age`, y=`Salary`, color=Field)) +
   geom_point(size=2, alpha=0.5) +
-  ggtitle("Age vs Salary")
+  ggtitle("Age vs Salary based on Field")
 
 ```
 
@@ -383,7 +374,9 @@ Going even deeper into each of these plots you notice small trends. For example,
 
 The other trend that I found very interesting, was that of the Age vs Salary plot for only industry jobs. If one looks closely to the darker regions of the graph, there is a staircase like behavior to it. I noted that this could be due to the progression of ones career with promotions. This would explain why jobs from various companies have similar paths, as careers across various companies as they have various levels of jobs and one progresses through these ranks throughout their career.
 
-Finally, I've learned how the role/field within my industry can influence job choices and even what path I go to as I gain more experience. For example, I see that the demand for certain roles diminishes as a career progresses. For example, it seems that jobs in data have a high entry point, but as one's career progresses it seems that it plateaus. Where as it seems that software has a slightly lower entering salary, but there is constant growth.
+Finally, I've learned how the role/field within my industry can influence job choices and even what path I go to as I gain more experience. For example, I see that the demand for certain roles diminishes as a career progresses. It seems that jobs in data have a high entry point, but as one's career progresses it seems that it plateaus. Where as it seems that software has a slightly lower entering salary, but there is constant growth.
+
+Assuming one is obtaining a degree in a related field and finds the work entertaining they can use this data to look for specific roles and fields to maximize their salary capabilities. They can also use this data as guidance for how they can shape their career if they want to have many opportunities or be paid better than their competition.
 
 ### Lingering Discussion
 
@@ -404,6 +397,8 @@ Wickham H, Averick M, Bryan J, Chang W, McGowan LD, François R, Grolemund G, Ha
   Hester J, Kuhn M, Pedersen TL, Miller E, Bache SM, Müller K, Ooms J, Robinson D, Seidel DP, Spinu V,
   Takahashi K, Vaughan D, Wilke C, Woo K, Yutani H (2019). “Welcome to the tidyverse.” _Journal of
   Open Source Software_, *4*(43), 1686. doi:10.21105/joss.01686 <https://doi.org/10.21105/joss.01686>.
+  
+RStudio Team (2020). RStudio: Integrated Development for R. RStudio, PBC, Boston, MA URL http://www.rstudio.com/.
 
 ```{r}
 tidy_citation <- citation("tidyverse")
