@@ -1150,8 +1150,6 @@ To begin, we will explore if the observed increase in incidence of obesity (as m
 The figure below shows the distribution of BMI classes by food security group and CRP risk class. To construct this figure, we start by dividing the data into 12 subgroups (one for each food security group and CRP risk level). Then, we plot the percentage of subjects within each subgroup that belong to each BMI class. As such, the bars in each grouped bar plot sum to 100%. To infer if CRP can explain the differences in obesity incidence, we can compare the BMI composition by CRP risk class for each food security group. 
 
 ``` {r message=F, warning=F}
-# if obesity levels are driven by CRP, we would only expect to see increases in obesity (or larger) increases in obesity in the food-insecure groups.
-# rename crp group for nice facet labels
 sample <- sample %>%
   mutate(
     crp_group = case_when(
