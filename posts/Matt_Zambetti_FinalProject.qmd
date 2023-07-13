@@ -32,7 +32,7 @@ Another area this source is lacking is the type of companies they are sampling f
 
 When looking into what region this data came from, I could not find anything. So, I looked and compared this to the salaries of similar jobs with similar experience in the United States, and they were similar. With that, I believe that although this may not be perfect, it is certainly sufficient for someone to use this data in the US to compare their salary to.
 
-I gathered the data at: (https://www.kaggle.com/datasets/mohithsairamreddy/salary-data?resource=download)
+I gathered the data at: ()
 
 ```{r}
 workers_tidy <- read_csv("_data/Salary_Data.csv")
@@ -314,7 +314,9 @@ ggplot(industry_jobs,aes(x=`Age`, y=`Salary`, color=Role)) +
   geom_point(size=2, alpha=0.5) +
   ggtitle("Age vs Salary") 
 ```
-In this plot we can see that Developer, Engineer, Director and Manager all dominate the plot. But, what is also interesting and self explanitory is that most of the higher paying roles are Managerial Roles, where the lower paying jobs are developers. One job that follows the positive trend and seems to be evenly distributed is an engineer. It seems that this position is valued through ones career.
+In this plot we can see that Developer, Engineer, Director and Manager all dominate the plot in terms of quantity. But, what is also interesting and self explanatory is that most of the higher paying roles are Managerial Roles, where the lower paying jobs are developers. One job that follows the positive trend and seems to be evenly distributed is an engineer. It seems that this position is valued through ones career.
+
+Another trend we can see is that Developers are paid less than their counterparts in other rolls. As aforementioned there are many developer jobs, but they seem to be more common for younger individuals, with the salaries being lower than other jobs such as Engineers, Analysts and Scientists.
 
 ```{r}
 mark_field <- function(entry) {
@@ -350,9 +352,17 @@ ggplot(industry_jobs,aes(x=`Age`, y=`Salary`, color=Field)) +
   ggtitle("Age vs Salary") 
 ```
 
+This plot has a very similar look in color distributions as the previous graph. This is self-explanatory as roles and fields somewhat over lap. In the division of this data, I tried to label the most specific fields first, such as Data and Software, and then if a job title did not fit into there I used more general fields such as Developing, Engineering, and others.
+
+Looking closely, we can see that there is a noticeable difference between general developing and Front and Back End developing. This may be due to the fact the latter requires a more specific skill set which is more desirable and competitive with pay. 
+
+We can also see that jobs with data dominate in salary for years 20-35, but then the salaries fall back into normal range. This could possibly be due to the fact that data is a competitive/popular field coming out of college so industry professionals want to hire the best possible candidates.
+
+Similar to the previous plot, we see that the software field follows the positive trend very closely and has a wide range of salaries but most fall into a similar range. This can be because software is a very common field to go around so the market may have settled and found a stable price point for age and salary.
+
 ## Conclusions
 
-In this data I have looked at not only how age and experience affect most jobs but also how it affects jobs in the industries I'm interested in and how the salaries compare between the two. From this analysis on the two variables (age and experience) and their affect on salary for given jobs, I have found interesting trends, and confirmed previous thoughts.
+In this data I have looked at not only how age and experience affect most jobs but also how it affects jobs in the industries I'm interested in and how the salaries compare between the two. From this analysis on the two variables (age and experience) and their affect on salary for given jobs, I have found interesting trends, and confirmed previous thoughts. In addition to these confirmations, I have also found out how the field and role within the industries I'm interested affect affects the salary and what the projections look like across those different careers.
 
 Even though I was able to discover new things and confirm old ideas, there is still plenty left on the table that I was not able to discover because of limitations from the data set.
 
@@ -360,9 +370,11 @@ Even though I was able to discover new things and confirm old ideas, there is st
 
 My previous thoughts were that age and experience positively correlate with salary, which is true. My second was that people in the industry I am hoping to enter (engineering, data, computer science) would make slightly more than jobs not in this field. This was also confirmed in the plots where we compared industry salaries (in red) to non-industry salaries (in blue) versus both age and experience.
 
-Going even deeper into each of these plots you notice small trends. For example, in both age and experience for the total distribution you see the trend of salaries plateauing after a certain age/number of years. I listed many possible reasons for this, but it would be interesting to see if the companies that provided these numbers would ellaborate on why these trends are present.
+Going even deeper into each of these plots you notice small trends. For example, in both age and experience for the total distribution you see the trend of salaries plateauing after a certain age/number of years. I listed many possible reasons for this, but it would be interesting to see if the companies that provided these numbers would elaborate on why these trends are present.
 
 The other trend that I found very interesting, was that of the Age vs Salary plot for only industry jobs. If one looks closely to the darker regions of the graph, there is a staircase like behavior to it.
+
+Finally, I've learned how the role/field within my industry can influence job choices and even what path I go to as I gain more experience. For example, I see that the demand for certain roles diminishes as a career progresses. For example, it seems that jobs in data have a high entry point, but as one's career progresses it seems that it plateaus. Where as it seems that software has a slightly lower entering salary, but there is constant growth.
 
 ### Lingering Discussion
 
@@ -371,3 +383,6 @@ What this data could not provide insight into was the types of companies are the
 This data also cannot provide geographic data. Cost of living for various cities heavily influences salaries in my experience. Having all of these jobs combined into one plot can provide false insights about what job pays better if the higher paying job is mostly found in a city versus the lower paying one in a suburb.
 
 ## Bibliography
+
+Reddy, Mohith Sai Ram. “Salary_data.” Kaggle, 18 May 2023,   www.kaggle.com/datasets/mohithsairamreddy/salary-data?resource=download. 
+
