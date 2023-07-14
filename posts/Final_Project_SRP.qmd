@@ -24,7 +24,7 @@ library(dplyr)
 
 ## Introduction
 
-Using data compiled by the World Bank over the last half-century, this report explores trends in female participation in the Bhutanese education system, and reveals some dimensions of change in girls' enrollment in Bhutanese schools over most recent 25 years of available data. After taking an overview of data recorded on education since 1971, this report focuses on the period of 1998 to 2022, which spans major societal transitions after the whole-scale introduction of internet, television, and cellular technology between 1999 and 2003, and Bhutan’s political transition from absolute monarchy to parliamentary democracy in 2008. Throughout the report, I contextualizes patterns in female enrollment, persistence, and attainment within observations from my personal experience in Bhutan, as well as known political and civic developments in the Kingdom. In the discussion, I raise questions that may guide future research in the hopes that insights will eventually inform gender-sensitive institutional policies and practices. 
+Using data compiled by the World Bank over the last half-century, this report explores trends in female participation in the Bhutanese education system, and reveals some dimensions of change in girls' enrollment in Bhutanese schools over most recent 25 years of available data. After taking an overview of data recorded on education since 1971, this report focuses on the period of 1998 to 2022, which spans major societal transitions after the whole-scale introduction of internet, television, and cellular technology between 1999 and 2003, and Bhutan’s political transition from absolute monarchy to parliamentary democracy in 2008. Throughout the report, and especially as visualizations appear to confirm the common perception that Bhutan has achieved educational equity, I contextualizes patterns in female enrollment, persistence, and attainment within observations from my personal experience in Bhutan, as well as known political and civic developments in the Kingdom. In the discussion, I suggest directions for further research in the hopes that insights will eventually inform gender-sensitive institutional policies and practices. 
 
 ## Rationale
 
@@ -164,11 +164,14 @@ The top five types of indicators (as indicated by their unit) look at educationa
 
 As we run analyses on the available data and hypothesize about the conditions and support for females in the Bhutanese education system, these limitations of the data should remain forefront in our minds. Qualitative research is required to lend context to these indicators and yield meaningful insights that might lead to sound recommendations for improvement. 
 
-## Focus of analysis
+## Focus of exploration
 
-This exploration of the World Bank’s Global Development Indicators related to education and gender is intended to explore females' access, participation, and attainment, in order to describe  patterns in female student engagement over the past 25 years of recorded data (1998-2022). I will look for variation in female enrollment with respect to major events in Bhutan's social and political history, and explore trends in female student persistence and attainment and changes in the gender ratio and training of teachers.
+This exploration of the World Bank’s Global Development Indicators related to education in Bhutan seeks to illuminate patterns in female participation as students in the education system, and generate research questions and that may guide future research. Insights from continuous diagnosis and learning should inform gender-sensitive institutional policies. I will focus on the past 25 years of recorded data (1998-2022), and aim to show issues in educational coverage and efficacy as well as notable covariances, including: 
+-- overage enrollment in primary school
+-- drop off in high school enrollment 
+-- possible correlation in female persistence with increase in female teachers 
 
-These data can give us a view on girls' and women's access to and persistence in education - their bare participation - but the data can not give insight into the dynamics of inclusion within schools, nor the external conditions (eg. personal, familial, cultural, social, economic) which interfere with girls' or women's access to education. I will draw upon my research and personal experience working to develop Bhutan's education system (2018-2021) to contextualize the observed trends and suggest possible hypotheses for further investigation.
+These data can give us a view on girls' and women's access to and persistence in education - their bare participation - but the data can not give insight into the dynamics of inclusion within schools, nor the external conditions (eg. personal, familial, cultural, social, economic) which interfere with girls' or women's access to education. I will draw upon my personal experience working in Bhutan to develop a new model for education (2018-2021), in order to contextualize the observed trends and suggest directions of further investigation.
 
 Throughout this report, I will highlight the perceptible lacks and weaknesses in data, and emphasize the need for more extensive research on the situation of female Bhutanese to better diagnose sources of educational discrimination and exclusion. Without continuous collection of high quality data, it will be impossible to detect and understand problems, design interventions, and know when they are successful. 
 
@@ -438,7 +441,7 @@ The median values of females' gross enrollment ratio for each school level range
 
 Overall, while these data show dramatic increases in female gross enrollment ratios across all levels of schooling, the negative differences between primary and secondary levels of schooling, and then secondary and tertiary levels of schooling, suggest that female progression into and persistence through secondary school is low; progression and persistence through tertiary schooling is even lower. Female dropout rates rates may be influenced by myriad social, cultural, and economic factors that create "push" from school and "pull" into the domestic sphere or workforce, and a deeper, qualitative exploration of these conditions is required to diagnose these negative trends.
 
-##Does an increase in the porportion of female teachers vs. male correlate with increased female student persistence and higher levels of attainment? 
+##Does the gender ratio of teachers correlate with the gender ratio of students?
 I strongly recommend that Bhutanese leadership consider diverse ways to support female participation, persistence, and success in its education system. One lever for change may be increasing the presence of women in the teaching workforce. Female teachers can be critical role models and guides for female students, and can also introduce and shape gender-sensitive policies within local institutions based on their perception and insight into the needs of female youth. According to the World Bank metadata for relevant WDI, women teachers are recognized as key for attracting and retaining girls in school. 
 
 To get a sense of whether increasing the percentage of female teachers may effectively increase the enrollment of girls in education, I will compare the percentage of females enrolled in secondary education with the percentage of female teachers serving in secondary schools.  
@@ -505,11 +508,14 @@ While this report highlight's Bhutan's progress in educating its people and clos
 
 Kinley Seden, Maxwell, T.W. (2016). Gender and Education in Bhutan. In: Schuelka, M., Maxwell, T. (eds) Education in Bhutan. Education in the Asia-Pacific Region: Issues, Concerns and Prospects, vol 36. Springer, Singapore. https://doi.org/10.1007/978-981-10-1649-3_14
 
+Phuntsho, Sherab, and Natalia Mufel. Ministry of Education Bhutan, and UNICEF Bhutan Country Office, 2020, An Evaluation of the Early Childhood Care and Development Programme in Bhutan, https://www.unicef.org/bhutan/media/1761/file/ECCD%20Evaluation%20Report.pdf. Accessed 13 July 2023. 
+
+R Core Team (2023). _R: A Language and Environment for Statistical Computing_. R
+Foundation for Statistical Computing, Vienna, Austria. <https://www.R-project.org/>.
+
 Wickham, H., & Grolemund, G. (2016). R for data science: Visualize, model, transform, tidy, and import data. OReilly Media.
 
 World Bank. "World Development Indicators/Bhutan." World Development Indicators, The World Bank Group, Published 29-June-2023, https://databank.worldbank.org/reports.aspx?source=2&country=BTN, Accessed 13-July-2023.
-
-Phuntsho, Sherab, and Natalia Mufel. Ministry of Education Bhutan, and UNICEF Bhutan Country Office, 2020, An Evaluation of the Early Childhood Care and Development Programme in Bhutan, https://www.unicef.org/bhutan/media/1761/file/ECCD%20Evaluation%20Report.pdf. Accessed 13 July 2023. 
 
 ## Appendix
 
