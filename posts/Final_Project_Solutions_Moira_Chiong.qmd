@@ -245,7 +245,6 @@ group_by(pseo_filtered_three$label_cipcode)
 summarise(Mean=mean(y1_p50_earnings, na.rm=T))
                 
 ```
-```
 ## Critical Reflection
 
 What I learned from this project confirmed conventional knowledge and axioms. For example, my analyses confirmed that earnings generally increase with credential level, earnings generally increase with time since graduation elapsed, and earnings in STEM fields are generally higher than other fields. The limitations of my analysis is that I did not break down my analysis demographically. I expect that the Census Bureau will provide this disaggregated data in time. Given the recent Supreme Court decision on affirmative action, I would conjecture that such employment outcomes data disaggregated by race/ethnicity would be a useful and timely addition to the dataset and further analysis. Further statistical analysis could test the relationship between credential level and earnings, and test if they are correlated as well. Further, we could check for a statistical relationship between earnings and race/ethnicity. In addition, unit record data would be very interesting for analysis using panel data methods. 
