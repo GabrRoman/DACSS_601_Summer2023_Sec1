@@ -1,0 +1,114 @@
+---
+title: "Challenge 8 Solution"
+author: "Shreya Varma"
+description: "Joining Data"
+date: "7/10/2023"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_8
+  - railroads
+  - snl
+  - faostat
+  - debt
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(ggplot2)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to:
+
+1)  read in multiple data sets, and describe the data set using both words and any supporting information (e.g., tables, etc)
+2)  tidy data (as needed, including sanity checks)
+3)  mutate variables as needed (including sanity checks)
+4)  join two or more data sets and analyze some aspect of the joined data
+
+(be sure to only include the category tags for the data you use!)
+
+## Read in data
+
+Read in one (or more) of the following datasets, using the correct R package and command.
+
+  - military marriages ⭐⭐
+  - faostat ⭐⭐
+  - railroads  ⭐⭐⭐
+  - fed_rate ⭐⭐⭐
+  - debt ⭐⭐⭐
+  - us_hh ⭐⭐⭐⭐
+  - snl ⭐⭐⭐⭐⭐
+
+```{r}
+actors <- read.csv("_data/snl_actors.csv")
+head(actors)
+dim(actors)
+seasons <- read.csv("_data/snl_seasons.csv")
+head(seasons)
+dim(seasons)
+casts <- read.csv("_data/snl_casts.csv")
+head(casts, 20)
+
+```
+
+### Briefly describe the data
+
+I chose the SNL dataset. It has three files described as below:
+1. Actor:  It contains the details of the actors who worked with SNL. There are 4 columns where the column ‘aid’ represents the name of the person, ‘url’ refers to the url associated to the aid and two other columns type and gender which talks about how the aid is associated and the gender of the aid respectively. The show featured 2306 actors in total.
+2. Seasons: It contains the details of all season of SNL. The date first and last episodes were released and the number of episodes in each season. sid contains the season number. This show had 46 seasons.
+3. Casts: This contains the data of actor , the season in which they were featured and episode details.    
+
+## Tidy Data (as needed)
+
+I will check for null values in any of the datasets since null values inflate rows in case of joins. The first episode and last episode id  contains some null values. However we will not be using these columns to make any joins thus we can ignore them.
+
+
+```{r}
+colSums(is.na(actors))
+colSums(is.na(seasons))
+colSums(is.na(casts))
+
+```
+
+## Join Data
+
+I will join the actors, casts and season data to plot the distribution of male and female actors over the seasons to see if there is any bias as is claimed with regards to SNL.
+
+```{r}
+
+actors_casts <- actors %>% inner_join(casts, by="aid")
+
+actors_casts_seasons <- actors_casts %>% inner_join(seasons, by="sid")
+
+
+```
+
+## Data Visualization
+
+We can see that there is a bias between the female and male actors who appear on SNL.
+
+```{r}
+seasons_gender <- actors_casts_seasons %>% 
+  select(sid, gender)
+
+seasons_gender <- seasons_gender %>% group_by(sid, gender) %>% summarise(count = n())
+
+# Create the line plot
+ggplot(seasons_gender, aes(x = sid, y = count, group = gender, color = gender)) +
+  geom_line() +
+  labs(title = "Gender of Actors across seasons",x = "Seasons", y = "Count", color = "Gender") 
+
+```
+
+
