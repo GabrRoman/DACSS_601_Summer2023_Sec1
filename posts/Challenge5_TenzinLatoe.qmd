@@ -1,0 +1,114 @@
+---
+title: "Challenge 5"
+author: "Tenzin Latoe"
+description: "Introduction to Visualization"
+date: "7/13/2023"
+format:
+  html:
+    df-print: kable 
+categories:
+  - challenge_5
+  - Tenzin Latoe
+  - cereal
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(ggplot2)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to:
+
+1)  read in a data set, and describe the data set using both words and any supporting information (e.g., tables, etc)
+2)  tidy data (as needed, including sanity checks)
+3)  mutate variables as needed (including sanity checks)
+4)  create at least two univariate visualizations
+   - try to make them "publication" ready
+   - Explain why you choose the specific graph type
+5)  Create at least one bivariate visualization
+   - try to make them "publication" ready
+   - Explain why you choose the specific graph type
+
+[R Graph Gallery](https://r-graph-gallery.com/) is a good starting point for thinking about what information is conveyed in standard graph types, and includes example R code.
+
+(be sure to only include the category tags for the data you use!)
+
+## Read in data
+
+Read in one (or more) of the following datasets, using the correct R package and command.
+
+-   cereal.csv ⭐
+
+```{r}
+cereal_data <- read.csv("_data/cereal.csv")
+cereal_data
+```
+
+### Briefly describe the data
+```{r}
+dim((cereal_data))
+head(cereal_data)
+```
+
+This dataset shows 20 rows and 4 columns. The four column names are: Cereal, Sodium, Sugar, and Type. There are 20 enteries of different types of cereals. 
+
+```{r}
+#Column names
+colnames(cereal_data)
+```
+
+```{r}
+#Types of names
+unique(cereal_data$Cereal)
+```
+
+## Tidy Data (as needed)
+
+```{r}
+#checking for missing values
+is.na(cereal_data)
+```
+
+Running the function above shows that there are no missing values in this data set. This data is already tidy. 
+
+## Univariate Visualizations
+
+```{r}
+#Geo_Col
+ggplot(cereal_data, aes(x= Sugar , y=Cereal,)) + 
+    geom_col(fill= "mediumturquoise",
+             color= "black")
+```
+Using the ggplot() fuction, I did a simple bar graph to illustrate the sugars per serving for each type of cereal. This illustrated that Raisan Bran has the highest, while Fiber One was the lowest. 
+
+```{r}
+
+#Geom_boxplot
+ggplot(cereal_data, aes(fill= Type, y=Sodium, x=Type)) + 
+    geom_boxplot()+guides(fill='none')
+
+```
+
+Next, the box plot illustrates how the distribution of the quantities of sodium in the data set varies based on the two different types of cereals:A or C. 
+
+## Bivariate Visualization(s)
+
+
+```{r}
+#Geom_point 
+
+ggplot(cereal_data, aes(x= Sugar , y=Sodium,
+                        col=Type)) + 
+    geom_point()+geom_smooth(se=FALSE)
+
+```
+Scatter plot used to display sodium and sugar per cereal type to show the relationship between them, and smoothed to provide an estimate of the trend between the two variables. 
+
