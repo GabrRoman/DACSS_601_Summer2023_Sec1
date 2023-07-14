@@ -473,16 +473,18 @@ Finally, by comparing the number of series episodes to average viewer rating of 
 
 ## Bibliography
   
-“IMDb Non-Commercial Datasets.” IMDb Developer, 13 June 2023, datasets.imdbws.com/.
+"IMDb Non-Commercial Datasets." IMDb Developer, 13 June 2023, datasets.imdbws.com/.
 
-Lewis, Robert. “IMDb.” Encyclopedia Britannica, 15 May 2023, www.britannica.com/topic/IMDb.
+Khetlani, Komal. "IMDb Dataset - from 1888 to 2023." Kaggle, 5 Apr. 2021, www.kaggle.com/datasets/komalkhetlani/imdb-dataset. 
+
+Lewis, Robert. "IMDb." Encyclopedia Britannica, 15 May 2023, www.britannica.com/topic/IMDb.
 
 R Core Team (2023). _R: A Language and Environment for Statistical Computing_. R Foundation for
   Statistical Computing, Vienna, Austria. <https://www.R-project.org/>.
 
-“Ratings FAQ.” IMDb, 9 May 2023, help.imdb.com/article/imdb/track-movies-tv/ratings-faq/G67Y87TFYYP6TWAV#.
+"Ratings FAQ." IMDb, 9 May 2023, help.imdb.com/article/imdb/track-movies-tv/ratings-faq/G67Y87TFYYP6TWAV#.
 
-“Where Does the Information on IMDb Come From?” IMDb, 9 May 2023, help.imdb.com/article/imdb/general-information/where-does-the-information-on-imdb-come-from/GGD7NGF5X3ECFKNN.
+"Where Does the Information on IMDb Come From?" IMDb, 9 May 2023, help.imdb.com/article/imdb/general-information/where-does-the-information-on-imdb-come-from/GGD7NGF5X3ECFKNN.
 
 Wickham, Hadley, et al. R for Data Science: Import, Tidy, Transform, Visualize, and Model Data. 2nd ed., O’Reilly Media, Inc, 2023. 
 
