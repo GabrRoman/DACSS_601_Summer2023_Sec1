@@ -99,5 +99,6 @@ Using `map` to compute statistics on two data frames of wild_bird_data, split by
 split_data <- list(wild_bird_data[1:73,], wild_bird_data[74:146,])
 split_data
 map(split_data, ~statistics(.x, `Wet body weight [g]`))
+map(split_data, ~statistics(.x, `Population size`))
 ```
 
