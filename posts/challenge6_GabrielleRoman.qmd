@@ -63,7 +63,7 @@ Read in one (or more) of the following datasets, using the correct R package and
 
 ```{r}
 fed_rate<-read.csv("_data/FedFundsRate.csv")
-glimpse(fed_rate)`
+
 ```
 ```
 
@@ -72,9 +72,10 @@ The data appears to show a series of rates and changes in the economy as evaluat
 
 ## Tidy Data (as needed)
 
-I have trouble quantifying what "needs" to be changed in order to meet tidy requirements, but I think this dataset's year, month, and day columns could be consolidated into one, so I'll do that below.
+I think this dataset's year, month, and day columns could be consolidated into one, so I'll do that below.
 
 ```{r}
+
 fed_rate$Date<-as.Date(with(fed_rate, paste(Year,Month,Day,sep="-")),"%Y-%m-%d")
 fed_rate<-fed_rate[-c(1:3)]
 view(fed_rate)
