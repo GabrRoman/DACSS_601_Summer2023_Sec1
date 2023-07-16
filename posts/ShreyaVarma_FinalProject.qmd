@@ -1,0 +1,627 @@
+---
+title: "Final Project - Hotel Booking Data Analysis"
+author: "Shreya Varma"
+description: "Data analysis and visualization"
+date: "07/12/2023"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+    df-print: paged
+categories:
+  - hw3
+  - shreya
+  - hotel_bookings.csv
+---
+
+```{r}
+#| label: setup
+#| warning: false
+
+library(tidyverse)
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction to Hotel booking dataset
+
+
+
+The dataset used for analysis is the Hotel Bookings dataset which is available on Kaggle: https://www.kaggle.com/datasets/jessemostipak/hotel-booking-demand. It contains information about two hotel types - City Hotel and Resort hotels. For these two hotel types, it has information of customer arrival, checkout details, number of adults, children and babies along with their booking details, payment types, and reservation information. The data captures hotel bookings made from July 2015 to July 2017 that is 2 years of data. It provides insights into various aspects of hotel stays, such as lead time (the duration between booking and arrival), meal preferences, market segments through which bookings are made, cancellations, and tourist patterns.
+
+```{r}
+hotel_bookings <- read_csv("_data/hotel_bookings.csv")
+hotel_bookings
+glimpse(hotel_bookings)
+
+```
+
+I created visualizations to analyze different aspects of the dataset. The lead time analysis compared lead times for Resort hotels and City hotels, revealing that City hotels had slightly higher lead times. 
+
+Market segments were also analyzed, and it was found that most bookings came from the "Online TA" (Online Travel Agents) and "Offline TA/TO" (Offline Travel Agents/Tour Operators) segments.
+
+Furthermore, the number of cancellations and bookings per year was plotted, revealing that 2016 had the highest number of cancellations and bookings. The frequency of tourist arrivals by month was also visualized, highlighting June and August as peak months.
+
+These analyses provide valuable insights into the hotel booking dataset, offering information about lead times, meal preferences, market segments, cancellations, and tourist patterns. The dataset was cleaned, and the results were presented using visualizations to aid in understanding the data.
+
+I also checked the top 5 which countries most people travel from to these hotels to market accordingly. We can see that most number of travellers are from PRT - Portugal followed by GBR - United Kingdom.
+
+
+```{r}
+
+country_data <- hotel_bookings %>% group_by(country) %>% count()
+
+country_data <- head(arrange(country_data, desc(n)),5)
+
+ggplot(data = country_data, aes(x = country, y = n,  fill = country)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Top 5 countries", x = "Country", y = "Number of travellers")
+
+```
+## Data Cleaning
+
+We can now start cleaning the dataset. I will be checking if any columns have missing values, null values and remove irrelavent columns. I will also rename certain list of values or column names if needed to make the dataset more readable. I will also use data visualization to understand the data better.
+
+
+1. Missing and Null values: We see that there are 4 missing values in the rows we have. I will drop these rows to clean the data.
+
+```{r}
+count_missing <- sum(is.na(hotel_bookings))
+hotel_bookings <- hotel_bookings[complete.cases(hotel_bookings),]
+```
+
+2. I will drop the 'company' column since a majority of the values in that column are missing or represented as 'NULL'. Since the column contains a significant amount of missing data (112,593 out of 119,390 rows), it does not provide meaningful information for data analysis.
+
+When working with datasets, it is common practice to evaluate the usefulness and relevance of each column. Columns with a high percentage of missing or irrelevant data may not contribute significantly to the analysis and and thus I am safely dropping it to simplify the dataset and focus on more informative variables.
+
+```{r}
+
+head(hotel_bookings)
+table(hotel_bookings$company)
+hotel_bookings <- hotel_bookings[, -which(names(hotel_bookings) == "company")]
+glimpse(hotel_bookings)
+```
+
+3. A lot of columns have values that are encoded and not easily understandable. Thus, I will create a function that makes my data more readable by replacing value in columns by more readable value. 
+
+```{r}
+
+
+replace_values <- function(data, column_name, old_value, new_value) {
+  data[[column_name]][data[[column_name]] == old_value] <- new_value
+  return(data)
+}
+
+hotel_bookings <- replace_values(hotel_bookings,"meal","BB", "Bed and Breakfast")
+hotel_bookings <- replace_values(hotel_bookings,"meal","HB", "Half Board")
+hotel_bookings <- replace_values(hotel_bookings,"meal","FB", "Full Board")
+hotel_bookings <- replace_values(hotel_bookings,"meal","SC", "Self Catering")
+
+
+
+hotel_bookings <- replace_values(hotel_bookings,"market_segment","Online TA", "Online Travel Agent")
+hotel_bookings <- replace_values(hotel_bookings,"market_segment","Offline TA/TO", "Offline Travel Agent/Tour Operator")
+
+hotel_bookings <- replace_values(hotel_bookings,"distribution_channel","TA/TO", "Travel Agent/Tour Operator")
+hotel_bookings <- replace_values(hotel_bookings,"distribution_channel","GDS", "Global Distribution System")
+
+
+hotel_bookings <- hotel_bookings %>%
+  mutate(cancel_status = ifelse(is_canceled == 1, "Canceled", "Not Canceled"))
+
+
+
+```
+
+
+
+The distribution of meal types chosen by guests was visualized using a pie chart, with "Bed and Breakfast" being the most common choice. 
+I created a pie chart of meal types and based on the analysis of the pie chart of meal types, we can observe the following insights:
+
+1. Most people opt for "Bed and Breakfast" in hotels: The largest slice in the pie chart represents the "Bed and Breakfast" meal type. This indicates that a significant portion of hotel guests prefer a meal plan that includes breakfast. This preference could be due to the convenience and cost-effectiveness of having breakfast provided by the hotel.
+
+2. Complimentary breakfast may influence the choice of meal type: One possible explanation for the popularity of the "Bed and Breakfast" meal type is that many hotels offer complimentary breakfast as part of their services. This complimentary offering can attract guests and make the "Bed and Breakfast" option more appealing.
+
+3. "Half board" and "Self catering" are also chosen by guests: The second and third largest slices in the pie chart represent the "Half board" and "Self catering" meal types, respectively. This suggests that a considerable number of guests opt for meal plans that include either breakfast and dinner or prefer to make their own meal arrangements. These options provide flexibility for guests who may have specific dietary requirements or prefer to explore local dining options.
+
+4. Fewer guests choose "Full board": The smaller slice in the pie chart represents the "Full board" meal type. This option, which includes all meals provided by the hotel, is chosen by a relatively smaller number of guests. It indicates that the majority of guests prefer meal plans that offer more flexibility or that they may dine outside the hotel for some of their meals.
+
+
+```{r}
+
+ggplot(hotel_bookings, aes(x = "", fill = meal)) +
+  geom_bar(size = 1, alpha = 0.8) +
+  coord_polar("y", start=0) +
+  scale_fill_brewer("Meal type") +
+  theme_void() +
+  labs(title = "Meal Preferences",
+       subtitle = "Hotel Booking Dataset") +
+  theme_minimal()
+  
+```
+
+## Research Questions
+
+ Q1. Which factors affect the lead time? What is the average lead time and does it depend on people having children or hotel type?
+
+From the summary, we can observe that the mean lead time for hotel bookings is approximately 104 days, suggesting that people, on average, tend to book their stays approximately 3 to 3.5 months in advance. This information prompted me to investigate whether the lead time differs between Resort hotels and City hotels.
+
+Initially, my hypothesis was that the lead time would be higher for Resort hotels, assuming that people tend to book their vacations well in advance. On the other hand, I thought that City hotels could be booked due to office work or immediate needs, potentially resulting in shorter lead times. However, upon analyzing the lead time data for both hotel types, I discovered that my hypothesis was incorrect. Surprisingly, the lead time for City hotels was slightly higher than for Resort hotels. It is worth noting that there was a significant difference in the amount of data available for City hotels compared to Resort hotels, with City hotels having almost twice as much data. This uneven distribution of data may have influenced the lead time analysis, making it difficult to draw definitive conclusions about the relationship between lead time and hotel type.
+
+```{r}
+
+lead_time_summary <- hotel_bookings %>% 
+  group_by(hotel) %>% 
+  summarize('mean_lead_time' = mean(lead_time), 'max_lead_time' = max(lead_time), 'min_lead_time' = min(lead_time))
+
+
+ggplot(data = lead_time_summary, aes(x = mean_lead_time, y = hotel)) +
+  # Specify the type of plot and customize it as needed
+  geom_col(fill = "blue") +
+  labs(title = "Hotel type vs Lead Time", x = "Lead time", y = "Hotel type")
+
+hotel_type_summary <- hotel_bookings %>% 
+  group_by(hotel) %>% count()
+
+hotel_type_summary
+```
+
+To provide a clearer comparison between the lead time distributions of City hotels and Resort hotels, I created histograms for both individually. I separated the histograms by hotel type, allowing for a direct visual comparison of the distributions. Additionally, I included vertical dashed lines on the histograms to represent the mean lead time for each hotel type.
+
+This updated visualization provides a better understanding of the lead time distributions for City hotels and Resort hotels, enabling comparison of the shapes of the distributions and identify any differences. By incorporating the mean lead time lines on the histograms, we can easily compare the central tendencies of the distributions.
+
+In summary, my analysis revealed that the lead time for City hotels was slightly higher than for Resort hotels, contradicting my initial hypothesis. However, it is important to consider the limitations and data distribution when interpreting these results concerning lead time and hotel type.
+
+
+```{r}
+lead_time_comparison <- hotel_bookings %>%
+  mutate(hotel = factor(hotel, levels = c("City Hotel", "Resort Hotel"))) 
+
+
+ggplot(data = lead_time_comparison, aes(x = lead_time)) +
+  geom_histogram(fill = "blue", color = "black", bins = 30) +
+  facet_grid(hotel ~ ., scales = "free_y") +
+  geom_vline(data = lead_time_summary, aes(xintercept = mean_lead_time),
+             color = "red", linetype = "dashed", size = 1) +
+  labs(title = "Lead Time Distribution by Hotel Type",
+       x = "Lead Time", y = "Frequency") +
+  theme_bw()
+```
+
+We can instead check if Lead time is affected by people having children. The graph titled "Median Lead Time by Number of Children" provides insights into the relationship between the number of children and the median lead time for hotel bookings. The median lead time is a measure of central tendency that represents the middle value of the lead times for a given group of bookings with the same number of children. We can see that the median lead time varies from 55 to 70 days overall for people with or without any children. Thus we cannot say for sure if there is any pattern here.   
+
+```{r}
+
+children_lead_time_summary <- hotel_bookings %>%
+  group_by(children) %>%
+  summarize(median_lead_time = median(lead_time, na.rm = TRUE))
+
+ggplot(data = children_lead_time_summary, aes(x = children, y = median_lead_time)) +
+  geom_bar(stat = "identity", fill = "blue", color = "black") +
+  labs(title = "Median Lead Time by Number of Children", x = "Number of Children", y = "Median Lead Time")
+
+
+
+```
+
+
+
+Q2 What are the factors affecting the cancellation of hotel bookings? Does it depend on hotel type, seasonal trends or the deposit type through which the bookings are taken? Can the hotels try to take extra bookings accordingly if there is a pattern in booking cancellations based on these factors?
+
+To start with, I created a plot of cancellations per year and we can see that 2016 had the most number of cancellations as well as bookings.To check if there is any trend in cancellations based on market segment I also created that distribution. We can see that most of the bookings came from Online TA market segment and so did the cancellations.Thus it seems to be in sync and no particular trend based on market segment.
+
+
+```{r}
+
+
+is_categorical <- class(hotel_bookings$cancel_status) == "factor" || is.character(hotel_bookings$cancel_status)
+
+# Convert to categorical if not already
+if (!is_categorical) {
+  hotel_bookings$cancel_status <- as.factor(hotel_bookings$cancel_status)
+}
+
+hotel_bookings%>%
+  
+  ggplot(aes(x=arrival_date_year,fill=cancel_status)) + geom_bar()+
+  labs(title = "Booking Cancellation by year", x = "Year", y = "Number of bookings", fill ='Booking Status')
+
+
+hotel_bookings %>% 
+  ggplot(mapping = aes(x=cancel_status, fill = market_segment)) + 
+  facet_wrap(. ~ hotel)+
+  geom_bar() +
+  labs(title = "Booking Satus by Hotel type and Market Segment", x = "Booking Satus", y = "Number of bookings", fill ='Market Segment')
+
+```
+Next I want to check if the cancellations very depending on whether it is a City hotel or a Resort hotel.
+
+Upon examining the cancellations hotel wise, it becomes apparent that the proportion of cancelled bookings differs between the two types of hotels. Specifically, for the City Hotel, the majority of bookings (58.28%) were non-cancelled, while 41.72% of the bookings were cancelled. On the other hand, for the Resort Hotel, a higher percentage (72.24%) of bookings were non-cancelled, while only 27.76% of the bookings were cancelled. It is worth noting that, although most bookings in both hotels were not cancelled, there is a notable disparity in the cancellation rates between the two hotel types.
+
+
+```{r}
+
+# Calculate the cancellation percentages
+hotel_summary <- hotel_bookings %>%
+  group_by(hotel, cancel_status) %>%
+  summarise(count = n()) %>%
+  mutate(percentage = count / sum(count) * 100)
+
+# Create the bar plot
+ggplot(data = hotel_summary, aes(x = hotel, y = percentage, fill = cancel_status)) +
+  geom_bar(stat = "identity", position = "fill") +
+  geom_text(aes(label = paste(round(percentage, 1), "%")),
+            position = position_fill(vjust = 0.5),
+            color = "white", size = 4) +
+  labs(title = "Cancelled vs Non-cancelled Bookings",
+       x = "Hotel Type",
+       y = "Percentage",
+       fill = "Booking Status") +
+  scale_fill_manual(values = c("#F8766D", "#00BFC4")) +
+  theme_minimal()
+
+```
+
+The investigation further explored cancellations based on deposit types. I hypothesized that most cancellations would be for bookings with no deposit, as people are less likely to cancel if they have already made a payment. I will check this for City Hotels first followed by Resort Hotels. 
+```{r}
+
+booking_summary <- hotel_bookings %>%
+  select(hotel, cancel_status, deposit_type) %>%
+  filter(hotel == 'City Hotel') %>%
+  group_by(hotel, cancel_status, deposit_type) %>%
+  summarise(number_of_bookings = n())
+
+
+
+ggplot(booking_summary, aes(x = deposit_type, y = number_of_bookings, fill = cancel_status)) +
+  geom_col(position = position_dodge2(width = 0.9), width = 0.6, color = "black") +
+  geom_text(aes(label = number_of_bookings), 
+            position = position_dodge2(width = 0.9), 
+            vjust = -0.5, 
+            size = 3.5, 
+            color = "black", 
+            fontface = "bold",
+            check_overlap = TRUE) +
+  scale_fill_manual(values = c("#FF69B4", "#4169E1")) +
+  labs(title = "Number of Bookings by Deposit Type for City Hotels",
+       x = "Deposit Type",
+       y = "Number of Bookings") +
+  theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
+        axis.title = element_text(size = 12),
+        axis.text = element_text(size = 10),
+        panel.grid.major.x = element_blank(),
+        legend.title = element_blank(),
+        legend.position = "bottom",
+        legend.text = element_text(size = 10)) +
+  guides(fill = guide_legend(reverse = TRUE))
+
+```
+
+Now checking the same for Resort hotel:
+
+
+
+```{r}
+
+booking_summary <- hotel_bookings %>%
+  select(hotel, cancel_status, deposit_type) %>%
+  filter(hotel == 'Resort Hotel') %>%
+  group_by(hotel, cancel_status, deposit_type) %>%
+  summarise(number_of_bookings = n())
+
+
+
+ggplot(booking_summary, aes(x = deposit_type, y = number_of_bookings, fill = cancel_status)) +
+  geom_col(position = position_dodge2(width = 0.9), width = 0.6, color = "black") +
+  geom_text(aes(label = number_of_bookings), 
+            position = position_dodge2(width = 0.9), 
+            vjust = -0.5, 
+            size = 3.5, 
+            color = "black", 
+            fontface = "bold",
+            check_overlap = TRUE) +
+  scale_fill_manual(values = c("#FF69B4", "#4169E1")) +
+  labs(title = "Number of Bookings by Deposit Type for Resort Hotels",
+       x = "Deposit Type",
+       y = "Number of Bookings") +
+  theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
+        axis.title = element_text(size = 12),
+        axis.text = element_text(size = 10),
+        panel.grid.major.x = element_blank(),
+        legend.title = element_blank(),
+        legend.position = "bottom",
+        legend.text = element_text(size = 10)) +
+        guides(fill = guide_legend(reverse = TRUE))
+
+```
+The analysis confirmed this hypothesis, as the majority of cancellations were indeed associated with bookings without any deposit. However, it was interesting to note that the Non Refundable bookings had a higher number of cancellations than expected. This indicates that even if a booking is Non Refundable, it does not guarantee that it will not be cancelled.
+
+Let's see the seasonal analysis of cancellation rates to see which months have highest cancellation.
+
+```{r}
+
+hotel_bookings$month <- factor(hotel_bookings$arrival_date_month, levels = month.name)
+
+# Calculate cancellation rates by month
+cancellation_rates <- hotel_bookings %>%
+  group_by(month) %>%
+  summarise(cancellation_rate = sum(is_canceled) / n())
+
+
+
+booking_rate_success <- hotel_bookings %>%
+  group_by(month) %>%
+  summarise(booking_rate_success = sum(!is_canceled) / n())
+
+
+# Create a line plot of cancellation rates by month
+ggplot(cancellation_rates, aes(x = month, y = cancellation_rate, group =1 )) +
+  geom_line(color = "red") + 
+  labs(title = "Cancellation Rates by Month",
+       x = "Month",
+       y = "Cancellation Rate") +
+  theme_minimal()
+
+ggplot(booking_rate_success, aes(x = month, y = booking_rate_success, group =1)) +
+  geom_line(color = "green") +
+  labs(title = "Monthly Successful Booking Rate",
+       x = "Month",
+       y = "Successful Booking Rate")
+
+
+
+```
+Thus we can see that June has the highest cancellation rate which is 41%. June had the highest cancellation rate, possibly due to the summer vacation period when travel plans are more prone to changes. This insight highlights the importance of managing bookings during peak seasons and developing strategies to minimize cancellations during high-demand periods. January has the lowest cancellation rate of 31% followed by November.
+
+I will combine both these charts since they are mutually exclusive sets and the sum of cancellation rate and successful booking rate any month will be equal to 1. 
+
+
+```{r}
+combined_data <- full_join(cancellation_rates, booking_rate_success, by = "month")
+
+ggplot(combined_data, aes(x = month, group = 1)) +
+  geom_line(aes(y = cancellation_rate, color = "Cancellation Rate"), size = 0.5) +
+  geom_line(aes(y = booking_rate_success, color = "Booking Rate (Success)"), size = 0.5) +
+  labs(title = "Monthly Rates",
+       x = "Month",
+       y = "Rate") +
+  theme_minimal() +
+  scale_color_manual(values = c("green", "red"),
+                     labels = c("Booking Rate (Success)", "Cancellation Rate"),
+                     name = "Rate Type") +
+  scale_x_discrete(breaks = combined_data$month,
+                   labels = str_sub(combined_data$month, start = 1, end = 3))
+
+```
+To get a comprehensive view, I combined the information from cancellation rates and successful booking rates, scaled the frequency of bookings from 0 to 1, and compared it with the cancellation rates. This enabled a clearer comparison of monthly booking frequency and cancellation rates, highlighting any correlations or patterns between the two. Interestingly, both the line graphs representing booking success rate and cancellation rates appeared as mirror images of each other. 
+
+This suggests a possible relationship between booking frequency and cancellation rates, where periods of high booking activity may also lead to higher cancellation rates.
+```{r}
+month_counts <- as.data.frame(table(hotel_bookings$month))
+
+colnames(month_counts) <- c("month", "Frequency")
+
+min_val <- min(month_counts$Frequency)
+max_val <- max(month_counts$Frequency)
+scaled_freq <- (month_counts$Frequency - min_val) / (max_val - min_val)
+scaled_df <- data.frame(month = month_counts$month, Frequency = scaled_freq)
+
+ggplot(scaled_df, aes(x =  month, y = Frequency, group =1 )) +
+  geom_line(color = "black") + 
+  labs(title = "Bookings by Month",
+       x = "Month",
+       y = "Number of Bookings") +
+  theme_minimal()
+
+```
+The lower number of bookings in January, December, and November indicates a seasonal trend where people tend to stay home during the winter season. This observation aligns with common travel patterns during colder months. Hoteliers can leverage this insight to develop targeted promotions and offers to attract guests during these quieter periods. Out of these bookings also January has a cancellation rate of 31%. Thus we can say that 70% people retain their bookings during winter and few cancel.
+
+Whereas the bookings are highest from May to September peaking in August indicating that summer months are the most popular time for tourism as expected. Most people make bookings during summer out of which we saw that June had a high cancellation rate compared to other months. Thus this information can be useful to hotels suggesting that out of the summer months June will have maximum cancellations which is 41%. Thus to boom their business, the hotels can also take some extra bookings during this month as the expected cancellation rate is 41%. By allowing some extra bookings during June, hotels can compensate for the expected cancellations and avoid empty rooms or revenue loss.
+
+We can also check for June month which has the highest cancellation rate, if the cancellations are based on deposit type. Since our previous analysis suggests that the most cancellations are made for bookings with No Deposit.
+
+```{r}
+
+june_bookings <- hotel_bookings %>%
+  filter(month == "June")
+
+booking_summary <- june_bookings %>%
+  select( cancel_status, deposit_type) %>%
+  group_by(cancel_status, deposit_type) %>%
+  summarise(number_of_bookings = n())
+
+
+
+ggplot(booking_summary, aes(x = deposit_type, y = number_of_bookings, fill = cancel_status)) +
+  geom_col(position = position_dodge2(width = 0.9), width = 0.6, color = "black") +
+  geom_text(aes(label = number_of_bookings), 
+            position = position_dodge2(width = 0.9), 
+            vjust = -0.5, 
+            size = 3.5, 
+            color = "black", 
+            fontface = "bold",
+            check_overlap = TRUE) +
+  scale_fill_manual(values = c("#FF69B4", "#4169E1")) +
+  labs(title = "Number of Bookings in June by Deposit Type",
+       x = "Deposit Type",
+       y = "Number of Bookings in June") +
+  theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
+        axis.title = element_text(size = 12),
+        axis.text = element_text(size = 10),
+        panel.grid.major.x = element_blank(),
+        legend.title = element_blank(),
+        legend.position = "bottom",
+        legend.text = element_text(size = 10)) +
+  guides(fill = guide_legend(reverse = TRUE))
+
+```
+
+Thus we can see that bookings made by No Deposit and Non Refund both resulted in expected cancellation as per their cancellation rate. Infact cancellations seem to be higher for Non Refund deposit type.Thus we can conclude that overall June will expect a lot of cancellations and there is no fixed pattern based on Deposit type.
+
+Next I want to check if there is any relation between lead time and hotel cancellation.
+
+```{r}
+# Calculate cancellation rates by month
+booking_data <- hotel_bookings %>%
+  select(lead_time, is_canceled)
+
+# Calculate the cancellation rate based on lead time
+cancellation_rate <- booking_data %>%
+  group_by(lead_time) %>%
+  summarise(cancellation_rate = mean(is_canceled))
+
+
+# Create a scatter plot of lead time vs. cancellation rate
+ggplot(cancellation_rate, aes(x = lead_time, y = cancellation_rate)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Cancellation Rate vs. Lead Time",
+       x = "Lead Time (days)",
+       y = "Cancellation Rate") +
+  theme_minimal()
+```
+We can see that the cancellation rate increases with lead time. Thus if people booking their hotel stays very much in advance the more likely they are to cancel. Any lead time above 300 days has more than 50% chances of cancellation. This can be another important factor to consider when predicting cancellations for hotel bookings.
+
+
+In conclusion, the analysis of cancellations in the hotel bookings dataset revealed valuable insights for hotel management. Understanding trends in cancellations based on factors such as market segment, hotel type, deposit types, and seasonality can help hotels optimize their booking strategies, manage revenue, and make informed decisions to mitigate cancellations.
+
+Q3. How does market segment and distribution channel affect the hotel booking? What promotion strategies can we make based on the above two factors?
+
+In exploring the hotel booking data, I begin by examining the popularity of different distribution channels. It is evident that the majority of bookings came through Travel Agents and Tour Operators, followed by Direct bookings and Corporate bookings. This suggests that customers often rely on the expertise and convenience provided by Travel Agents when making their reservations, while Direct bookings offer a more independent approach.
+
+```{r}
+
+ggplot(data = hotel_bookings) +
+  geom_bar(mapping = aes(x = distribution_channel, fill = distribution_channel)) +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 15)) +
+    labs(title='Distribution Channel wise Booking Frequency', x='Distribution Channel', y='Number of Bookings', fill = 'Distribution channel')
+```
+
+To gain further insights, I investigate the alignment between distribution channels and market segments. Notably, the Travel Agent/Tour Operator channel exhibits a strong association with customers who prefer booking through Online or Offline Travel Agents. Additionally, the Group segment shows a significant presence within this channel, as organizing bookings for a large number of people is often facilitated by Travel Agents. Similarly, Direct bookings are favored by individuals who prefer making their reservations directly, potentially seeking more control and flexibility in their arrangements.
+
+```{r}
+ggplot(data=hotel_bookings) +
+    geom_bar(mapping=aes(x=distribution_channel, fill=market_segment)) +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 15)) +
+    labs(title='Market Segment vs. Distribution Channel', x='Distribution Channel', y='Market Segment Proportion', fill = 'Market Segment')
+```
+
+Next I want to analyze the Cancellation rates for each Distribution channel. 
+
+
+```{r}
+
+# Calculate cancellation rate by market segment
+cancellation_rate_channel <- hotel_bookings %>%
+  group_by(distribution_channel) %>%
+  summarise(cancellation_rate = mean(is_canceled))
+
+
+ggplot(cancellation_rate_channel, aes(x = reorder(distribution_channel, -cancellation_rate), y = cancellation_rate)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  labs(title = "Cancellation Rate by Market Segment",
+       x = "Market Segment",
+       y = "Cancellation Rate") +
+  theme_minimal() +
+  coord_flip()
+
+
+
+```
+
+Shifting my focus to cancellation rates, I analyze the likelihood of bookings being canceled across different distribution channels. Interestingly, bookings made through Undefined channels have an alarmingly high cancellation rate of 80%, while Travel Agent bookings have a cancellation rate of 40%. However, it is important to note that Travel Agents also contribute the highest number of bookings, so a relatively higher cancellation rate is to be expected. Conversely, Direct bookings exhibit the lowest cancellation rate of approximately 18%. This indicates that customers who book directly are least likely to experience cancellations, suggesting a higher level of commitment.
+
+We can also check if repeated guests book through the same distribution channel as non repeated guests.
+
+  
+```{r}
+
+hotel_bookings$is_repeated_guest <- factor(hotel_bookings$is_repeated_guest, labels = c("Non-repeated", "Repeated"))
+
+distribution_channel_usage <- hotel_bookings %>%
+  group_by(is_repeated_guest, distribution_channel) %>%
+  summarise(booking_count = n()) %>%
+  mutate(booking_percentage = booking_count / sum(booking_count) * 100)
+
+# Create a bar plot of distribution channel usage by guest type
+ggplot(distribution_channel_usage, aes(x = distribution_channel, y = booking_percentage, fill = is_repeated_guest)) +
+  geom_bar(stat = "identity", position = "fill") +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 15)) +
+  labs(title = "Distribution Channel Usage by Guest Type",
+       x = "Distribution Channel",
+       y = "Booking Percentage",
+       fill = 'Guest Type') +
+  scale_fill_manual(values = c("Non-repeated" = "steelblue", "Repeated" = "darkorange")) +
+  theme_minimal()
+
+```
+
+Examining the behavior of repeated guests, I uncover intriguing insights about their preferred distribution channels. Corporate bookings emerge as the primary choice for repeated guests, closely followed by Direct bookings. In contrast, Travel Agents and Undefined channels attract the least number of repeated guests. This pattern suggests that once customers have previously visited a hotel, they tend to opt for direct bookings in subsequent stays. The prevalence of repeated guests in the corporate channel may be attributed to employees frequently traveling to specific locations for work purposes.
+
+```{r}
+ggplot(data = hotel_bookings) +
+  geom_bar(mapping = aes(x = distribution_channel, y = booking_changes, fill = distribution_channel),
+           stat = "summary", fun.y = "sum") +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 15)) +
+  labs(title = 'Booking Changes by Distribution Channel',
+       x = 'Distribution Channel',
+       y = 'Number of Booking Changes',
+       fill = 'Distribution Channel')
+```
+Further analysis reveals the frequency of booking changes across distribution channels. Corporate and Direct channels stand out with the highest number of booking changes. This could be attributed to factors such as corporate travel plan alterations and employee preferences, which are often covered by the company. On the other hand, Travel Agent bookings also experience a significant number of changes, possibly due to additional charges imposed by travel agents for such modifications.
+
+```{r}
+ggplot(data = hotel_bookings) +
+  geom_bar(mapping = aes(x = distribution_channel, y = days_in_waiting_list
+, fill = distribution_channel),
+           stat = "summary", fun.y = "sum") +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 15)) +
+  labs(title = 'Waiting Days by Distribution Channel',
+       x = 'Distribution Channel',
+       y = 'Days in Waiting List',
+       fill = 'Distribution Channel')
+```
+Lastly, I investigate the waiting time associated with different distribution channels. It is evident that bookings made through the Global Distribution System (GDS) exhibit no waiting time. Similarly, Corporate and Direct channels experience minimal waiting periods. In contrast, bookings made through Travel Agents have the longest waiting times. This can be attributed to the fact that Travel Agents rely on GDS or other channels to make bookings, and hotels often prioritize direct or corporate bookings over Travel Agent bookings.
+
+Based on the analysis of market segment and distribution channel in the hotel booking data, we can observe that there is a relationship between these two factors. Different market segments tend to prefer specific distribution channels for making their hotel bookings.
+
+For example, the Travel Agent/Tour Operator distribution channel is popular among customers who prefer booking through Online or Offline Travel Agents. This indicates that targeting these market segments with promotions that highlight the convenience and expertise offered by travel agents could be effective. Additionally, the Group segment shows a significant presence in the Travel Agent/Tour Operator channel, suggesting that promotional efforts can be directed towards attracting group bookings through travel agents.
+
+On the other hand, Direct bookings are favored by individuals who prefer making their reservations directly. To target this segment, promotion strategies can focus on emphasizing the benefits of booking directly, such as greater control, flexibility, and potentially lower costs. Direct booking promotions can highlight features like easy online booking platforms, direct communication with the hotel, and any exclusive benefits or discounts offered to direct bookers.
+
+Considering the different market segments and their preferences, it is important to align the promotional strategies with the specific distribution channels. For instance, promotions targeting the Corporate segment can emphasize the advantages of corporate bookings, such as special rates, dedicated services, and flexible cancellation policies. These promotions can be tailored to reach corporate decision-makers and highlight the benefits of choosing the Corporate channel for their hotel bookings.
+
+Furthermore, based on the analysis of cancellation rates, efforts can be made to reduce cancellations, particularly in the channels with higher cancellation rates. This could include offering incentives or personalized offers to encourage customers to commit to their bookings, implementing flexible booking policies, and improving the overall customer experience to enhance satisfaction and minimize the likelihood of cancellations.
+
+In summary, the analysis of market segment and distribution channel provides insights into customer preferences and behaviors. By aligning promotional strategies with the specific market segments and distribution channels, hotels can effectively target their marketing efforts, tailor their messaging, and optimize their promotional campaigns to attract and retain customers across different channels.
+
+## Crtitcal Reflection
+
+In the process of putting together this project, I have learned several insights about hotel bookings and lead time. Initially, I explored the mean lead time for hotel bookings and discovered that, on average, people tend to book their stays approximately 3 to 3.5 months in advance. This led me to investigate the difference in lead time between Resort hotels and City hotels.
+
+Contrary to expectations, City hotels had a slightly higher lead time than Resort hotels. However, limitations in the dataset's data distribution between the two hotel types make it difficult to draw definitive conclusions about the relationship between lead time and hotel type. To gain clarity, I created histograms for lead time distributions, allowing for a direct comparison and assessment of central tendencies.
+
+The analysis of the relationship between lead time and the number of children did not reveal a clear pattern. Median lead time varied between 55 and 70 days for people with or without children, suggesting that the presence of children may not strongly influence lead time.
+
+It is important to acknowledge the limitations of the dataset. The uneven distribution of data between hotel types and potential missing variables, such as customer demographics or reasons for travel, limit the depth of analysis. Additionally, the dataset does not capture certain factors that could influence lead time, such as special events, travel restrictions, or seasonal variations.
+
+From the analysis of the cancellation data, several key insights have emerged.The analysis showed no significant cancellation trend based on market segment, but disparities were observed between City hotels and Resort hotels. Bookings without a deposit had higher cancellation rates, including Non Refundable bookings. June had the highest cancellation rate, possibly due to summer vacations, while January had the lowest cancellation rate reflecting winter travel patterns. Longer lead times were associated with higher cancellation rates, particularly for bookings made well in advance.
+
+While these insights shed light on cancellation patterns in hotel bookings, there are still areas to explore. Future research could investigate additional factors influencing cancellations, such as customer demographics, travel purposes, or the presence of specific events or circumstances. This could provide a deeper understanding of the underlying reasons for cancellations and help develop more targeted strategies to mitigate them.
+
+Regarding the limitations of the dataset, it is important to acknowledge several factors. Firstly, the dataset does not capture all the relevant variables that could impact cancellations, such as customer preferences, travel restrictions, or external events. Additionally, the dataset is not  representative of the entire hotel industry, as it includes data from specific hotels and regions. The uneven distribution of data between hotel types, market segments, or other variables may also affect the robustness of the analysis.
+
+Furthermore, while the analysis explored various aspects of cancellations, there are still questions that the dataset cannot answer. For example, it does not provide insights into the specific reasons behind cancellations, customer satisfaction levels, or the impact of hotel policies on cancellation behavior. These aspects would require additional data or a more targeted research approach.
+
+Through the analysis of market segment and distribution channel in hotel bookings, we learned that different market segments prefer specific distribution channels. This information can guide targeted promotional strategies to attract and retain customers. For example, the Travel Agent/Tour Operator channel is popular among customers who value convenience, while Direct bookings appeal to those seeking control. However, further research is needed to understand customer preferences within each channel and improve promotional efforts. It's important to acknowledge limitations such as missing factors and the dataset's focus. Overall, aligning promotions with customer preferences is crucial, and future research can explore additional dimensions of the booking process to enhance marketing strategies.
+
+It is important to acknowledge the limitations of the dataset. The dataset does not capture certain factors that influence customer decision-making, such as individual preferences, personal circumstances, or external factors. Furthermore, the dataset's focus on market segment and distribution channel does not provide a comprehensive understanding of the entire booking process or the complete customer journey. Therefore, additional data sources and research methods may be required to explore other aspects of hotel bookings, such as pricing strategies, customer reviews, or marketing effectiveness.
+
+
+## Bibliography
+
+1. Dataset: https://www.kaggle.com/datasets/jessemostipak/hotel-booking-demand
+2. R programming language reference: https://intro2r.com/citing-r.html
+3. Hotel Bookings - Data Visualisation with  R by Michel Nay https://www.kaggle.com/code/michelnay/hotel-bookings-data-visualisation-with-r
