@@ -1,0 +1,153 @@
+---
+title: "Challenge 8 Instructions"
+author: "Gabrielle Roman"
+description: "Joining Data"
+date: "7/17/2023"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_8
+  - military marriages
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(readxl)
+library(readr)
+library(here)
+library(purrr)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to:
+
+1)  read in multiple data sets, and describe the data set using both words and any supporting information (e.g., tables, etc)
+2)  tidy data (as needed, including sanity checks)
+3)  mutate variables as needed (including sanity checks)
+4)  join two or more data sets and analyze some aspect of the joined data
+
+(be sure to only include the category tags for the data you use!)
+
+## Read in data
+
+Read in one (or more) of the following datasets, using the correct R package and command.
+
+  - military marriages ⭐⭐
+  - faostat ⭐⭐
+  - railroads  ⭐⭐⭐
+  - fed_rate ⭐⭐⭐
+  - debt ⭐⭐⭐
+  - us_hh ⭐⭐⭐⭐
+  - snl ⭐⭐⭐⭐⭐
+
+```{r}
+MaritalStatus_untidy<-read_xls("_data/ActiveDuty_MaritalStatus.xls")
+view(MaritalStatus_untidy)
+```
+
+### Briefly describe the data
+This data set specifies (in some complex terms) the marital and parental statuses of military personnel. Subcategories include pay grade, single with children, single without children, joint service marriage, civilian marriage. I notice that there is no overlap between these variables, and no individual could have multiple pay grades or both have and not have children.
+
+There are several datasets with the same variables for different branches of the army.
+
+## Tidy Data (as needed)
+
+
+```{r}
+#designating columns for the first sheet in the dataset, which will be applied to all of them after joining.
+
+marital_status_cols <- c("delete", "payGrade_payLevel",
+            "single_nokids_male", "single_nokids_female", "delete",
+            "single_kids_male", "single_kids_female", "delete",
+            "married_military_male", "married_military_female", "delete",
+            "married_civilian_male", "married_civilian_female", "delete",
+            rep("delete", 3))
+
+read_excel(here("posts","_data","ActiveDuty_MaritalStatus.xls"), 
+           skip=8,
+           col_names = marital_status_cols)
+
+#deleting unneeded columns from the dataset
+
+maritalstatus_newcol<-read_excel(here("posts","_data","ActiveDuty_MaritalStatus.xls"), 
+           skip=9,
+           col_names = marital_status_cols
+           )%>%
+  select(!contains("delete"))%>%
+  filter(str_detect(payGrade_payLevel, "TOTAL", negate=TRUE))
+
+maritalstatus_newcol
+
+```
+
+Mutating the dataset for analysis.
+
+```{r}
+#separating payGrade_payLevel and pivoting for tidiness
+marital_tidy<-maritalstatus_newcol %>% 
+  separate(payGrade_payLevel,
+           into = c("payGrade", "payLevel"),
+           sep = "-") %>% 
+  pivot_longer(cols = contains(c("male", "female")),
+                 names_to = c("Marriage_status", "Kids_or_Spouse_Status", "Gender"),
+                 names_sep = "_",
+                 values_to = "Count")
+
+view(marital_tidy)
+
+```
+
+## Join Data
+
+I'm going to join by writing a function, which is necessary because I want the input to match the adjustments I made to the first sheet. The [-1] in the code when I run the function indicates to ignore the first sheet because its data is already accounted for.
+
+```{r}
+excel_sheets(here("posts","_data","ActiveDuty_MaritalStatus.xls"))
+
+militaryreader<-function(sheet_name){
+  dat <- read_excel(here("posts","_data","ActiveDuty_MaritalStatus.xls"),
+  sheet = sheet_name,
+  skip = 9,
+  col_names = marital_status_cols) %>%
+  mutate("branch" = sheet_name) %>% 
+  select(!contains("delete"))%>%
+  filter(str_detect(payGrade_payLevel, "TOTAL", negate=TRUE)) %>%
+  separate(payGrade_payLevel,
+           into = c("payGrade", "payLevel"),
+           sep = "-") %>% 
+  pivot_longer(cols = contains(c("male", "female")),
+                 names_to = c("Marriage_status", "Kids_or_Spouse_Status", "Gender"),
+                 names_sep = "_",
+                 values_to = "Count")
+return(dat)}
+  
+enlisted_military_status<-map_dfr(excel_sheets(here("posts","_data","ActiveDuty_MaritalStatus.xls"))[-1], militaryreader)
+
+head(enlisted_military_status)
+```
+```{r}
+#Comparing the branches by marriage status:
+
+unique(enlisted_military_status$branch)
+
+ggplot(enlisted_military_status, aes(branch, Marriage_status))+
+  geom_count()
+  
+         
+  
+```
+# Questions-- Would it be more efficient to join the data mefore mutating and tidying? How do I specify that I only want the data tht contains "military" or "civilian" mapped from the Kids_or_Spouse_Status column? Why can't I use geom_bar/histogram?
+
+
