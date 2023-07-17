@@ -39,7 +39,7 @@ Olympics is the most decorated sporting event in an athlete's career. The Olympi
 ## Dataset
 
 The dataset I would use for this analysis is downloaded from
-[Kaggle](https://www.kaggle.com/datasets/samruddhim/olympics-althlete-events-analysis). 
+[Kaggle](https://www.kaggle.com/datasets/samruddhim/olympics-althlete-events-analysis). The original data has been scraped from <https://www.sports-reference.com/> in May 2018 and cleaned by Samruddhi Mhatre. 
 
 This dataset consists of Olympics data of over a century, from the year 1896 to 2016. Studying this dataset will help to understand the patterns followed in the games of Olympics, patterns of the most successful athletes and countries in their Olympics journey and much more!
 
@@ -100,6 +100,8 @@ ggplot(data = teams_medals_tally , aes(x= reorder(NOC, total_medals), y = count)
   geom_bar(stat = "identity",
            mapping = aes(fill = Medal),
            position = "stack") +
+  scale_fill_manual(values=c('brown', 'gold', 'darkgrey')) +
+  theme_classic() +
   labs(title ="Top 50 countries that won most medals",
        y = "No of medals",
        x = "Nation of Origin",
@@ -123,14 +125,15 @@ treemap(sport_events,
         index = "Sport",
         vSize = "no_events",
         type = "index",
-        fontsize.labels = 10,
+        fontsize.labels = 25,
         fontcolor.labels = "black",
         align.labels=list(
           c("center", "center")),
         inflate.labels=F,
         palette = "Set1",
         title="Treemap representing each Sport proportional to number of events in olympics",
-        fontsize.title=12)
+        fontsize.title=12,
+        bg.labels = 0)
 ```
 
 Athletics and shooting are the sports with highest number of events (`r sport_events$no_events[1]` events each) followed by swimming with `r sport_events$no_events[3]` events.
@@ -142,7 +145,7 @@ Athletics and shooting are the sports with highest number of events (`r sport_ev
 ggplot(olympics_data, aes(x = Age, na.rm = TRUE)) +
   geom_histogram(bins = 85, fill="darkred", alpha=0.7) +
   theme_linedraw() +
-  facet_wrap(~Sex, scales = "free") +
+  facet_wrap(vars(Sex), nrow = 2, ncol = 1) +
   labs(title = "Age distribution of atheletes in Olympics",
        x = "Age",
        y = "Counts")
@@ -172,6 +175,12 @@ ggplot(teams_medals_yearly,
        x = "Year",
        y = "Number of medals")
 ```
+## Research Questions
+
+1. Is there an unbiased ranking system to determine the rankings of nations in Olympics? Can we rank different nations on varied ranking systems (different weightage for gold, silver and bronze) and observe how their ranks differ based on weightage given to gold, silver and bronze medals? - **Ranking System** section
+2. Can we identify the most decorated athlete of all time, most decorated men and women athlete? Can we also identify impactful performances of athletes? - **Decorated Athletes** section
+3. Can we identify the age of men and women athletes where their performance is maximized? Does this differ for countries? - **Peak Performant Age** section
+4. Can we identify if there is a correlation of features like height/weight/age to specific sports? (For example if height positively impacts basketball, age helps in shooting or athletics, etc.) Does it equally hold for both the genders? **Correlation of features to Sport** section
 
 ## Ranking System
 
@@ -246,12 +255,19 @@ ggplot(ranks_2016, aes(x = type, y=NOC, label=rank, fill=rank)) +
   scale_fill_continuous(low = "darkorange",
                         high = "darkblue",
                         name = "rank") +
+  scale_x_discrete(labels=c('1:1:1',
+                            '5:2:1',
+                            '5:5:1',
+                            '10:2:1',
+                            '10:5:1',
+                            '20:5:1',
+                            '1:0:0')) +
   theme(axis.text.x = element_text(angle = 90),
         axis.text.y = element_text(size = 6))+
   labs(title = "Heatmap of rankings for top 50 total medal winning countries in 2016",
+       subtitle = "X-label represent weight multiplier for each medal type",
        y = "Nation",
-       x = "Ranking System")
-
+       x = "Ranking System (Gold:Silver:Bronze)")
 ```
 
 From the above heatmap of rankings for year 2016, we can see that, rank_5 has the least deviation from rankings by other systems for most of the countries. Also, rank_2 is fairly close to most of the other rankings. Hence, either of them can be used as the best estimator of country rankings for the year 2016. Likewise, let's verify for year 2008 and see if there is a common best system for both the years.
@@ -295,11 +311,19 @@ ggplot(ranks_2008, aes(x = type, y=NOC, label=rank, fill=rank)) +
   scale_fill_continuous(low = "darkorange",
                         high = "darkblue",
                         name = "rank") +
+  scale_x_discrete(labels=c('1:1:1',
+                            '5:2:1',
+                            '5:5:1',
+                            '10:2:1',
+                            '10:5:1',
+                            '20:5:1',
+                            '1:0:0')) +
   theme(axis.text.x = element_text(angle = 90),
         axis.text.y = element_text(size = 6))+
   labs(title = "Heatmap of rankings for top 50 total medal winning countries in 2008",
+       subtitle = "X-label represent weight multiplier for each medal type",
        y = "Nation",
-       x = "Ranking System")
+       x = "Ranking System (Gold:Silver:Bronze)")
 ```
 From the above heatmap of rankings for year 2008, we can see that, rank_5 has the least deviation from rankings by other systems for most of the countries. Also, rank_3 is fairly close to most of the other rankings. Hence, either of them can be used as the best estimators of country rankings for the year 2008.
 
@@ -358,7 +382,7 @@ Can we identify the most decorated athlete of all time, most decorated men and w
 
 First we compute the weighted value of medals (points) won by athletes across years using ranking system 5 (the best ranking system as shown previously). The most decorated athlete is definitely based on the number of points earned.
 
-Another ranking system can be designed based on overall number of events the athlete has participated in years and the number of appearances over years. This can be defined as impact rankings. This system tries to give more weightage to points scored by athletes who scored comparable points in lesser time frames(either lesser appearances or lesser events). Impact ranking is based on extrapolated impact points. Impact points are calculated by using points, normalized number of events (normal_events) and normalized number of appearances(normal_years). Only athletes with number of events and number of appearances above 10th percentile are ranked because there could be outliers on the lower end (especially for those who either participated in a single event or only appeared once).
+Another points system to rank athletes performance can be designed based on number of events the athlete has participated in years and the number of appearances over years. This ranking can be defined as impact rankings. This system tries to give weightage to closely comparable points based on time frame and participation in number of events(either lesser appearances or lesser events are weighted higher). Impact ranking is based on extrapolated impact points. Impact points are calculated by using points, normalized number of events (normal_events) and normalized number of appearances(normal_years). Only athletes with number of events and number of appearances above 10th percentile are ranked because there could be outliers on the lower end (especially for those who either participated in a single event or only appeared once).
 $$ impact\_points = (points * normal\_events)/normal\_years $$
 
 ```{r}
@@ -464,7 +488,7 @@ ggplot(age_wise_medals, aes(x=Age, y=no_medals, size = no_medals,color=is_medal_
   geom_point(alpha=0.6) +
   scale_size(range = c(.1, 10), name="Medals")+
   theme_linedraw()+
-  facet_wrap(~Sex, scales = "free_x") +
+  facet_wrap(vars(Sex),nrow=2, ncol=1) +
   labs(title = "Scatter plot for medals won vs age",
        subtitle = "Size of bubble represents number of medals won",
        x = "age",
@@ -473,7 +497,7 @@ ggplot(age_wise_medals, aes(x=Age, y=no_medals, size = no_medals,color=is_medal_
   theme(legend.position = "top")
 ```
 
-From the above visualizations, we can conclude that peak performant age for male athletes is between 22 to 24 . While for females, it is between 23 to 25. This prediction is also evident from the raw data shown in the following tables.
+From the above visualizations, we can conclude that peak performant age for male athletes is between 22 to 24 . While for females, it is between 23 to 26. This prediction is also evident from the raw data shown in the following tables.
 
 ```{r}
 #| label: performance_1
@@ -518,7 +542,7 @@ ggplot(age_top10_country_wise_medals, aes(x=reorder(NOC, Age, mean), y=Age, fill
   arrange(Sex,mean_age))
 ```
 
-From the above graphs and table we can see that the mean medal winning age is different for different countries. Italy has the least mean for medal winning age in females and Soviet Union has the least in males. When we say that it might be because of their body types and the difference in nutrition across countries.
+From the above graphs and table we can see that the mean medal winning age is different for different countries. Italy has the least mean for medal winning age in females and Soviet Union(URS) has the least in males. We can say that this difference might be present because of differences in a few influential attributes like body type, difference in nutrition habits across countries and the way they train.
 
 ## Correlation of features to Sport
 
@@ -539,7 +563,7 @@ ggplot(basketball_medals,
   geom_point(alpha=0.6) +
   scale_size(range = c(.1, 10), name="Medals")+
   theme_linedraw()+
-  facet_wrap(~Sex, scales = "free_x") +
+  facet_wrap(vars(Sex), nrow = 2, ncol = 1) +
   labs(title = "Scatter plot for medals won vs height in basketball",
        subtitle = "Size of bubble represents number of medals won",
        x = "height",
@@ -547,7 +571,7 @@ ggplot(basketball_medals,
        color = "Position")+
   theme(legend.position = "top")
 ```
-For basketball, men with height ranging from 190 to 205 cm have won most of the medals. For females, it is between 180 to 190 cm. So, we can say that height has an affect on winning in basketball.
+For basketball, men with height ranging from 190 to 205 cm have won most of the medals. For females, it is between 180 to 190 cm. So, we can say that height has a positive affect on winning in basketball because majority of the medal winning athletes are tall.
 
 ```{r}
 #| label: features_1
@@ -562,7 +586,7 @@ ggplot(athletics_medals,
   geom_point(alpha=0.6) +
   scale_size(range = c(.1, 10), name="Medals")+
   theme_linedraw()+
-  facet_wrap(~Sex, scales = "free_x") +
+  facet_wrap(vars(Sex), nrow = 2, ncol = 1) +
   labs(title = "Scatter plot for medals won vs age in athletics",
        subtitle = "Size of bubble represents number of medals won",
        x = "age",
@@ -570,8 +594,7 @@ ggplot(athletics_medals,
        color = "Position")+
   theme(legend.position = "top")
 ```
-
-In athletics, for both the genders most of the medals won are between ages 20 and 30. We can say that since this is the age with maximum potential for human body, age factor is dominant in athletics.
+In athletics, for both the genders most of the medals winners are between ages 20 and 30. Also, we can observe that most of the participants age is also in this bracket. We can say that since this is the age with maximum potential of human body, age factor is dominant in athletics.
 
 ```{r}
 #| label: features_2
@@ -586,7 +609,7 @@ ggplot(shooting_medals,
   geom_point(alpha=0.6) +
   scale_size(range = c(.1, 10), name="Medals")+
   theme_linedraw()+
-  facet_wrap(~Sex, scales = "free_x") +
+  facet_wrap(vars(Sex), nrow = 2, ncol = 1) +
   labs(title = "Scatter plot for medals won vs age in shooting",
        subtitle = "Size of bubble represents number of medals won",
        x = "age",
@@ -595,21 +618,24 @@ ggplot(shooting_medals,
   theme(legend.position = "top")
 ```
 
-In shooting, for both the genders most of the medals won are around age 25. We can say that since this is the age with maximum potential for human body and the concentrations levels are higher as well,  age factor is dominant in shooting.
+In shooting, for both the genders most of the medals winners are between 20 and 40. We can claim that this is the age with maximum potential of human body and the concentrations levels are higher in the younger age. So, age factor is dominant in shooting.
 
 ## Conclusion
 
-1. We have identified that ranking system 5 is the closest to an unbiased system. In this system we use 10, 5 and 1 weights for gold, silver and bronze respectively.
+1. The number of athletes, events, and participating nations has grown dramatically since 1896.
 
-2. Michael Fred Phelps, II is the most decorated male athlete and Larysa Semenivna Latynina (Diriy-) is the most decorated female athlete. Phelps won 23 gold, 3 silver and 2 bronze in 5 appearances. Larysa Semenivna Latynina (Diriy-) won 9 gold, 5 Silver and 4 bronze medals in 3 appearances
+2. We have identified that ranking system 5 is the closest to an unbiased system. In this system we use 10, 5 and 1 weights for gold, silver and bronze respectively.
 
-3. Peak performance age for male athletes is between 22 to 24 and for females, it is between 23 to 25. Also the mean age of medal winning athletes is different across nations.
+3. Michael Fred Phelps, II is the most decorated male athlete and Larysa Semenivna Latynina (Diriy-) is the most decorated female athlete. Phelps won 23 gold, 3 silver and 2 bronze in 5 appearances. Larysa Semenivna Latynina (Diriy-) won 9 gold, 5 Silver and 4 bronze medals in 3 appearances. They are also the most impactful athletes ever.
 
-4. We observed significane of traits like height/age for sports and the data supports it. So, height matters in basketball and age matters in both athletics and shooting.
+4. Peak performance age for male athletes is between 22 to 24 and for females it is between 23 to 26. Also the mean age of medal winners is different across nations.
+
+5. We observed significance of traits like height/age in sports and the data supports it. So, height matters in basketball and age matters in both athletics and shooting.
 
 ## Limitiations
 1. It is quite tough to identify decorated/impactful athletes just from visualizations.
 2. Identifying the best ranking systems from heatmap could be challenging for general audience. But can be done.
+3. In the treemap showing "Sport size proportional to number of events in in Olympics" the labels in the right bottom corner couldn't be shown because of the sizes of the boxes and this is a bug in treemap library.
 
 ## Bibliography
 
