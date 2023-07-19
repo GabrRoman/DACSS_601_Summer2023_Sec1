@@ -1,0 +1,98 @@
+---
+title: "Homework 2"
+author: "Tenzin Latoe"
+description: "hw2"
+date: "07/16/2023"
+format:
+  html:
+    df-print: paged
+categories:
+  - hw2
+  - Tenzin Latoe
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(ggplot2)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Homework Overview
+
+HW 2:
+For this homework, your goal is to read in a more complicated dataset. Please use the category tag "hw2" as well as a tag for the dataset you choose to use.
+Read in a dataset. It's strongly recommended that you choose a dataset you're considering using for the final project. If you decide to use one of the datasets we have provided, please use a challenging dataset - check with us if you are not sure. 
+Clean the data as needed using dplyr and related tidyverse packages.
+Provide a narrative about the data set (look it up if you aren't sure what you have got) and the variables in your dataset, including what type of data each variable is. The goal of this step is to communicate in a visually appealing way to non-experts - not to replicate r-code.
+Identify potential research questions that your dataset can help answer.
+
+## Describe the Data 
+
+```{r}
+world_data <- read_csv ("_data/world-data-2023.csv")
+world_data
+```
+
+```{r}
+#column names
+colnames(world_data)
+```
+
+```{r}
+#names of all the countries represented
+unique(world_data$Country)
+```
+
+For my final project, I will be analyzing a comprehensive dataset that provides various socio-economic and demographic information from 195 countries. This dataset encompasses a wide range of information, including statistics related to population characteristics, environmental aspects,economic factors, educational indicators, healthcare measures,and various other data points. 
+
+## Tidy the Data 
+
+```{r}
+#check with missing values
+anyNA(world_data, recursive = TRUE)
+
+#column names with missing values
+names(which(colSums(is.na(world_data))>0))
+```
+
+This data set has several missing values, and running the code above shows that there are missing values under every column, except for country name and density. 
+There are also several rows where a particular name in a row in unfinished/ incomplete. To tidy the data, i've replaced all incomplete names of countries, capital cities, and largest city names with the correct names.  
+
+```{r}
+# Define the rows and columns to be changed
+rows_to_change_country <- c(151)
+rows_to_change_capital <- c(24, 32, 38, 41, 77, 105, 113, 137, 151, 176, 177)
+rows_to_change_largest_city <- c(24, 38, 41, 44, 77, 105, 113,  151, 169, 170, 176, 177)
+
+# Define the new names for each column
+new_names_country <- c("Sao Tome and Principe dobra")
+new_names_capital <- c("Brasília", "Yaoundé", "Bogotá", "San José", "Reykjavík","Malé", "Chişinău", "Asunción", "São Tomé", "Lomé", "Nuku'alofa")
+new_names_largest_city <- c("Brasília", "Bogotá", "San José", "Nicosa", "Reykjavík", "Malé", "Chişinău", "São Tomé", "Stockholm", "Zürich", "Lomé", "Nuku'alofa")
+
+# Apply changes to the specified rows and columns
+world_data$Country[rows_to_change_country] <- new_names_country
+world_data$`Capital/Major City`[rows_to_change_capital] <- new_names_capital
+world_data$`Largest city`[rows_to_change_largest_city] <- new_names_largest_city
+
+
+world_data
+```
+
+
+## Potential research questions
+
+Potential research questions to investigate are:
+
+- Analyzing the correlation between unemployment rate and other indicators such as armed forces size, life expectancy, and population labor force participation. 
+
+- An environmental analysis of factors like Co2 emissions and it's correlation to factors like fertility rate, infant mortality, maternal portality ratio, and life expectancy. 
+
+- An education analysis using gross primary and tertiary education enrollment and it's correlation to factors like unemployment rate, GDP, fertility rate, and urban population size. 
+
+
+
