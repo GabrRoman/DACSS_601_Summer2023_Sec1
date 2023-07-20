@@ -1,0 +1,120 @@
+---
+title: "Challenge 8"
+author: "Tenzin Latoe"
+description: "Joining Data"
+date: "07/18/2023"
+format:
+  html:
+    df-print: paged
+categories:
+  - challenge_8
+  - snl
+  
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(ggplot2)
+library(lubridate)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to:
+
+1)  read in multiple data sets, and describe the data set using both words and any supporting information (e.g., tables, etc)
+2)  tidy data (as needed, including sanity checks)
+3)  mutate variables as needed (including sanity checks)
+4)  join two or more data sets and analyze some aspect of the joined data
+
+(be sure to only include the category tags for the data you use!)
+
+## Read in data
+
+Read in one (or more) of the following datasets, using the correct R package and command.
+
+  - snl ⭐⭐⭐⭐⭐
+
+```{r}
+snl_actor <- read.csv("_data/snl_actors.csv")
+snl_actor
+```
+
+```{r}
+snl_cast <- read_csv("_data/snl_casts.csv")
+snl_cast
+```
+
+### Briefly describe the data
+
+```{r}
+#dimensions for snl actor
+dim(snl_actor)
+#column names for snl actor
+colnames(snl_actor)
+#dimensions for snl cast
+dim(snl_cast)
+#column names for snl actor
+colnames(snl_cast)
+```
+
+These two data sets provide information about members of the the NBC show: Saturday Night Live. SNL_actor data set consists of 4 columns and 2,306 entries, and SNL_cast consists of 8 columns and 614 entries. The names of all columns for both data sets are included above. 
+
+## Tidy Data (as needed)
+
+```{r}
+#check for missing values 
+anyNA(snl_actor, recursive = TRUE)
+anyNA(snl_cast, recursive = TRUE)
+```
+
+There are no missing values in snl_actor, but there missing values in snl_cast. 
+
+
+```{r}
+#change date column 
+snl_cast <- snl_cast %>% 
+  mutate(across(c(first_epid, last_epid), ymd))
+head(snl_cast)
+```
+
+Ymd function applied to convert current date format to include dashes so that it's easier to read. 
+
+```{r}
+#removing url column 
+snl_actor <- snl_actor %>% 
+  select(-url)
+```
+Removed url column as it provides the same information as the following column, type, provides and to make the data set tidier. The total number of columns reduced from 4 to now 3. 
+
+## Join Data
+
+```{r}
+#joining two data sets using left_join command
+snl <- inner_join(snl_actor, snl_cast)
+head(snl)
+```
+
+Used inner join command to join both datasets. This command removed non-matching rows from the two data sets, creating a new data set with 10 variables and 614 entries. We can observe the new data set removed all guests, and combined the names column. 
+
+```{r}
+
+  ggplot(snl, aes(x= `aid`, fill = `sid`)) +
+  geom_bar(position = "dodge") + 
+  labs(title= "Cast member participation by seasons", x= "Cast", y= "Count")+
+  theme_minimal()
+```
+```{r}
+snl %>% 
+  ggplot(aes (sid, fill= gender)) +
+  geom_histogram() +
+  labs(title= "Gender makeup per season", x= "Season", y= "Count") +
+  theme_minimal()
+```
+
