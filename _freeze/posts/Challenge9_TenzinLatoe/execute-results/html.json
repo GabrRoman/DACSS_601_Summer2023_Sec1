@@ -1,0 +1,18 @@
+{
+  "hash": "aa3bd530bcbc3343583d615a3ef49d74",
+  "result": {
+    "markdown": "---\ntitle: \"Challenge 9\"\nauthor: \"Tenzin Latoe\"\ndescription: \"Creating a function\"\ndate: \"07/18/2023\"\nformat:\n  html:\n    df-print: paged\ncategories:\n  - challenge_9\n---\n\n::: {.cell}\n\n```{.r .cell-code}\nlibrary(tidyverse)\nlibrary(ggplot2)\n\nknitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)\n```\n:::\n\n\n## Challenge Overview\n\nToday's challenge is simple. Create a function, and use it to perform a data analysis / cleaning / visualization task:\n\nExamples of such functions are:\n1) A function that reads in and cleans a dataset.  \n2) A function that computes summary statistics (e.g., computes the z score for a variable).  \n3) A function that plots a histogram.  \n\nThat's it!\n\n## Function \n\n\n::: {.cell}\n\n```{.r .cell-code}\nstats <- function (df) {\n  stat <- c(\n    Mean = mean(df, na.rm = TRUE),\n    Median = median(df, na.rm = TRUE),\n    Minimum = min(df, na.rm = TRUE),\n    Maximum = max(df, na.rm = TRUE)\n  )\n  return(stat)\n}\n```\n:::\n\nCreated function to calculate mean, median, minimum, and maximum. \n\n::: {.cell}\n\n```{.r .cell-code}\nrailroad <- read_csv(\"_data/railroad_2012_clean_county.csv\")\n```\n:::\n\nChose Railroad data set. \n\n\n::: {.cell}\n\n```{.r .cell-code}\nstats(railroad$total_employees)\n```\n\n::: {.cell-output .cell-output-stdout}\n```\n      Mean     Median    Minimum    Maximum \n  87.17816   21.00000    1.00000 8207.00000 \n```\n:::\n:::\n\n\nRan function. \n",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {
+      "include-in-header": [
+        "<link href=\"../site_libs/pagedtable-1.1/css/pagedtable.css\" rel=\"stylesheet\" />\n<script src=\"../site_libs/pagedtable-1.1/js/pagedtable.js\"></script>\n"
+      ]
+    },
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}
