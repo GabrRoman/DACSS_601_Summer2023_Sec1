@@ -1,7 +1,7 @@
 ---
-title: "Homework 3"
+title: "Final Project"
 author: "Prasann Desai"
-description: "Reading in Data"
+description: "Expected Goals (xG) and how to use it in Soccer"
 date: "7/13/2023"
 format:
   html:
