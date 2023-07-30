@@ -1,0 +1,155 @@
+---
+title: "HW2/3"
+author: "Gabrielle Roman"
+categories: "HW_2" "HW_3" "HW_2/3" 
+---
+```{r}
+library(tidyverse)
+library(dplyr)
+library(purrr)
+library(lubridate)
+library(ggplot2)
+library(readr)
+
+```
+
+#Reading in and naming the Chicago lobbyist data below:
+
+```{r}
+gifts_lobbying<-read.csv("_data/Lobbyist_Data_-_Gifts.csv") 
+compensation_lobbying<-read.csv("_data/Lobbyist_Data_-_Compensation.csv")
+expenditure_lobbying<-read.csv("_data/Lobbyist_Data_-_Expenditures_-_Large.csv")
+```
+
+#Data set one, "expenditure_lobbying", is about the expenditures of lobbyists; two is compensation_lobbying, which documents the compensation of lobbyists, and three is gifts_lobbying, which documents gifts made from lobbyists to public officials. Since I have three separate data sets, I will be combining them into one as a first step in the tidying process, then reordering columns and changing column names.
+
+```{r}
+expenditure_lobbying<-expenditure_lobbying%>% 
+  dplyr::rename("EXPENDITURE_AMOUNT" = 9,
+         "EXPENDITURE_PURPOSE" = 11,
+         "EXPENDITURE_RECIPIENT" = 12)
+
+gifts_lobbying_rename<-gifts_lobbying%>% 
+  dplyr::rename("LOBBYIST_FIRST_NAME" = LOBBYIST_FIRSTNAME,
+         "LOBBYIST_LAST_NAME" = LOBBYIST_LASTNAME,
+         "GIFT_VALUE" = VALUE,
+         "DEPARTMENT_OF_GIFT_RECIPIENT" = DEPARTMENT)
+
+df4<- bind_rows(expenditure_lobbying, compensation_lobbying) %>% 
+  select(-6)
+
+#Now, I'll bind all the sets together, rename some columns for ease of interpretation, and then reorder the columns.
+
+lobbying_data_bound<- bind_rows(df4, gifts_lobbying_rename) %>% 
+  dplyr::rename("GIFT_RECIPIENT_DEPARTMENT" = DEPARTMENT_OF_GIFT_RECIPIENT)
+
+lobbying_data_bound$LOBBYIST_NAME<- paste(lobbying_data_bound$LOBBYIST_FIRST_NAME, lobbying_data_bound$LOBBYIST_LAST_NAME, sep = " ")
+
+lobbying_data_bound<-lobbying_data_bound %>% 
+  select(-c(5, 6))
+
+lobbying_data_ordered<-lobbying_data_bound[, c(4, 22, 2, 3, 1, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21, 12)]
+
+#Variables in my dataset are as follows:
+colnames(lobbying_data_ordered)
+
+```
+
+#The first set of variables (cols 1:5) are identifiers for individual lobbyists and the period in which their expenditures, compensations, and gifts are being recorded. This will make it easy for me to do evaluations over time and comparisons between periods later on.
+
+#The second set of variables (cols 6:11) are exclusively related to expenditures by the lobbyists, covering the type of expenditure ("ACTION"), amount, date of expenditure, and purpose. The expenditure data also shares values with the compensation data, with columns CLIENT_ID and CLIENT_NAME having values for both sets.
+
+#The final set of variables (cols 17:23) contains information on gifts made by lobbyists to public officials.
+
+#My main questions about this data set are as follows:
+
+#1. Which parties are the most active? What names are popping up often?
+
+#2. What do lobbying activities look like when plotted over time?
+
+#3. Can I realistically visualize a relationship between the level of compensation received by lobbyists vs. their expenditures and contributions? If so, what is the relationship?
+
+HW3
+
+```{r}
+#Range in expenditure amounts made by lobbyists is $1,033,321, Maximum is #1,033,571, and Minimum is $250.
+
+print(max(lobbying_data_ordered$EXPENDITURE_AMOUNT, na.rm=TRUE)-min(lobbying_data_ordered$EXPENDITURE_AMOUNT, na.rm=TRUE))
+print(max(lobbying_data_ordered$EXPENDITURE_AMOUNT, na.rm = TRUE))
+print(min(lobbying_data_ordered$EXPENDITURE_AMOUNT, na.rm = TRUE))
+
+#The range in gift amounts is more complex, as there are inexplicably a bunch of gifts in the data frame that are valued at "None" or "0", but I don't want to delete at this stage since there is some anecdotal context suggested by the recipient value. How do I exclude the 0 values from my range analysis?
+      
+
+#Frequency of values in LOBBYIST_ID, starting with most mentioned lobbyist:
+
+sample_size_IDs <- unique(lobbying_data_ordered$LOBBYIST_ID)
+
+
+ID_frequency<-table(lobbying_data_ordered$LOBBYIST_ID)
+head(ID_frequency)
+
+ID_frequency_sorted<-ID_frequency[order(ID_frequency, decreasing = TRUE)]
+
+print(ID_frequency_sorted)
+
+#It looks like Thomas Moore is the lobbyist most accounted for in the three lobbying activity data sets at 1694 mentions. Now I'll check the mode of each type of activity he's done.
+
+mode<-function(x){which.max(tabulate(x))}
+
+MOORE_LOBBYING <- lobbying_data_ordered %>% 
+  filter(LOBBYIST_ID == 5861)
+
+
+mode(MOORE_LOBBYING$COMPENSATION_AMOUNT)
+mode(MOORE_LOBBYING$EXPENDITURE_AMOUNT)
+mode(MOORE_LOBBYING$GIFT_VALUE)
+
+#Now I'll check the frequency of unique values in some of the categorical variables from expenditures: expenditure purpose, expenditure recipient, and client name.
+
+Expenditure_Purpose<- unique(lobbying_data_ordered$EXPENDITURE_PURPOSE)
+names(which.max(table(Expenditure_Purpose)))
+
+Expenditure_Recipient<-unique(lobbying_data_ordered$EXPENDITURE_RECIPIENT)
+names(which.max(table(Expenditure_Recipient)))
+
+Client_Name<-unique(lobbying_data_ordered$CLIENT_NAME)
+names(which.max(table(lobbying_data_ordered$CLIENT_NAME)))
+
+#Though the outputs lack some context, I can at least see what businesses and parties are the most active.
+ 
+
+```
+
+Visualizations
+
+```{r}
+#A tibble of summary statistics on gift values for each lobbyist.
+
+gift_stats_by_lobbyist<-lobbying_data_ordered %>% 
+  filter(GIFT_VALUE > 0) %>%
+  dplyr::group_by(LOBBYIST_NAME) %>% 
+  dplyr::summarise('Average Gift Value' = mean(GIFT_VALUE),
+            'Maximum Gift Value' = max(GIFT_VALUE),
+            'Most Common Gift Value' = mode(GIFT_VALUE)) 
+
+#Here, I attempted to visualize the summary statistics for gift value and facet wrap by lobbyist, but I'm having trouble mapping appropriately and unsure if I have the right variables at work.
+
+gift_stats_by_lobbyist_pivot<-gift_stats_by_lobbyist %>% 
+  pivot_longer(cols = 2:4,
+               names_to = "GIFT_STAT",
+               values_to = "AMOUNT")
+
+ggplot(data = gift_stats_by_lobbyist_pivot, mapping = aes(x = GIFT_STAT, y = AMOUNT))+
+  geom_boxplot()+
+  facet_wrap()
+  
+  
+
+#Next, I'd like to visually compare each summary statistic per lobbyist to the mean of that summary statistic for all lobbyists. After that code is done successfully, it should be easier to apply the same principles to the other lobbying activities for the final paper analysis.
+  
+
+
+```
+
+For the final project, I will need to explore the range of values in the set more thoroughly so I can determine the most researchable questions. Here, I mostly just investigated the data and practiced coding for inquiry. After going through this initial exploration, I am curious as to what types of expenditures are most common. In what ways are lobbyists spending money? There are too many completely different recipients/clients to try to class each one by industry, but I would do so if I had the time.
