@@ -1,3 +1,17 @@
+---
+title: "HW 2 and 3"
+author: "Gabrielle Roman"
+description: "First Draft of Final Paper" 
+date: "7/30/23" 
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-tools: true
+categories: 
+- HW2
+- HW3
+---
 
 ```{r}
 library(tidyverse)
