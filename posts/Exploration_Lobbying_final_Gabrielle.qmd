@@ -249,6 +249,7 @@ Action_Sought<-table(lobbying_data_ordered$ACTION_SOUGHT_FOR_EXPENDITURE)
 
 print(head(Action_Sought))
 
+library(wordcloud2)
 
 wordcloud2(Action_Sought, size=2.6, minSize = 1, color='random-dark', backgroundColor = "white")
 ```
@@ -261,6 +262,8 @@ Lastly, we have gifts, to paint a picture of what items in that category look li
 Gifts<-table(lobbying_data_ordered$GIFT)
 
 print(head(Gifts))
+
+library(wordcloud2)
 
 wordcloud2(Gifts, size = 3, minSize = 1)
 
