@@ -1,0 +1,477 @@
+---
+title: "Exploration of Chicago Lobbying Data"
+format: 
+   html:
+     df-print: paged
+author: "Gabrielle Roman"
+description: "Exploring Lobbying Data"
+categories: "Final Project" 
+---
+
+# A Chicago Lobbying Deep Dive
+
+## Introduction
+
+Since 2015, the City of Chicago Board of Ethics has provided public access to an improved selection of data on the activities of local lobbyists, updating information on a quarterly reporting basis. From the source, "The Board of Ethics regulates persons who lobby City government. Article 3 of the Governmental Ethics Ordinance requires all lobbyists to register with the Board each January 20 (or within 5 business days of first engaging in lobbying activities), and file reports about their lobbying activities with the Board each January 20, April 20, July 20 and October 20. Beginning in 2017, all lobbyists' forms and reports \[were\] filed through the Board's on-line lobbyist registration system, or ELF." (Chicago.gov) The data provided is all self-reported by Chicago lobbyists. The link to this lobbying data was discovered on the data-is-plural archive, dated 2018.09.26 at the following link (https://www.data-is-plural.com/archive/2018-09-26-edition/).
+
+The data provided by the City of Chicago has been documented in four different sets, three of which will be analyzed in this paper: the first set contains **large expenditures** (\$250 and above) made by lobbyists with the intent to influence, the second contains **compensations of lobbyists** and the client compensating, and the third contains **gifts made by lobbyists** to an official or employee of the city with the intent to influence. Small expenditures (those under \$250) will be excluded from analysis. I will be looking at some of the narrative content discoverable in the list of clients and gift recipients.
+
+My research questions are as follows:
+
+#1. Which parties are the most active? What names are popping up often?
+
+#2. What do lobbying activities look like when plotted over time?
+
+#3. Can I realistically visualize a relationship between the level of compensation received by lobbyists vs. their expenditures? If so, what is the relationship?
+
+# Read-in
+
+```{r}
+library(tidyverse)
+library(dplyr)
+library(purrr)
+library(lubridate)
+library(ggplot2)
+library(readr)
+library(wordcloud2)
+```
+
+```{r}
+gifts_lobbying<-read.csv("_data/Lobbyist_Data_-_Gifts.csv") 
+compensation_lobbying<-read.csv("_data/Lobbyist_Data_-_Compensation.csv")
+expenditure_lobbying<-read.csv("_data/Lobbyist_Data_-_Expenditures_-_Large.csv")
+```
+
+# Join by bindrows
+
+```{r}
+expenditure_lobbying<-expenditure_lobbying%>% 
+  dplyr::rename("EXPENDITURE_AMOUNT" = 9,
+         "EXPENDITURE_PURPOSE" = 11,
+         "EXPENDITURE_RECIPIENT" = 12)
+
+gifts_lobbying_rename<-gifts_lobbying%>% 
+  dplyr::rename("LOBBYIST_FIRST_NAME" = LOBBYIST_FIRSTNAME,
+         "LOBBYIST_LAST_NAME" = LOBBYIST_LASTNAME,
+         "GIFT_VALUE" = VALUE,
+         "DEPARTMENT_OF_GIFT_RECIPIENT" = DEPARTMENT)
+
+df4<- bind_rows(expenditure_lobbying, compensation_lobbying) %>% 
+  select(-6)
+
+#Now, I'll bind all the sets together, rename and recategorize some columns for ease of interpretation, and then reorder the columns.
+
+lobbying_data_bound<- bind_rows(df4, gifts_lobbying_rename) %>% 
+  dplyr::rename("GIFT_RECIPIENT_DEPARTMENT" = DEPARTMENT_OF_GIFT_RECIPIENT)
+
+lobbying_data_bound$LOBBYIST_NAME<- paste(lobbying_data_bound$LOBBYIST_FIRST_NAME, lobbying_data_bound$LOBBYIST_LAST_NAME, sep = " ")
+
+lobbying_data_bound<-lobbying_data_bound %>% 
+  select(-c(5, 6))
+
+lobbying_data_ordered<-lobbying_data_bound[, c(4, 22, 2, 3, 1, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21, 12)]
+
+class(lobbying_data_ordered$LOBBYIST_ID) = "character"
+
+class(lobbying_data_ordered$GIFT_ID) = "character"
+
+class(lobbying_data_ordered$EXPENDITURE_ID) = "character"
+
+class(lobbying_data_ordered$COMPENSATION_ID) = "character"
+
+class(lobbying_data_ordered$CLIENT_ID) = "character"
+
+class(lobbying_data_ordered$CREATED_DATE) = "date"
+
+lobbying_data_ordered$GIFT_RECIPIENT_NAME<-paste(lobbying_data_ordered$RECIPIENT_FIRST_NAME, lobbying_data_ordered$RECIPIENT_LAST_NAME, sep = " ")
+
+lobbying_data_ordered<-lobbying_data_ordered %>% 
+  select(-c(17, 18))
+
+lobbying_data_ordered<-lobbying_data_ordered[, c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 21, 17, 18, 19, 20)]
+
+lobbying_data_ordered<-lobbying_data_ordered %>% 
+  dplyr::rename("ACTION_SOUGHT_FOR_EXPENDITURE" = `ACTION`)
+
+lobbying_data_ordered$PERIOD<-paste(lobbying_data_ordered$PERIOD_START, lobbying_data_ordered$PERIOD_END, sep = " - ")
+
+ lobbying_data_ordered<-lobbying_data_ordered %>% 
+   select(-c(3, 4))
+ 
+lobbying_data_ordered<-lobbying_data_ordered[, c(1, 2, 20, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19)]
+
+```
+
+# Data Set
+
+```{r Lobbying Data}
+lobbying_data_ordered
+```
+
+```{r Lobbying Data column names}
+
+lobbying_colnames<-colnames(lobbying_data_ordered)
+
+lobbying_colnames
+```
+
+Descriptions are derived from the City of Chicago government website and expanded upon by myself:
+
+**#LOBBYIST_ID**: Each lobbyist has an identifier number which remains consistent between each of the three original data sets. It serves the same role as LOBBYIST_NAME.
+
+**#LOBBYIST_NAME:** The name of the lobbyist referred to in the case.
+
+**#PERIOD_START:** The beginning of the quarterly period for which the activity is being reported. Quarterly periods in the data set begin on January 1st, April 1st, July 1st, and October 1st of each year from 2020-2022.
+
+**#PERIOD_END:** The end of the quarterly period for which the activity is being reported. The end of each quarterly period lies on either March 31st, June 30th, September 30th, or December 31st.
+
+**#EXPENDITURE_ID**: The unique identifier for a case of expenditure from a lobbyist to another party. Where there is an Expenditure ID, there will be NA values for that row's Gift ID or Compensation ID, since the cases do not have a relationship.
+
+**#ACTION_SOUGHT_FOR_EXPENDITURE:** The purpose for which an expenditure by a lobbyist was made, or the desired action being lobbied for in an expenditure case.
+
+**#EXPENDITURE_AMOUNT:** The dollar amount of the expenditure.
+
+**#EXPENDITURE_DATE:** The date of the expenditure.
+
+**#EXPENDITURE_PURPOSE:** The type of expenditure.
+
+**#EXPENDITURE_RECIPIENT:** The party to whom the expenditure was paid.
+
+**#CLIENT_ID:** A unique ID for the client on whose behalf any of the three categories of lobbying activities was done.
+
+**#CLIENT_NAME:** The name of the client on whose behalf the lobbying related to an expenditure was done. Client name corresponds with Client ID.
+
+**#COMPENSATION_ID:** The unique identifier for a case of compensation toward a lobbyist. Where there is a compensation ID, there are NA values for GIFT_ID and EXPENDITURE_ID.
+
+**#COMPENSATION_AMOUNT:** The dollar amount of the compensation.
+
+**#GIFT_ID:** The unique identifier for a case of a gift made by a lobbyist to an official or employee of the city of Chicago. When there is a Gift ID, there will be NA values for Expenditure ID and Compensation ID.
+
+**#GIFT:** Describes the gift itself (tickets, food, etc.)
+
+**#GIFT_RECIPIENT_NAME:** The name of the gift recipient.
+
+**#RECIPIENT_TITLE:** The title of the gift recipient.
+
+**#GIFT_VALUE:** The dollar value of the gift made.
+
+**#GIFT_RECIPIENT_DEPARTMENT:** The department of the recipient of the gift made.
+
+**#CREATED_DATE:** The date the record of the activity was created. Applies across all types of activity.
+
+Let's start the data introduction by looking at the **most active lobbyists**:
+
+```{r Most active lobbyists}
+
+name_frequency<-table(lobbying_data_ordered$LOBBYIST_NAME)
+
+name_frequency_sorted<-name_frequency[order(name_frequency, decreasing = TRUE)]
+
+#The following shows the most active lobbyists by count:
+print(head(name_frequency_sorted))
+
+```
+
+All **reporting periods** in the data set are shown in the following data frames. The start of the first reporting period in the data set was on January 1st, 2014. The latest completed reporting period began April 1st, 2023 and ended June 30th, 2023. The July-September reporting period for 2023 is in progress.
+
+```{r}
+ 
+reporting_periods_sorted<-lobbying_data_bound[rev(order(as.Date(lobbying_data_bound$PERIOD_START, format="%m/%d/%Y"))),]
+
+reporting_periods_start<-unique(reporting_periods_sorted$PERIOD_START)
+
+reporting_periods_start
+
+reporting_periods_end_sorted<-lobbying_data_bound[rev(order(as.Date(lobbying_data_bound$PERIOD_END, format="%m/%d/%Y"))),]
+
+reporting_periods_end<-unique(reporting_periods_end_sorted$PERIOD_END)
+
+reporting_periods_end
+
+```
+
+The following is a summary table that provides a comprehensive look at frequently occuring values in the data set across all variables:
+
+```{r}
+
+summarytools::st_options(
+  dfSummary.custom.1 = 
+    expression(
+      paste(
+        "Q1 - Q3 :",
+        round(
+          quantile(column_data, probs = .25, type = 2, 
+                   names = FALSE, na.rm = TRUE), digits = 1
+        ), " - ",
+        round(
+          quantile(column_data, probs = .75, type = 2, 
+                   names = FALSE, na.rm = TRUE), digits = 1
+        )
+      )
+    )
+)
+
+print(
+  summarytools::dfSummary(lobbying_data_ordered, 
+            varnumbers   = FALSE,
+            na.col       = FALSE,
+            style        = "multiline",
+            plain.ascii  = FALSE,
+            headings     = FALSE,
+            graph.magnif = .8),
+  method = "render"
+)
+```
+
+## Categorical Visualizations
+
+The following is a visual look at some of the categorical variables for my later analysis, including expenditure recipients, actions being lobbied for, and client names. They will help provide some colloquial insight on the types of actions and parties at work in Chicago lobbying. It also exposes some of the issues with the self-reporting data entry process, where many of the values are abbreviated, confusingly explained, or there are multiple notations for the same item, like "Air Fare" and "Airfare". It's very hard to catch all of these formatting issues in a data set of this size, and consequently it will be difficult to analyze some variables due to text inconsistencies.
+
+I'll show the client names first.
+
+```{r Lobbying clients wordcloud}
+
+Client_Name<-table(lobbying_data_ordered$CLIENT_NAME)
+
+print(head(Client_Name))
+
+library(wordcloud2)
+
+wordcloud2(Client_Name, size = 2.6, minSize = 1, gridSize = 1, fontFamily = 'Bookman', color = 'random-dark', backgroundColor = "white")
+```
+
+You can see that the names appear to be mostly corporate entities, with some recognizable brands like Amazon and Adobe Inc.
+
+Next, I'll model actions sought by expenditure lobbying clients:
+
+```{r Actions sought by lobbying clients wordcloud}
+Action_Sought<-table(lobbying_data_ordered$ACTION_SOUGHT_FOR_EXPENDITURE)
+
+print(head(Action_Sought))
+
+
+wordcloud2(Action_Sought, size=2.6, minSize = 1, color='random-dark', backgroundColor = "white")
+```
+
+We can see in this wordcloud that some of the actions sought by lobbying clients range from mundane (filing fees, administrative) to more mission-oriented (defeat proposed tax, meetings with the mayor's office, etc.).
+
+Lastly, we have gifts, to paint a picture of what items in that category look like:
+
+```{r Gifts made wordcloud}
+Gifts<-table(lobbying_data_ordered$GIFT)
+
+print(head(Gifts))
+
+wordcloud2(Gifts, size = 3, minSize = 1)
+
+```
+
+As seen in the visual, gifts can range from mundane to novel. Nothing seems particularly "scandalous".
+
+# Analysis
+
+The following section is an exploration of patterns, beginning with a zoom-in on top lobbyists and follow-up inquiries, a look at money spent on lobbying in our activity categories, and the relationship between expenditure and compensation for lobbyists (since cases of expenditure and compensation are not paired together in any of our cases), as well as a look at gift recipient data.
+
+#### Question 1: What parties are the most active?
+
+Earlier on, we collected the most frequently mentioned lobbyists by sorting the lobbyist_name column in lobbying_data_ordered by number of mentions, calling the table "name_frequency_sorted". Let's look at what the top lobbyists (or, better put, our busiest lobbyists, with the most cases to their name) are doing first.
+
+```{r Zoom-in on the busiest lobbyists}
+
+ 
+
+print(head(name_frequency_sorted))
+
+top_lobbyist_activity<-filter(lobbying_data_ordered, LOBBYIST_NAME %in% c("THOMAS MOORE", "RICHARD KLAWITER", "LANGDON NEAL", "JOHN GEORGE", "MICHAEL KASPER", "TIMOTHY DART"))
+
+#How many clients are represented with the busiest 6 lobbyists?
+
+#Creating a frequency for top clients among the busiest lobbyists:
+  
+top_lobbyist_top_clients<-top_lobbyist_activity %>% 
+  group_by(CLIENT_NAME) %>% 
+  summarise(Count = n()) %>%
+  filter(Count >= 38) %>% 
+  .$CLIENT_NAME
+
+#Filtering to top 10 clients and adding the values to the busiest lobbyist data set.
+top_lobbyist_activity<-top_lobbyist_activity %>% 
+  filter(CLIENT_NAME %in% top_lobbyist_top_clients)
+
+#Visualizing clients across the six different busiest lobbyists.
+
+ggplot(data = top_lobbyist_activity) +
+  geom_bar(aes(x=LOBBYIST_NAME, fill = CLIENT_NAME)) +
+  labs(y="Lobbying Cases", x = "Lobbyist", title = "Top Clients Among the 10 Busiest Chicago Lobbyists", )+
+  theme(axis.text.x = element_text(angle = 90, size = 7), legend.text = element_text(size = 8))+
+  guides(fill=guide_legend(title="Client Name"))
+  
+```
+
+We can see in the graph that there is only one client that has multiple lobbyists working for them-- Sterling Bay Companies, a real estate developer. This graph cannot show the full range of clients per top lobbyist, so we don't know just how varied any of the lobbyists' client bases are. This is difficult to visualize as there are so many different clients overall. As a second step, we could examine the quantity of unique clients by lobbyist to see if lobbyists such as Michael Kasper and Thomas Moore are individuals with few clients but many cases, or do indeed have a wide range of clients. We could then look at the clients in our graph and see how many lobbyists are in their employ, or investigate how many dollars in expenditures are being made by the most lobbying-happy clients.
+
+To begin, let's look at lobbyists Moore and Kasper from our "Top Clients Among the 10 Busiest Chicago Lobbyists" plot to answer our question about whether they are, in fact, working for very few clients, since Moore was only found to have cases with David Gassman and Kasper was only found to have cases with the American Beverage Association.
+
+```{r Zoom-in on Moore and Kasper: Do they have many clients, or a few?}
+
+#First, I'll filter for their cases:
+
+MOORE_LOBBYING <- lobbying_data_ordered %>% 
+  filter(LOBBYIST_ID == 5861)
+
+KASPER_LOBBYING <-lobbying_data_ordered %>% 
+  filter(LOBBYIST_NAME == "MICHAEL KASPER")
+
+
+MOORE_CLIENTS<-unique(MOORE_LOBBYING$CLIENT_NAME)
+
+KASPER_CLIENTS<-unique(KASPER_LOBBYING$CLIENT_NAME)
+```
+
+We can see that Moore has 475 unique clients and Kasper has 71. They are certainly not limited to David Gassman and the American Beverage Association as clients. Now let's find the average n of clients per lobbyist:
+
+```{r  Zoom-in on Moore and Kasper: Do they have many clients relative to other lobbyists?}
+
+lobbyists_by_unique_clients<-lobbying_data_ordered %>% 
+  group_by(LOBBYIST_NAME) %>% 
+  summarise(unique((CLIENT_NAME))) %>% 
+  summarise(Count = n())
+
+mean(lobbyists_by_unique_clients$Count)
+max(lobbyists_by_unique_clients$Count)
+min(lobbyists_by_unique_clients$Count)
+max(lobbyists_by_unique_clients$Count)-min(lobbyists_by_unique_clients$Count)
+
+mode<-function(x){which.max(tabulate(x))}
+
+mode(lobbyists_by_unique_clients$Count)
+
+```
+
+Using the above statistical functions, I've found that the average number of unique clients per lobbyist is 6, the range is 527, and the most frequent number of unique clients is 1. I notice that Moore's count in the lobbyists_by_unique_clients set is larger than in his unique clients count in the MOORE_LOBBYING set. Could this be because of the inclusion of 0 values somewhere? I may have coded my unique clients data set incorrectly.
+
+We can see from this look at Moore, Kasper, and the lobbying set as a whole that the top 6 lobbyists not only have many more clients than what the initial graph suggests, but that a number of the lobbyists in our data set have only one unique client.
+
+Next, we'll look at the total expenditures of the top spending clients. After first looking at the total expenditures by client for the top 6 lobbyists, I was surprised to learn only one of the 10 most active clients (David Gassman, another real estate developer) was responsible for an expenditure. Some of the busiest lobbyists may have many compensation cases with clients instead of expenditures (these cases could not be gifts, because there are no client names associated with gifts made by lobbyists. I assume because this is classified info?). Consequently, I will look at the total expenditure amount per client, selecting for the top 13:
+
+```{r Total expenditures by client}
+
+total_expenditures_all_lobbyists<-lobbying_data_ordered %>% 
+  drop_na(EXPENDITURE_AMOUNT) %>% 
+  group_by(CLIENT_NAME) %>% 
+  summarise("Total_Expenditure_by_Client" = sum(EXPENDITURE_AMOUNT))
+
+
+coul <- RColorBrewer::brewer.pal(5, "Set2") 
+
+total_expenditures_all_lobbyists %>% 
+  filter(Total_Expenditure_by_Client >= 30000) %>% 
+  ggplot(aes(CLIENT_NAME, Total_Expenditure_by_Client, fill = CLIENT_NAME))+
+  geom_bar(stat = 'identity')+
+  labs(y="Total Expenditure", x = "Client", title = "Top Chicago Expenditure Clients", subtitle = "Cumulative (All Years)")+
+  scale_y_continuous(labels = scales::dollar_format())
+
+```
+
+According to the plot, Uber Technologies spent the most on expenditure lobbying by far. It is followed by AirBnB. I notice that many of the top spenders are corporate entities that may have a special interest in maintaining influence in an urban area like Chicago. For instance, Uber may have lobbied so extensively in order to undermine the Chicago taxi industry, which would act as competition for Uber. I'll look more closely at Uber's case next.
+
+```{r Who is Uber lobbying and why?}
+
+Uber_cases<-lobbying_data_ordered %>% 
+  filter(CLIENT_NAME %in% "UBER")
+Uber_Inc_cases<-lobbying_data_ordered %>% 
+  filter(CLIENT_NAME %in% "UBER TECHNOLOGIES, INC.")
+
+Uber_cases_most<-bind_rows(Uber_cases, Uber_Inc_cases)
+
+Uber_cases_most
+
+Uber_lobbyists<-unique(Uber_cases_most$LOBBYIST_NAME)
+Uber_lobbyists
+
+Uber_Expenditure_Recipient<-unique(Uber_cases_most$EXPENDITURE_RECIPIENT, na.rm = TRUE)
+Uber_Expenditure_Recipient
+
+unique(Uber_cases_most$EXPENDITURE_PURPOSE)
+
+Uber_Action_Sought<-unique(Uber_cases_most$ACTION_SOUGHT_FOR_EXPENDITURE)
+Uber_Action_Sought
+  
+```
+
+While examining the Uber cases, I noticed that filtering for "UBER", "UBER TECHNOLOGIES", "UBER TECHNOLOGIES, INC", and "UBER TECHNOLOGIES, INC AND AFFILIATES" yielded four different sets of results. The inconsistent notation for the character data in these sets remains a problem!
+
+After doing some filtering manually in the data set to find which notations had any expenditure data, I found that most expenditures by Uber are for advertising and printing. It looks like Uber has 63 or more cases of lobbying activity. Among their 6 lobbyists utilized is Michael Kasper, who we examined earlier for being among the most prolific lobbyists in Chicago. After doing a quick filter in Kasper's individual data set, I found that Uber accounts for 38 of his 596 total entries, making Uber a significant percentage of his cases.
+
+Now, let's take a quick look at gifts, since we haven't explored that much. What officials are receiving gifts? Keep in mind that, according to the data set documentation, gift recipients are always members of the city government.
+
+```{r What officials are receiving gifts?}
+
+#Unique names in the gift recipient category include:
+gift_recipients<-unique(lobbying_data_ordered$GIFT_RECIPIENT_NAME, na.rm = TRUE)
+print(head(gift_recipients))
+
+#Unique departments are:
+unique_gift_departments<-unique(lobbying_data_ordered$GIFT_RECIPIENT_DEPARTMENT, na.rm = TRUE)
+print(head(unique_gift_departments))
+
+#This will tell us how many gift cases there are:
+#unique(lobbying_data_ordered$GIFT_ID)
+
+#And the following is a table of gift recipients by their frequency of gift cases:
+gift_recipients_table<-table(lobbying_data_ordered$GIFT_RECIPIENT_NAME)
+
+gift_recipients_table<-gift_recipients_table[order(gift_recipients_table, decreasing = TRUE)]
+
+print(head(gift_recipients_table))
+
+```
+
+By looking at the unique number of Gift IDs, we're able to see how many gift cases we have in the data set, which is 561\-- 558 if we're excluding the NA string values remaining in the column. What we can see from our gift recipient table is that the top gift recipients are Lewis W Powell, III, Dan Casey, and Bryon Sigcho-Lopez. A quick look in our lobbying_data_ordered set tells us that Powell is a real estate attorney and his department is usually listed as Planning or Housing and Economic Development, Dan Casey is Deputy Director of Public Safety IT in the department of Emergency Management and Communications, and Bryon is a City Council Member/Alderman. Unfortunately, we don't have client names in the gift data with which to see who is really sponsoring these gifts. Additionally, due to the aforementioned tameness of the types of gifts reportedly received by these officials, there isn't much scandal to be extracted from this part of the data set.
+
+Finally, I will be addressing questions two and three in one inquiry; I'll look at the comparison of expenditure amount, gift value, and compensation for all lobbyists on an annual basis:
+
+```{r compensation vs. Expenditure}
+
+lobbying_data_bound %>%
+  mutate(PERIOD_START = as.Date(PERIOD_START, format="%m/%d/%Y")) %>% 
+  group_by(PERIOD_START) %>% 
+  summarise(Expenditures = (sum(EXPENDITURE_AMOUNT, na.rm = TRUE)), 
+            Compensation = (sum(COMPENSATION_AMOUNT, na.rm = TRUE)),
+            Gifts_Made = (sum(GIFT_VALUE, na.rm = TRUE))) %>% 
+  ggplot()+
+  geom_line(aes(PERIOD_START, Expenditures, color = "Expenditures"))+
+  geom_line(aes(PERIOD_START, Compensation, color = "Compensation"))+
+  geom_line(aes(PERIOD_START, Gifts_Made, color = "Gifts_Made"))+
+  labs(x = "Year", y = "Total Spent", title = "Dollars Spent on Lobbyist Compensation, Expenditures, and Gifts in Chicago", subtitle = "Annually")+
+  scale_color_manual(values = c(
+    'Expenditures' = 'cyan3',
+    'Compensation' = 'purple',
+    'Gifts_Made' = 'orange'))+
+  guides(color=guide_legend(title="Activity"))+
+  scale_y_continuous(labels = scales::dollar_format())+
+  theme(text = element_text(size = 11, family = "serif"))
+  
+```
+
+We can see through the lineplot that the compensation for lobbyists unanimously outweighed expenditures done by lobbyists. This doesn't verify any trends in individual lobbyist-client relationships, such as if a given lobbyist received more in compensation in a period than they provided in expenditures or gifts; it does, however, show that the total expenditures and gift amount remain entirely below the total compensations for every year. Total compensation remain erratic and less stable overall than expenditures total and gift amounts.
+
+# Critical Reflection
+
+A big issue with analyzing this data set was the text variables. Some of the string lengths in value outputs were very long; we have expenditure recipient names, actions lobbied for, and expenditure purposes that often have near-sentence length values, which makes them difficult to visualize or provide visualizations requiring x and y axes to be legible. This was the biggest hamper on my analytical decisions, because I couldn't look at everything I wanted. Similarly, many values are notated several different ways, like "C" for "City of Chicago" or the four different varieties of "Uber".
+
+I notice that in my interest of subsetting my data so all the outputs weren't overwhelming, such as where I looked at top clients of top lobbyists, I missed out on the trends in the full range of clients for each of the lobbyists. The most financially impactful or prolific clients of a particular top lobbyist may be clipped out of the set due to not meeting the criteria of most frequent participant among top lobbyists overall.
+
+On that same note, I believe my analysis would have benefited from a wider range of frequency and mean evaluations, such as frequency or mean of clients per lobbyist, lobbyists per client, etc. This would have allowed me to more accurately discern the top participants from the less active participants, as well as judge a wider range of qualities among the top lobbyists and clients (i.e., do the lobbyists with the most cases have the most clients, or the most *active* clients? Do the clients with the highest expenditure amounts have the most cases, or just a few very large ones?). This is the biggest regret of my analysis, and could have led to some more complex x vs. y comparisons.
+
+I also opted to exclude small expenditures (under \$250) from my analysis, which could have provided some insight on the types of expenditures made in that cost bracket and what such expenditures are used for.
+
+# Bibliography
+
+\#"Improved Lobbyist Data." City of Chicago :: Improved Lobbyist Data, 2015, www.chicago.gov/city/en/depts/ethics/supp_info/improved-lobbyist-data.html.
+
+##Grolemund, G., & Wickham, H. (2017). R for Data Science. O'Reilly Media.
+
+#Singer-Vine, Jeremy. "Data Is Plural - 2018.09.26 Edition." - 2018.09.26 Edition, 26 Sept. 2018, www.data-is-plural.com/archive/2018-09-26-edition/.
+
+#Wikipedia contributors. (2023, August 2). Uber. In Wikipedia, The Free Encyclopedia. Retrieved 08:14, August 8, 2023, from https://en.wikipedia.org/w/index.php?title=Uber&oldid=1168423261
