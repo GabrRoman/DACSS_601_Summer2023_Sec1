@@ -468,7 +468,7 @@ I also opted to exclude small expenditures (under \$250) from my analysis, which
 
 # Bibliography
 
-\#"Improved Lobbyist Data." City of Chicago :: Improved Lobbyist Data, 2015, www.chicago.gov/city/en/depts/ethics/supp_info/improved-lobbyist-data.html.
+##"Improved Lobbyist Data." City of Chicago :: Improved Lobbyist Data, 2015, www.chicago.gov/city/en/depts/ethics/supp_info/improved-lobbyist-data.html.
 
 ##Grolemund, G., & Wickham, H. (2017). R for Data Science. O'Reilly Media.
 
