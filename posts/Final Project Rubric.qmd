@@ -1,0 +1,8 @@
+---
+title: "Final Project"
+author: "Gabrielle Roman"
+description: "Exploration of Lobbying Data"
+editor: visual
+---
+
+#1. A clear description of the data set you are using. This description should summarize critical points from your exploratory data analysis conducted in earlier homework. 2. Question-driven descriptive analysis (tables, visualizations, other descriptive statistics) of at least two broad patterns in the data that addresses a focused research question of your choosing, that includes some sort of interesting pattern you identify through exploratory analysis. 3. Additional detailed statistical or descriptive analysis to tease out information about the broad patterns you identify, as needed. For example, if you identify a broad trend - mass shootings are more prevelant in the summer than during the rest of the year - try to find a way to distinguish between increased opportunity (e.g., outdoor shootings) and heat-related stress (increase in both indoor and outdoor shootings) as potential causes of this seasonal trend. 4. Critical reflection.

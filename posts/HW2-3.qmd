@@ -90,7 +90,7 @@ print(min(lobbying_data_ordered$EXPENDITURE_AMOUNT, na.rm = TRUE))
 #The range in gift amounts is more complex, as there are inexplicably a bunch of gifts in the data frame that are valued at "None" or "0", but I don't want to delete at this stage since there is some anecdotal context suggested by the recipient value. How do I exclude the 0 values from my range analysis?
       
 
-#Frequency of values in LOBBYIST_ID, starting with most mentioned lobbyist:
+#The following is a frequency table for unique values in LOBBYIST_ID, ordered by which ID is the most referenced in the dataset, to the least:
 
 sample_size_IDs <- unique(lobbying_data_ordered$LOBBYIST_ID)
 
@@ -100,9 +100,9 @@ head(ID_frequency)
 
 ID_frequency_sorted<-ID_frequency[order(ID_frequency, decreasing = TRUE)]
 
-print(ID_frequency_sorted)
+view(ID_frequency_sorted) 
 
-#It looks like Thomas Moore is the lobbyist most accounted for in the three lobbying activity data sets at 1694 mentions. Now I'll check the mode of each type of activity he's done.
+#It looks like Thomas Moore's ID is the most accounted for in the three lobbying activity data sets at 1694 rows containing his ID. Now, I'll check the mode of each type of activity he's done.
 
 mode<-function(x){which.max(tabulate(x))}
 
@@ -149,10 +149,17 @@ gift_stats_by_lobbyist_pivot<-gift_stats_by_lobbyist %>%
                names_to = "GIFT_STAT",
                values_to = "AMOUNT")
 
+gift_stats_by_lobbyist_pivot %>% 
+  filter(GIFT_STAT %in% c("Average Gift Value")) %>% 
+  ggplot(aes(AMOUNT))+
+  geom_bar()
+
+ggplot(data = head(gift_stats_by_lobbyist_pivot), mapping = aes(x = GIFT_STAT, y = AMOUNT, color = LOBBYIST_NAME))+
+  geom_line()
+
 ggplot(data = gift_stats_by_lobbyist_pivot, mapping = aes(x = GIFT_STAT, y = AMOUNT))+
-  geom_boxplot()+
-  facet_wrap()
-  
+  geom_boxplot()
+
   
 
 #Next, I'd like to visually compare each summary statistic per lobbyist to the mean of that summary statistic for all lobbyists. After that code is done successfully, it should be easier to apply the same principles to the other lobbying activities for the final paper analysis.
