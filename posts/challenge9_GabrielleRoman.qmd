@@ -1,0 +1,63 @@
+---
+title: "Challenge 9"
+author: "Gabrielle Roman"
+description: "Creating a function"
+date: "8/25/2023"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_9
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is simple. Create a function, and use it to perform a data analysis / cleaning / visualization task:
+
+Examples of such functions are:
+1) A function that reads in and cleans a dataset.  
+2) A function that computes summary statistics (e.g., computes the z score for a variable).  
+3) A function that plots a histogram.  
+
+That's it!
+
+```{r Summary statistic}
+
+trimmed_mean <- function(x){
+  mean(x, trim = 0.2)
+}
+  
+data1<- c(31, 49, 81, 20, 29, 893, 10, 27, 70, 44, 58, 68, 200)
+
+data_1_trimmed_mean<-trimmed_mean(data1)
+
+data_1_trimmed_mean
+
+```
+```{r Function for barplot}
+barplotting<-function(dat, colname, fill = "black"){dat %>% 
+    ggplot(aes({{colname}}))+
+    geom_bar(fill = fill)+
+    labs(x="xlab", y="ylab", title = "Barplotted", subtitle = "Written with function")
+}
+
+data2<-data.frame(name = c("A", "B", "C", "D", "E"),
+                  value = c(24, 32, 19, 20, 41))
+
+barplotting(data2, name)
+
+```
