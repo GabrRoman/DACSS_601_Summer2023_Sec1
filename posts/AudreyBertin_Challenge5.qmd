@@ -1,0 +1,187 @@
+---
+title: "Challenge 5"
+author: "Audrey Bertin"
+description: "Basic visualization with ggplot"
+date: "6/13/2023"
+format:
+  html:
+    df-print: paged
+    toc: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_5
+  - air_bnb
+  - ggplot2
+  - audrey_bertin
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(ggplot2)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge
+
+For today's challenge, I'll be reading in the `AB_NYC_2019.csv ⭐⭐⭐` dataset and producing some basic visualizations with `ggplot2`.
+
+## Data Overview
+
+```{r message = FALSE}
+airbnb <- readr::read_csv("_data/AB_NYC_2019.csv")
+```
+
+```{r}
+glimpse(airbnb)
+```
+
+This dataset has 48,895 rows and 16 columns. It contains information on different AirBnB properties located in New York City, NY.
+
+Each row represents a single property in the city. For each property, we have the following information;
+
+- `id`: unique identifier for the property
+- `name`: descriptive name shown on the AirBnB website that customers see when clicking on the property
+- `host_id`: unique identifier for the host of the property
+- `host_name`: first name of the property host
+- `neighbourhood_group`: borough name where property is located
+- `neighborhood`: neighborhood within the burough (more detailed location)
+- `latitude/longitude`: geographical coordinates of property
+- `room_type`: what type of property is being booked (private room in shared home, a whole home/apartment, etc)
+- `price`: nightly price, presumably in USD
+- `minimum_nights`: minimum length of stay
+- `number_of_reviews`: total number of reviews for the property on AirBnB so far
+- `last_review`: date of last review
+- `reviews_per_month`: average number of reviews left for the property each month
+- `calculated_host_listings_count`: number of listings/properties that this specific host has on AirBnB overall
+- `availability_365`: number of nights in the year that the property is available for booking on AirBnB
+
+Room types include:
+
+```{r}
+unique(airbnb$room_type)
+```
+
+All boroughs appear to be included:
+
+```{r}
+unique(airbnb$neighbourhood_group)
+```
+
+For each borough, we have the following count of neighborhoods and properties:
+
+```{r}
+airbnb %>%
+  group_by(neighbourhood_group) %>%
+  summarize(n_properties = n(), n_neighborhoods = n_distinct(neighbourhood)) %>%
+  arrange(desc(n_properties))
+```
+Most of the properties are located in Manhattan and Brooklyn, with significantly fewer in Queens, the Bronx, and Staten Island. Within each borough, we have a few dozen neighborhoods covered, so this data seems to have pretty good coverage of the city with no obvious big missing areas of data.
+
+## Tidy Data
+
+Data is already in a tidy format, so no pivoting is necessary. Each row represents a single property, which can't be broken down into a longer format.
+
+However, we can mutate a few of the variables to get them into a better format for visualization. Specifically, the following variables should be turned into factors:
+
+- `neighbourhood_group`
+- `neighbourhood`
+- `room_type`
+
+There are a few other modifications that can be made (e.g. converting some doubles to integers), but they are not necessary for the purpose of this visualization.
+
+We do this mutation below:
+
+```{r}
+airbnb_tidy <- airbnb %>%
+  mutate(neighbourhood_group = as_factor(neighbourhood_group),
+         neighbourhood = as_factor(neighbourhood),
+         room_type = as_factor(room_type))
+```
+
+## Univariate Visualizations
+
+For our univariate visualizations, we'll just look at the distribution of a single variable. The main types of univariate plots are bar chart (categorical) and histogram (numeric).
+
+#### Room Type
+
+Room type is a categorical variable, so it can be displayed using a bar chart:
+
+```{r}
+airbnb_tidy %>%
+  ggplot(aes(x=room_type)) + geom_bar() +
+  ggtitle("Number of Properties on AirBnB in NYC By Property Type") +
+  ylab("# of Properties") +
+  xlab("Property/Rental Type") + 
+  theme_minimal()
+```
+From this graph, we can see that "Entire home/apt" rentals make up the largest share of the market, with quite a few private rooms and very few shared rooms.
+
+#### Price
+
+Next, we can look at how expensive these properties are. Price is a numeric variable, so we can use a histogram to view the distribution.
+
+```{r}
+airbnb_tidy %>%
+  ggplot(aes(x=price)) + geom_histogram() +
+  ggtitle("Distribution of Property Prices on AirBnB in NYC") +
+  ylab("# of Properties") +
+  xlab("Price Per Night ($)") + 
+  theme_minimal()
+```
+From this graph, it looks like there may be some outliers (very few, so much so that they are impossible to see) on the super high price end that make it difficult to judge the main distribution. We can create another version of this graph that's zoomed in on the low end to get more information:
+
+```{r}
+airbnb_tidy %>%
+  filter(price < 1000) %>%
+  ggplot(aes(x=price)) + geom_histogram(binwidth=50) +
+  ggtitle("Distribution of Property Prices (UNDER $1000/night) on AirBnB in NYC") +
+  ylab("# of Properties") +
+  xlab("Price Per Night ($)") + 
+  theme_minimal()
+```
+
+Now, we can see that most properties are below $200/night and there is a strong right tail.
+
+## Bivariate Visualizations
+
+Next, we can create some bivariate visualizations. 
+
+#### Price vs Minimum Stay Length
+
+Let's look at how price and minimum stay length are associated. These are both numeric variables, so we'll want a scatterplot.
+
+```{r}
+airbnb_tidy %>%
+  ggplot(aes(x=price, y=minimum_nights)) + 
+  geom_point() +
+  ggtitle("Price VS Minimum Stay Length for NYC AirBnBs") + 
+  xlab("Price Per Night ($)") + 
+  ylab("Minimum Allowed Stay (# Nights)") +
+  theme_minimal()
+```
+
+Based on this graph, we can see that there is no clear pattern between price and minimum stay length.
+
+#### Price vs Property Type
+
+What about price and room type? It is more likely that we may see a pattern here, as people will almost certainly pay more for a private room or whole apartment compared with a shared room.
+
+```{r}
+airbnb_tidy %>%
+  group_by(room_type) %>%
+  summarize(avg_price = mean(price)) %>%
+  ggplot(aes(x = room_type, y = avg_price)) +
+  geom_col() +
+  ggtitle("Average Nightly AirBnB Price By Property Listing Type, NYC") +
+  ylab("Average Nightly Price ($)") +
+  xlab("Property/Rental Type") +
+  theme_minimal()
+```
+
+This makes sense with our intuition. Shared rooms have the lowest average price, with private rooms being a little higher. Entire homes and apartments are by far the most expensive on average, which makes sense as they offer the largest and most private spaces.

@@ -1,0 +1,59 @@
+---
+title: "Challenge 9 Solution"
+author: "Susannah Reed Poland"
+description: "Creating a function"
+date: "6/12/2023"
+format:
+  html:
+    df-print: paged
+    toc: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_9
+  - Susannah Reed Poland
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(ggplot2)
+library(lubridate)
+library(readxl)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Create a function that reads in and cleans a dataset
+
+I chose to create a function that changes a column of year and quarter characters to dates, and removes the old column. 
+
+```{r}
+#create a function called "read_debt", f is the file name and by default is false
+read_debt<-function(f){
+#read in the data file
+  d<-read_excel(f)%>%
+#change the "year and quarter" to a date format
+    mutate(date_orig = parse_date_time(`Year and Quarter`, orders="yq"))%>%
+#remove the old column
+  select(-`Year and Quarter`)
+  return(d)
+}
+```
+
+Now we can apply this to the "Debt in Trillions" dataset: 
+
+```{r}
+#apply function
+debt_date<-read_debt("_data/debt_in_trillions.xlsx")
+
+#check it out!
+debt_date
+```
+
+Et voila! 
+
+

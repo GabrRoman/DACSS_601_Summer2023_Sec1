@@ -1,0 +1,78 @@
+---
+title: "Challenge 4 Submission"
+author: "Suyash Bhagwat"
+description: "More data wrangling: pivoting"
+date: "6/9/2023"
+format:
+  html:
+    df-print: paged
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_4
+  - poultry_tidy
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+#install.packages("readxl")
+library(readxl)
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to:
+
+1)  read in a data set, and describe the data set using both words and any supporting information (e.g., tables, etc)
+2)  tidy data (as needed, including sanity checks)
+3)  identify variables that need to be mutated
+4)  mutate variables and sanity check all mutations
+
+## Read in data
+
+Read in one (or more) of the following datasets, using the correct R package and command.
+
+-   poultry_tidy.xlsx
+
+```{r}
+data_poultry <- read_excel("_data/poultry_tidy.xlsx")
+data_poultry
+```
+
+### Briefly describe the data
+**Ans:** The poultry_tidy.xlsx provides the price per lb for different kinds/cuts of poultry meat (e.g. B/S Breast, Thighs, Whole) for different month/year from 2004 to 2013.
+
+## Tidy Data (as needed)
+
+Is your data already tidy, or is there work to be done? Be sure to anticipate your end result to provide a sanity check, and document your work here.
+
+**Ans:** The data is already in the tidy format. We have the columns of month and year which gathers all the months/years into two columns.
+
+```{r}
+#Data is already tidy
+```
+
+Any additional comments?
+
+## Identify variables that need to be mutated
+
+Are there any variables that require mutation to be usable in your analysis stream? For example, are all time variables correctly coded as dates? Are all string variables reduced and cleaned to sensible categories? Do you need to turn any variables into factors and reorder for ease of graphics and visualization?
+
+Document your work here.
+
+**Ans:** I have mutated the Price_Dollar column since there are some entries which have more than 2 decimal places in them(e.g. 2.16375). Ideally since this price is in USD, the smallest denomination is 1 cent which is $0.01 and hence I have created a new column called price_per_lb_in_dollars which rounds off the Price_Dollar to 2 decimal points. Other than that, the poultry_tidy.xlsx data set looks good and there is nothing else that needs to be changed.
+
+```{r}
+data_poultry <- mutate(data_poultry, price_per_lb_in_dollars = round(Price_Dollar, 2))
+data_poultry
+```
+
+Any additional comments?
+**Ans:** NA

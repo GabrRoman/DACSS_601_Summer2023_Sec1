@@ -1,0 +1,233 @@
+---
+title: "Challenge 5: Visualization"
+author: "Jocelyn Lutes"
+description: "Using ggplot to visualize the Public Schools dataset "
+date: "6/14/2023"
+format:
+  html:
+    df-print: paged
+    toc: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_5
+  - tidyverse
+  - ggplot
+  - public_schools
+  - jocelyn_lutes
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(readr)
+library(ggplot2)
+library(here)
+library(glue)
+
+knitr::opts_chunk$set(echo=TRUE, warning=FALSE, message=FALSE)
+```
+
+## Import Data
+
+For this challenge, I have chosen to work with the `Public School Characteristics` dataset. We will begin by using `readr::read_csv()` to import the data.
+
+```{r}
+path <- here('posts', '_data')
+df <- read_csv(glue('{path}/Public_School_Characteristics_2017-18.csv'))
+```
+
+A sample of the data is shown below:
+
+``` {r}
+df
+```
+
+### Briefly describe the data
+
+This data, which appears to have been collected by the [National Center for Education Statistics](https://nces.ed.gov/opengis/rest/services/K12_School_Locations/EDGE_ADMINDATA_PUBLICSCH_1718/MapServer/0), contains administrative information for elementary and secondary schools throughout the United States. 
+
+The raw dataset contains data for `r nrow(df)` schools, and there are `r ncol(df)` variables to describe each school. The types of information provided for each school include:
+
+- School Information (Name, Address, Coordinates, Phone, Type)
+- Enrollment by Grade (PK-High School Senior)
+- Enrollment by Demographic Information (Race and Sex)
+
+## Tidy Data (as needed)
+
+In its raw form, the data is not yet tidy. The enrollment counts for various groups of students are currently spread across multiple columns instead of being contained in a single "enrollment" column. For example, the counts of students per grade are contained in columns such as `PK`, `KG`, `G01`,...,`G13`, and the counts for students by race are contained in columns such as `AMALM`, `AMALF`, `AM` etc. Because we do not know how the grade and race student counts are related, to be able to work with these variables, it would be best to divide the data into separate data frames and use `pivot_longer()` to tidy each table separately.
+
+First, we can start by doing a quick "clean" of our data by eliminating any columns that will not be useful to our visual analysis of the data. 
+``` {r}
+df_clean <- df %>%
+  select(-X, -Y, -NCESSCH, -NMCNTY, -SURVYEAR, -LEAID, -ST_LEAID, -LEA_NAME, -SCH_NAME, -contains('STREET'), -LCITY, -LSTATE, -contains('ZIP'), -PHONE, -TOTFRL, -FRELCH, -REDLCH, -LATCOD, -LONCOD, -STITLEI, -STATUS, -MEMBER)
+```
+
+This leaves us with a data frame with `r ncol(df_clean)` columns.
+
+Next, we will tidy the data. We will begin by using `pivot_longer` to create a `grade` column that contains the grade-level and a `num_students` column that contains the number of students per grade. After this pivot, we should expect to see `r nrow(df_clean) * 15` rows in our data frame, and the number of columns will be dependent on how many columns we choose to select. In addition to pivoting, we will also cast categorical data to `factors`.
+
+```{r}
+grade_cols <- df_clean %>%
+  select('PK', 'KG', contains('G0'), contains('G1'), TOTAL) %>%
+  colnames()
+
+df_grades <- df_clean %>%
+  pivot_longer(
+    cols = grade_cols, 
+    names_to = 'grade', 
+    values_to = 'num_students'
+  ) %>%
+  select(
+    id = OBJECTID,
+    state = STABR,
+    virtual = VIRTUAL,
+    teachers = FTE,
+    locale = ULOCALE,
+    student_teacher_ratio = STUTERATIO,
+    school_type = SCHOOL_TYPE_TEXT,
+    school_status = SY_STATUS_TEXT,
+    school_level = SCHOOL_LEVEL,
+    charter_school = CHARTER_TEXT,
+    magnet_school = MAGNET_TEXT,
+    grade,
+    num_students
+    ) %>%
+  mutate(
+    state = factor(state),
+    virtual = factor(virtual),
+    locale = factor(locale),
+    school_type = factor(school_type),
+    school_status = factor(school_status),
+    school_level = school_level, # set to factor later
+    charter_school = factor(charter_school), # could also cast as boolean
+    magent_school = factor(magnet_school),
+    grade = factor(grade)
+  )
+
+df_grades
+```
+
+We could also repeat the process above by pivoting the columns corresponding to race/ethnicity to a `race` column and the values to a `num_students` column. However, for the sake of this analysis, we will focus entirely on enrollment data by grades. 
+
+## Univariate Visualizations
+
+#### Visualization 1: What is the frequency of each school level?
+
+For my first visualization, I will look at the count of school types in the data. 
+
+``` {r}
+
+infrequent_levels <- c('Adult Education', 'Not Applicable', 'Not Reported', 'Other', 'Secondary', 'Ungraded')
+
+df_grades %>%
+  # make sure that each school is only counted once!
+  distinct(id, school_level) %>%
+  # group infrequent school levels into "other" variable for a cleaner graph
+  # also cast to factor with defined levels
+  mutate(
+    school_level = ifelse(
+      school_level %in% infrequent_levels, 
+      'Other', 
+      school_level
+    ),
+    school_level = factor(
+      school_level, 
+      levels = c('Prekindergarten', 'Kindergarten', 
+                 'Elementary', 'Middle', 
+                 'High', 'Other')
+    )
+  ) %>%
+  ggplot(aes(school_level)) +
+  geom_bar(color = "black", fill = "#4f759b") +
+  labs(
+    title = 'Count of Schools by Level in the United States (2017-2018)',
+    x = 'School Level',
+    y = 'Number of Schools'
+    ) +
+  theme_minimal()
+```
+
+For this visualization, I have chosen to use a bar plot because it will allow me to look at the counts for different levels of my categorical variable (`school_level`). From this visualization, we can see that the majority of schools in our dataset are elementary schools. 
+
+#### Visualization 2: What is the distribution of student enrollment for U.S. elementary schools?
+
+For my second visualization, I will look at the distribution of total students across all elementary schools in the dataset.
+
+``` {r}
+df_grades %>%
+  filter(school_level == 'Elementary', grade == 'TOTAL') %>% # also de-duplicates!
+  ggplot(aes(num_students)) +
+  geom_histogram(color = "black", fill = "#4f759b") +
+  labs(
+    title = 'Distribution of Students Enrolled in U.S. Elementary Schools (2017-2018)',
+    x = 'Number of Students',
+    y = 'Frequency'
+    ) +
+  theme_minimal()
+```
+
+For this visualization, I chose to use a histogram so that I could see how frequently different total student counts occurred in the data. From the histogram, we can see that a large chunk of our data seems to be normally distributed. However, the tail that extends to the left suggests that we have some outliers that are giving our data a right skew.
+
+## Bivariate Visualization(s)
+
+#### Visualization 3: Does the student-teacher ratio in elementary schools vary by total enrollment?
+
+For this visualization, I am interested in determining if there is a relationship between the number of students enrolled in an elementary school and the student-teacher ratio. 
+
+``` {r}
+df_grades %>%
+  filter(school_level == 'Elementary', grade == 'TOTAL') %>%
+  ggplot(aes(num_students, student_teacher_ratio)) +
+  geom_point() + 
+  geom_smooth() +
+  labs(
+    title='Student-Teacher Ratio by Number of Students in U.S. Elementary Schools (2017-2018)',
+    x = 'Number of Students',
+    y = 'Student-Teacher Ratio'
+  ) +
+  theme_minimal()
+```
+
+Because both variables are `numeric`, we can use a scatterplot (`geom_point`) and smoothing function (`geom_smooth`) to look for a relationship between the two variables. In the plot, above, we  however, it appears that outliers are overshadowing any potential relationship. Therefore, we will re-plot with these outliers filtered out. (From using `summary()` on our subset of data, it appears that only including ratios less than 100 will be a good boundary.)
+
+``` {r}
+df_grades %>%
+  filter(school_level == 'Elementary', grade == 'TOTAL') %>%
+  filter(student_teacher_ratio < 100) %>%
+  ggplot(aes(num_students, student_teacher_ratio)) +
+  geom_point() + 
+  geom_smooth() +
+  labs(
+    title='Student-Teacher Ratio by Number of Students in U.S. Elementary Schools (2017-2018)',
+    x = 'Number of Students',
+    y = 'Student-Teacher Ratio'
+    ) +
+  theme_minimal()
+```
+
+From looking at the revised scatterplot, there still does not appear to be a relationship between student enrollment and student-teacher ratio. 
+
+#### Visualization 4: Does the student-teacher ratio in elementary schools vary by type of school?
+
+We might also wonder if the student-teacher ratio varies by the type of school.
+
+``` {r}
+df_grades %>%
+  filter(student_teacher_ratio < 100) %>%
+  filter(school_level == 'Elementary', grade == 'TOTAL') %>%
+  distinct(id, school_type, student_teacher_ratio) %>%
+  ggplot(aes(school_type, student_teacher_ratio)) +
+  geom_boxplot() +
+  labs(
+    title = 'Distribution of Student-Teacher Ratio by School Type in U.S. Elementary Schools (2017-2018)',
+    x = 'School Type',
+    y = 'Student Teacher Ratio') +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+
+For this plot, we use a boxplot that displays the distributions of student-teacher ratio by school type. From this plot, it is interesting to see that Special Education Schools have a lower median student-teacher ratio than any of the other school types. It might be interesting to explore this finding further.

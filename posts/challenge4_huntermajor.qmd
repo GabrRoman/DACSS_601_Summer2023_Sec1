@@ -1,0 +1,118 @@
+---
+title: "Challenge 4 Post"
+author: "Hunter Major"
+description: "More data wrangling: pivoting"
+date: "6/14/2023"
+format:
+  html:
+    df-print: paged
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_4
+  - abc_poll
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(dplyr)
+library(readr)
+library(readxl)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to:
+
+1)  read in a data set, and describe the data set using both words and any supporting information (e.g., tables, etc)
+2)  tidy data (as needed, including sanity checks)
+3)  identify variables that need to be mutated
+4)  mutate variables and sanity check all mutations
+
+## Read in data
+
+Read in one (or more) of the following datasets, using the correct R package and command.
+
+-  For challenge 4, I will be reading in abc_poll.csv ⭐
+
+```{r}
+abc_poll <- read.csv("_data/abc_poll_2021.csv")
+abc_poll
+
+```
+
+```{r}
+dim(abc_poll)
+
+summary(abc_poll)
+
+n_distinct(abc_poll$ppstaten)
+```
+
+### Briefly describe the data
+The ABC Poll dataset is most likely capturing responses from a US-based nationwide poll. Running the n_distinct () function for the state or ppstaten variable determines that responses from 49 US states were featured The dim () function reveals that there are 527 rows or observations and 31 columns or variables. We can infer from the row count that 527 people responded to the poll. From the summary () function, we can deduce that the majority of the variables seem to have character values, such as education level, gender, marital status, age, region, employment status, etc--aimed at collecting demographic data and political data. There are other variables, such as the ID number variable, the Q1-Q5 variables, the Contact variable that serve to help better organize the information and respondent preferences for further interviews collected by the poll.
+
+## Tidy Data (as needed)
+
+Is your data already tidy, or is there work to be done? Be sure to anticipate your end result to provide a sanity check, and document your work here.
+
+The dataset is already tidy in the sense that every value does have its own cell, each variable has its own column, and each observation has its own row.
+
+## Identify variables that need to be mutated
+
+Are there any variables that require mutation to be usable in your analysis stream? For example, are all time variables correctly coded as dates? Are all string variables reduced and cleaned to sensible categories? Do you need to turn any variables into factors and reorder for ease of graphics and visualization?
+
+In terms of variables that require mutation, in this dataset, I mainly believe this takes shape in the form of reducing and cleaning some of the string variables to more sensible categories. 
+
+### Mutating the QPID variable
+In the QPID or political party identification variable, we can take the "A or An" out of cells so a response within this column, like "An Independent" becomes "Independent." 
+
+Running the table () function shows that in addition to included political party responses of "A Democrat," "A Republican," and "An Independent," there are also two types of responses in the QPID column: "Skipped" or "Something Else." The "Something Else" response can remain as is but we can re-code the "Skipped" value to read as NA instead of "Skipped."
+
+```{r}
+# view the QPID column within the dataset
+table(abc_poll$QPID)
+
+# mutate so that "A" or "An" can be removed from party identification responses and so that "Skipped" can read as NA
+abc_poll2 <- abc_poll%>%
+  mutate(party_id = str_remove(QPID, "A[n]*"),
+         party_id = case_when(
+           str_detect(QPID, "Skipped")~NA_character_,
+           TRUE~party_id
+         )) %>%
+  select(-QPID)
+
+abc_poll2
+
+# check
+table(abc_poll2$party_id)
+unique(abc_poll2$party_id)
+
+```
+
+Seems QPID variable has been renamed party_id. As expected, it also seems like "Skipped" has been changed to NA and "Democrat," "Republican" and "Independent" responses no longer have the word "A" or "An" before them!
+
+### Changing "Skipped" to NA from in responses within the Q1-Q5 columns/variables
+When poll participants didn't offer a response when answering the Q1-Q5 questions in the poll, a response of "Skipped" was recorded. Like we did in the previous section, we can transform this into reading as NA, for analysis purposes. Instead of mutating one 'Q' column at a time, we can do them simultaneously by using the across() function within mutate ().
+
+```{r}
+# mutating "Skipped" to NA in the Q1-Q5 columns/variables
+abc_poll2<-abc_poll2%>%
+  mutate(across(starts_with("Q"), ~ na_if(.x, "Skipped")))
+abc_poll2
+```
+
+```{r}
+#checking one of the 'Q' columns, Q1_b, to see if the NA value has taken the place of "Skipped"
+table(abc_poll2$Q1_b)
+unique(abc_poll2$Q1_b)
+```
+Looks like NA has taken the place of "Skipped" in Q1_b (and assumingly all the Q columns) as expected!

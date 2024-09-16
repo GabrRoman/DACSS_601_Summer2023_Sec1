@@ -1,0 +1,78 @@
+---
+title: "Challenge 1 Submission"
+author: "Suyash Bhagwat"
+description: "Reading in data and creating a post"
+date: "5/31/2023"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_1
+  - railroads
+  - faostat
+  - wildbirds
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to
+
+1)  read in a dataset, and
+
+2)  describe the dataset using both words and any supporting information (e.g., tables, etc)
+
+## Read in the Data
+
+Read in one (or more) of the following data sets, using the correct R package and command.
+
+-   railroad_2012_clean_county.csv ⭐
+-   birds.csv ⭐⭐
+-   FAOstat\*.csv ⭐⭐
+-   wild_bird_data.xlsx ⭐⭐⭐
+-   StateCounty2012.xls ⭐⭐⭐⭐
+
+Find the `_data` folder, located inside the `posts` folder. Then you can read in the data, using either one of the `readr` standard tidy read commands, or a specialized package such as `readxl`.
+
+```{r}
+#Since this is my first time using R, I am using the easiest data set.
+#I am using the read_csv function to read the csv file
+data_railroad <- read_csv("_data/railroad_2012_clean_county.csv")
+```
+## Describe the data
+
+Using a combination of words and results of R commands, can you provide a high level description of the data? Describe as efficiently as possible where/how the data was (likely) gathered, indicate the cases and variables (both the interpretation and any details you deem useful to the reader to fully understand your chosen data).
+
+**Ans**: The R code given below contains three common functions (spec(), head() and glimpse()) that are used to describe the data set.
+
+The spec function tells us that the data set has three columns with the datatype given in brackets; state(chr),county(chr) and total_employees(dbl).
+```{r}
+#| label: summary
+#spec function gives an overall idea of the column variable types
+spec(data_railroad)
+```
+
+The head function gives us the first 6 rows.
+```{r}
+#Head function gives the first few rows of the data
+head(data_railroad)
+```
+The glimpse function gives us the size of the data set which is 2930 rows x 3 cols. It also gives us an idea of the column names and datatypes along with the first few observations. Overall the glimpse function is the most concise method to get information about a data set.
+
+Looking at the data, it looks like it was gathered from the database of a railroad company in 2012 that keeps track of all its employees count by state and county.
+```{r}
+glimpse(data_railroad)
+```
+

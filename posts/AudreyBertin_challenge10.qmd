@@ -1,0 +1,84 @@
+---
+title: "Challenge 10"
+author: "Audrey Bertin"
+description: "purrr"
+date: "7/1/2023"
+format:
+  html:
+    df-print: paged
+    toc: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_10
+  - functions
+  - purrr
+  - audrey_bertin
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+#| include: false
+
+library(tidyverse)
+library(ggplot2)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+For this challenge, I'll be using the function I wrote in challenge 9 that calculates z scores and apply it multiple times.
+
+A common use of z-scores is in anomaly detection. In this practice, we compare the most recent value in a sequence to all the values that came before to see if that value is an anomaly or not. 
+
+We can use a built in dataset for this, called `airquality`, which stores time series air quality information:
+
+```{r}
+data(airquality)
+head(airquality)
+```
+
+Our original function looks as follows:
+
+```{r, eval = FALSE}
+z_score <- function(baseline, value){
+  mean <- mean(baseline)
+  sd <- sd(baseline)
+  z_score <- abs((value - mean)/sd)
+  
+  results = tibble(mean = mean, sd = sd, input_value = value, z_score = z_score)
+  return(results)
+}
+```
+
+We can rewrite this so that it determines the baseline and value itself, and instead takes a vector as input:
+
+```{r}
+z_score <- function(vec){
+  baseline = vec %>% head(-1)
+  value = vec %>% tail(1)
+  
+  mean <- mean(baseline, na.rm=TRUE)
+  sd <- sd(baseline, na.rm=TRUE)
+  z_score <- abs((value - mean)/sd)
+  
+  results = tibble(baseline_mean = mean, baseline_sd = sd, most_recent_value = value, z_score = z_score)
+  return(results)
+}
+```
+
+Running this on a single column we get:
+
+```{r}
+z_score(airquality$Temp)
+```
+
+We can use `purrr::map` to compute this for multiple columns and join them into a single dataframe:
+
+```{r}
+cols = list(airquality$Ozone, airquality$Wind, airquality$Temp)
+
+map_dfr(cols, z_score)
+```
+

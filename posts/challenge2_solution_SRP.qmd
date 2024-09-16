@@ -1,0 +1,81 @@
+---
+title: "Challenge 2 Solution"
+author: "Susannah Reed Poland"
+description: "Data wrangling: using group() and summarise()"
+date: "6/7/2023"
+format:
+  html:
+    df-print: paged
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_2
+  - railroads
+  - faostat
+  - hotel_bookings
+  - Susannah Reed Poland
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(readxl)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Read in the Data: Railroad
+
+After loading the tidyverse and readxl packages, I read in the data and named it 'railroadxls'. I then removed the top four rows using the skip function, then removed unnecessary columns, and filtered out the state totals. 
+```{r}
+read_excel("_data/StateCounty2012.xls")
+railroadxls<-read_excel("_data/StateCounty2012.xls", skip = 4, col_names= c("state", "delete", "county", "delete", "employees"))%>%
+  select(!contains("delete"))%>%
+  filter(!str_detect(state, "Total"))
+
+railroadxls<-head(railroadxls, -2)%>%
+  mutate(county = ifelse(state=="CANADA", "CANADA", county))
+
+railroadxls
+```
+
+## Describe the data: Railroad
+
+This resulting table contains three variables (state, county, and total employees) and `r nrow(railroadxls)` observations. Every row is a unique combination of state and county; therefore, each row is a single case. (Check out my use of r embedded in this text to count rows -- I hope it works!) 
+
+As we surmised in Challenge 1, these data describe the aggregated number of railroad personnel employed in various counties in the U.S. in the year 2012. The counties are embedded within states; all 50 US states are included as well as 3 other locations including Washington DC. These data were likely collected from railroad offices/stations, rather than counties; not all counties have railroad offices/stations.
+
+```{r}
+#| label: summary
+railroadxls%>%
+  summarise(across(c(state,county), n_distinct))
+```
+In summary: There are 54 unique "states" and 1710 unique counties in the dataframe. Since we know there are 2931 cases, but fewer unique county names, we can infer that some county names must be repeated across states. In my subsequent analyses, I will be sure not to use the county name to reference the total number of cases, because I will lose information. 
+
+## Grouped Summary Statistics with Interpretations 
+
+The total number of reported railroad employees in 2012 was 256,094 -- in other words, about a quarter of a million people. 
+
+```{r}
+railroadxls %>%
+  summarise(total_employees = sum(employees))
+```
+According to [IBISWorld](https://www.ibisworld.com/industry-statistics/employment/rail-transportation-united-states/#:~:text=How%20many%20people%20are%20employed,the%20US%20as%20of%202023), the Rail Transportation industry in the US currently employs 177,747 people -- a nearly 7% decrease since 2012. Their analysis of the past 10 years (since 2013, just after this data were collected) show a significant decrease in employees in 2020 (presumably an effect of the pandemic) with a steady increase in the subsequent 2 years, and then another decline of nearly 2% in 2023 as compared with 2022. On average, over the past 5 years (since 2018), the number of people employed by the US railroad industry has increase 1.1% annually. 
+
+```{r}
+railroadxls%>%
+  group_by(state)%>%
+  summarise(total_employees = sum(employees),num_counties =n())%>%
+  arrange(desc(total_employees))
+```
+
+Within the dataframe, I grouped the counties by state. Then, within each state group, I calculated the sum of employees and counted the number of counties. In the table above, these summary data are presented in descending order. 
+
+We can see that the states with the most counties and employees are Texas, Illinois, New York, Nebraska, and California. Perhaps the only surprise in here might be Nebraska, which is currently the 38th most populous state in the US (in approximately the 25th percentile, and this was similar in 2012), whereas the other states in that top 5 list are both large and populous. A little historical digging reveals a probable explanation: not only do Nebraska's railroads handle a tremendous amount of agriculture traffic, and but Omaha was also eastern terminal of the Transcontinental Railroad. 
+
+For me, these data invite questions about the changing usage of railroad within a states transportation infrastructure. Are freight and passenger traffic decreasing and increasing at the same rate? As the relative proportions of passenger and freight traffic shifts in a given state, how does this affect the need for employment? (I.e. does freight require fewer people?) It would be interesting to compare these typs of data over time and contextualize them within historical trends of the industry. 

@@ -1,0 +1,83 @@
+---
+title: "Challenge 3"
+author: "Noah Dixon"
+description: "Tidy Data: Pivoting"
+date: "6/08/2023"
+format:
+  html:
+    df-print: paged
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_3
+  - eggs
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Read in the Data
+
+```{r}
+#| label: read data
+eggs_from_csv <- read_csv("_data/eggs_tidy.csv")
+```
+
+## Describe the Data
+
+In order to get a better sense of what the data looks like, we can print the first 6 rows of the data using the head function.
+
+```{r}
+#| label: check data
+head(eggs_from_csv)
+```
+
+It appears this data set is showing the number of eggs sold for different egg types during each month for specific years. Lets see how many years there are in the data set.
+
+```{r}
+#| label: check data again
+print(unique(eggs_from_csv$year))
+```
+
+We have confirmed that the data set shows data for multiple years. For this data, it is clear that a case should be represented by a month, year, and container size (large_half_dozen, large_dozen, extra_large_half_dozen, and extra_large_dozen). Therefore, we need to pivot the data to remove the large_half_dozen, large_dozen, extra_large_half_dozen, and extra_large_dozen columns and add a container size column.
+
+
+## Describe the Final Dimensions
+
+The output below shows the dimensions of the current data fram in terms of number of rows and columns, as well as the expected dimensions of the new dataframe after pivoting.
+
+```{r}
+#existing rows/cases
+nrow(eggs_from_csv)
+
+#existing columns/cases
+ncol(eggs_from_csv)
+
+#expected rows/cases
+nrow(eggs_from_csv) * 4
+
+# expected columns 
+ncol(eggs_from_csv) - 4 + 2
+
+```
+
+## Pivot the Data
+
+Again, after pivoting a case should be represent a month, year, and container size.
+
+```{r}
+eggs_tidy <- pivot_longer(eggs_from_csv, col = large_half_dozen:extra_large_dozen, names_to = "container", values_to = "quantity")
+
+eggs_tidy
+```
+
+As we can see, the pivoted data is the expected size (480 x 4).

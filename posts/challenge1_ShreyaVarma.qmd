@@ -1,0 +1,66 @@
+---
+title: "Challenge 1 Solution"
+author: "Shreya Varma"
+description: "Reading in data and creating a post"
+date: "6/17/2023"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_1
+  - railroads
+  - faostat
+  - wildbirds
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to
+
+1)  read in a dataset, and
+
+2)  describe the dataset using both words and any supporting information (e.g., tables, etc)
+
+## Read in the Data
+
+Solution: As it is a csv file I am using read_csv() funtion to read the data and viewing the top 10 rows to see if the data was correctly imported along with headers.
+```{r}
+railroad_data <- read_csv("_data/railroad_2012_clean_county.csv")
+head(railroad_data,10)
+
+```
+
+## Describe the data
+
+Solution: This looks like a dataset of number of Railroad employees in the US at a state and county level. The Cook county in Illinois had maximum exployees 8207 and there are multiple counties which had only 1 employee which is the least number of employees. The average number of employees in each county is 87. We see that the county name has duplicates this means that it is not unique and the associated state information is necessary. There are a total of 255,432 employees for 53 states in the US. There are no missing values in any of the columns.    
+
+```{r}
+#| label: summary
+spec(railroad_data)
+summary(railroad_data)
+n_distinct(railroad_data$state)
+sum(railroad_data$total_employees)
+colSums(is.na(railroad_data))
+
+
+any(duplicated(railroad_data$county))
+subset(railroad_data,duplicated(county))
+railroad_data[duplicated(railroad_data$county), ]
+railroad_data[railroad_data$county == 'APO',]
+
+
+railroad_data %>% arrange(desc(total_employees))
+```

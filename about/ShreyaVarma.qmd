@@ -1,0 +1,42 @@
+---
+title: "Shreya Varma"
+image: images/Shre.jpeg
+about:
+  template: solana
+  image-width: 15em
+  image-shape: round
+  image: images/Shre.jpeg
+  links:
+    - icon: github
+      text: Github
+      href: https://github.com/shreya-1306
+---
+
+##Instructions
+
+  - save a copy of this document as *FirstLast.qmd* in the **about** folder
+  - replace *Your Name* in yaml header with your first and last name
+  - save an image (jpeg, png) to use in the **about/images** folder
+  - replace image names in yaml header
+  - replace github user name
+  - fill in information below, as appropriate
+  - commit to github and submit pull request
+
+## Education/Work Background
+MS CS Grad student at UMass, Amherst
+
+
+## R experience
+None
+
+## Research interests
+Data Science
+
+## Hometown
+Mumbai, India
+
+## Hobbies
+Dancing, Travelling
+
+## Fun fact
+I do counselling

@@ -1,0 +1,70 @@
+---
+title: "Challenge 9 Submission"
+author: "Suyash Bhagwat"
+description: "Creating a function"
+date: "07/04/2023"
+format:
+  html:
+    df-print: paged
+    toc: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_9
+  - railroad
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(ggplot2)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is simple. Create a function, and use it to perform a data analysis / cleaning / visualization task:
+
+Examples of such functions are:
+1) A function that reads in and cleans a dataset.  
+2) A function that computes summary statistics (e.g., computes the z score for a variable).  
+3) A function that plots a histogram.  
+
+That's it!
+
+**Ans:** For this challenge, I am going to use the railroad_2012_clean_county.csv dataset. The dataset is already cleaned so therefore there is no need to write a clean dataset function. The functions implemented are:
+
+1) get_z_score: Calculates the z-score of a column and returns the z_scores
+2) plot_histogram: Outputs a histogram for a given input numerical data column
+```{r}
+#This function calculates the z-score of a column and returns the z_scores
+get_z_score <- function(col_name) {
+  z_scores <- (col_name - mean(col_name)) / sd(col_name)
+  return(z_scores)
+}
+
+#This function outputs a histogram for a given input numerical data column
+plot_histogram <- function(data, col_name, title, fill="steelblue", xlab="x", ylab="Count",x_max=2000,y_max=700){
+   data %>%
+     ggplot(aes({{col_name}}))+ geom_histogram(fill=fill)+labs(x=xlab, y=ylab, title = title) + xlim(0,x_max) + ylim(0,y_max)
+ }
+
+railroad_dataset <- read_csv("_data/railroad_2012_clean_county.csv")
+
+#Example of z-score function for the total_employees column of the railroad_2012_clean_county.csv dataset
+get_z_score(railroad_dataset$total_employees)
+
+#Example of histogram function for the total_employees column of the railroad_2012_clean_county.csv dataset
+plot_histogram(railroad_dataset,total_employees,"Histogram of total employees for railroad dataset",xlab="total_employees",ylab="Number of counties")
+```
+
+
+
+
+
+
+

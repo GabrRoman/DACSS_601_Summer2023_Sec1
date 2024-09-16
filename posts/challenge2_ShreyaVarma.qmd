@@ -1,0 +1,124 @@
+---
+title: "Challenge 2 Solution"
+author: "Shreya Varma"
+description: "Data wrangling: using group() and summarise()"
+date: "7/4/2023"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_2
+  - railroads
+  - faostat
+  - hotel_bookings
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to
+
+1)  read in a data set, and describe the data using both words and any supporting information (e.g., tables, etc)
+2)  provide summary statistics for different interesting groups within the data, and interpret those statistics
+
+## Read in the Data
+
+Read in one (or more) of the following data sets, available in the `posts/_data` folder, using the correct R package and command.
+
+-   railroad\*.csv or StateCounty2012.xls ⭐
+-   FAOstat\*.csv or birds.csv ⭐⭐⭐
+-   hotel_bookings.csv ⭐⭐⭐⭐
+
+```{r}
+
+```
+
+Add any comments or documentation as needed. More challenging data may require additional code chunks and documentation.
+
+## Describe the data
+
+Using a combination of words and results of R commands, can you provide a high level description of the data? Describe as efficiently as possible where/how the data was (likely) gathered, indicate the cases and variables (both the interpretation and any details you deem useful to the reader to fully understand your chosen data).
+
+I will be using the Hotel Bookings dataset for my Homework. I have imported it using the read_csv() function and will use the glimpse() function the see the columns it has. On a high level it seems to have the information of hotel type and its customer data like arrival departure information, number of people, their booking details, payment type and reservation details. The data has 119,390 rows and 32 columns and seems to be captured from different hotels between 2015 to 2015 when people checked in and out. To get more insights I will use the summary() function.
+```{r}
+
+hotel_bookings <- read_csv("_data/hotel_bookings.csv")
+hotel_bookings
+glimpse(hotel_bookings)
+
+```
+
+
+## Provide Grouped Summary Statistics
+
+Conduct some exploratory data analysis, using dplyr commands such as `group_by()`, `select()`, `filter()`, and `summarise()`. Find the central tendency (mean, median, mode) and dispersion (standard deviation, mix/max/quantile) for different subgroups within the data set.
+
+```{r}
+summary(hotel_bookings)
+
+lead_time_summary <- hotel_bookings %>% 
+  group_by(hotel) %>% 
+  summarize('mean_lead_time' = mean(lead_time), 'max_lead_time' = max(lead_time), 'min_lead_time' = min(lead_time))
+
+lead_time_stats
+
+
+ggplot(data = lead_time_summary, aes(x = mean_lead_time, y = hotel)) +
+  # Specify the type of plot and customize it as needed
+  geom_col(fill = "blue") +
+  labs(title = "Hotel type vs Lead Time", x = "Lead time", y = "Hotel type")
+
+ggplot(data = hotel_bookings, aes(x = lead_time, y = children)) +
+  geom_point() +
+  labs(title = "Children vs Lead time", x = "Lead time", y = "Children")
+
+month_counts <- table(hotel_bookings$arrival_date_month)
+barplot(month_counts, names.arg = month.name, col = 'yellow')
+
+
+is_categorical <- class(hotel_bookings$is_canceled) == "factor" || is.character(hotel_bookings$is_canceled)
+
+# Convert to categorical if not already
+if (!is_categorical) {
+  hotel_bookings$is_canceled <- as.factor(hotel_bookings$is_canceled)
+}
+
+
+active_booking <- hotel_bookings %>% 
+  filter(deposit_type== 'Non Refund') %>%
+  select(hotel, is_canceled)
+
+hotel_bookings%>%
+  ggplot(aes(x=hotel,fill=is_canceled)) + geom_bar()
+
+active_booking%>%
+  ggplot(aes(x=hotel,fill=is_canceled)) + geom_bar()
+
+
+```
+
+### Explain and Interpret
+
+Be sure to explain why you choose a specific group. Comment on the interpretation of any interesting differences between groups that you uncover. This section can be integrated with the exploratory data analysis, just be sure it is included.
+
+From the summary we can see that mean lead time is 104 days which means that people book their stays approximately 3 to 3.5 months in advance. We can also check if the lead time is higher for Resort hotels vs for City hotels. My hypothesis is that it should be higher for Resort hotels since people book their vacations in advance but City hotels can be booked due to office work or immediate need basis too. 
+
+We can see that my hypothesis is not correct and the lead time for City hotels is slightly higher infact. This could also be due to the fact that we have more data of City hotels than Resort hotel. Almost twice. This could skew the lead time thus we cannot say for sure about lead time or analysis related to Hotel type.  
+
+Instead I checked if people with children have a higher lead time. Thus I created the plot of children vs lead time. However we can see that people with 0 children have higher lead time. Thus the hypothesis is false.
+
+I also checked with arrival month frequency and it looks like February was the highest frequency month. 
+
+We can also see that people do make cancellations for deposit type 'Non Refund' very often too. Thus we cannot say that a Non refundable booking will result in no cancellations.

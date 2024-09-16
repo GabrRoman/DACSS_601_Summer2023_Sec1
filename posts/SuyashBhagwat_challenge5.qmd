@@ -1,0 +1,99 @@
+---
+title: "Challenge 5 Submission"
+author: "Suyash Bhagwat"
+description: "Introduction to Visualization"
+date: "6/14/2023"
+format:
+  html:
+    df-print: paged
+    toc: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_5
+  - public_schools
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(ggplot2)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to:
+
+1)  read in a data set, and describe the data set using both words and any supporting information (e.g., tables, etc)
+2)  tidy data (as needed, including sanity checks)
+3)  mutate variables as needed (including sanity checks)
+4)  create at least two univariate visualizations
+   - try to make them "publication" ready
+   - Explain why you choose the specific graph type
+5)  Create at least one bivariate visualization
+   - try to make them "publication" ready
+   - Explain why you choose the specific graph type
+
+[R Graph Gallery](https://r-graph-gallery.com/) is a good starting point for thinking about what information is conveyed in standard graph types, and includes example R code.
+
+(be sure to only include the category tags for the data you use!)
+
+## Read in data
+
+Read in one (or more) of the following datasets, using the correct R package and command.
+
+-   Public School Characteristics ⭐⭐⭐⭐ 
+
+**Ans:** The data set used for this challenge is given in the code below:
+```{r}
+data_pub_school <- read_csv("_data/Public_School_Characteristics_2017-18.csv")
+data_pub_school
+glimpse(data_pub_school)
+```
+
+### Briefly describe the data
+
+**Ans:** The Public_School_Characteristics_2017-18.csv data set provides information on the different types of US schools (e.g. elementary,middle, high school) for the year 2017-2018. The data set is a tibble of size 100,729 rows × 79 cols. The glimpse function provides us more information about the columns and their datatypes for the data set.
+
+## Tidy Data (as needed)
+
+Is your data already tidy, or is there work to be done? Be sure to anticipate your end result to provide a sanity check, and document your work here.
+
+**Ans:** For the purpose of this challenge(data visualization), the data is in a tidy format and the only change that needs to be made are the filtering of 'Not Reported' and 'Not Applicable' value for SCHOOL_LEVEL column and the creation of the total_student_enrollment column. The total_student_enrollment is the sum of the male and female enrollment.
+
+```{r}
+data_pub_school <- filter(data_pub_school,SCHOOL_LEVEL!="Not Reported" | SCHOOL_LEVEL!="Not Applicable")
+```
+Are there any variables that require mutation to be usable in your analysis stream? For example, do you need to calculate new values in order to graph them? Can string values be represented numerically? Do you need to turn any variables into factors and reorder for ease of graphics and visualization?
+
+Document your work here.
+
+**Ans:** Yes, I need to create the total_student_enrollment column. The total_enrollment is the sum of the male and female student enrollment.
+```{r}
+data_pub_school<-mutate(data_pub_school,total_student_enrollment = TOTMENROL+TOTFENROL)
+data_pub_school
+```
+
+## Univariate Visualizations
+
+**Ans:** Given below is the bar chart of the school count vs school level. I chose a bar chart since a bar chart can effectively visualize univariate categorical data. The chart below gives us a visualization of the most common school level. For e.g. for our data, the most common school_level is 'Elementary'.
+```{r}
+ggplot(data_pub_school, aes(SCHOOL_LEVEL)) + geom_bar(fill = "steelblue")+labs(x = "School_Level", y = "School Count", title = "School Count vs School Level") +theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+The second univariate plot is a histogram of the total student enrollment.I chose a histogram since a histogram can effectively visualize univariate continuous/numerical data.
+
+```{r}
+ggplot(data_pub_school, aes(total_student_enrollment)) + 
+  geom_histogram(bins = 100,aes(y = ..density..), alpha = 0.5) + labs(title = "Histogram of Total Student Enrollment with Density Plot", x = "Total Student Enrollment", y = "Density")+ geom_density(alpha = 0.1, fill="red") +xlim(0, 2500)
+```
+## Bivariate Visualization(s)
+
+**Ans:** Given below is a box plot of the Total student count vs the School Level. I chose a box plot since a box plot can effectively visualize bivariate data with x being the categorical variable and y being the numerical/continuous variable. Scatter plots need both x and y to be numerical data and hence it can't be used in this case.
+```{r}
+ggplot(data_pub_school, aes(SCHOOL_LEVEL, total_student_enrollment)) + geom_boxplot() + labs(x = "School_Level", y = "Total Student Enrollment", title = "Total Student Enrollment vs School Level") +theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```

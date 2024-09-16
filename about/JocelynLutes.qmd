@@ -1,0 +1,34 @@
+---
+title: "Jocelyn Lutes"
+image: images/JocelynLutes.JPG
+about:
+  template: solana
+  image-width: 15em
+  image-shape: round
+  image: images/JocelynLutes.JPG
+  links:
+    - icon: github
+      text: Github
+      href: https://github.com/jlu90
+---
+
+## Education/Work Background
+I completed my undergraduate studies at Viterbo University in La Crosse, WI, where I double-majored in Biopsychology and Spanish. Then, I moved to Boston, MA where I earned my M.S. in Developmental and Brain Sciences at UMass Boston and worked as a research assistant in a lab that investigated the impact of medications during pregnancy on the cognitive and behavioral development of children. Currently, I am pursuing my M.S. in Computer Science at UMass Amherst, and I work full-time as a Data Scientist at MassMutual.
+
+## R experience
+My first exposure to the data science workflow was in Python, but in my day-to-day work, I frequently use R to clean and wrangle data, build predictive models, and visualize results. So far, everything that I have learned about R has been motivated by needing to solve specific, work-related tasks, so I am very excited to more formally learn about the tidyverse and see how it can lead to an improved data science experience!
+
+## Research interests
+I am predominantly interested in how machine learning can be used to solve problems within the health and medical domains.
+
+## Hometown
+I am from the very small town of Benton, WI (population 958)!
+
+## Hobbies
+- Cooking and baking
+- Trying new restaurants
+- Listening to podcasts
+- Learning new things via MOOCs
+
+## Fun fact
+During my undergraduate research experience, I extracted and photographed the brains of fruit flies.

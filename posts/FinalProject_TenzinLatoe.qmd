@@ -1,0 +1,174 @@
+---
+title: "Final Project"
+author: "Tenzin Latoe"
+description: "An analysis of world data record"
+date: "07/16/2023"
+format:
+  html:
+    df-print: paged
+categories:
+  - Final Project
+  - 
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(ggplot2)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Introduction
+
+For my final project, I will be analyzing a comprehensive dataset that provides various socio-economic and demographic information from 195 countries. This data set encompasses a wide range of information, including statistics related to population characteristics, environmental aspects,economic factors, educational indicators, healthcare measures,and various other data points. 
+
+## Data Description
+
+The data set I used is from the website Kaggle and is titled "Global Country Information Dataset 2023". The are 195 countries represented, and the information provided for each country is: Density (P/Km2), Abbreviation, Agricultural Land (%), Land Area (Km2), Armed Forces Size, Birth Rate, Calling Code, Capital/Major City, CO2 Emissions, CPI: CPI Change (%), Currency_Code, Fertility Rate, Forested Area (%),  Gasoline_Price, GDP:Gross Primary Education Enrollment (%), Gross Tertiary Education Enrollment (%), Infant Mortality, Largest City, Life Expectancy, Maternal Mortality Ratio, Minimum Wage, Official Language, Out of Pocket Health Expenditure (%), Physicians per Thousand, Population, Population, Labor Force Participation (%), Tax Revenue (%), Total Tax Rate, Unemployment Rate, Urban Population, Latitude and Longitude. 
+
+
+
+```{r}
+world_data <- read_csv ("_data/world-data-2023.csv")
+world_data
+```
+
+```{r}
+
+
+print(summarytools::dfSummary(world_data,
+                        varnumbers = FALSE,
+                        plain.ascii  = FALSE, 
+                        style        = "grid", 
+                        graph.magnif = 0.70, 
+                        valid.col    = FALSE),
+      method = 'render',
+      table.classes = 'table-condensed')
+```
+
+
+## Analysis  
+
+The research questions I want to explore with this data set are the following: 
+
+- Is there a correlation between primary education enrollment and the unemployment rate? 
+
+- Does CO2 emission have an impact on life expectancy, fertility rate, and infant mortality rate? 
+
+This data set has several missing values, and using the code below reveals there are missing values under every column, with the exception of "Country Name" and "Density". There are also several rows where a particular name in a row in unfinished/ incomplete. To tidy the data, I've replaced all incomplete names of countries, capital cities, and largest city names with the complete and correct names. 
+
+```{r}
+
+#check with missing values
+anyNA(world_data, recursive = TRUE)
+
+#column names with missing values
+names(which(colSums(is.na(world_data))>0))
+
+# Define the rows and columns to be changed
+rows_to_change_country <- c(151)
+rows_to_change_capital <- c(24, 32, 38, 41, 77, 105, 113, 137, 151, 176, 177)
+rows_to_change_largest_city <- c(24, 38, 41, 44, 77, 105, 113,  151, 169, 170, 176, 177)
+
+# Define the new names for each column
+new_names_country <- c("Sao Tome and Principe dobra")
+new_names_capital <- c("Brasília", "Yaoundé", "Bogotá", "San José", "Reykjavík","Malé", "Chişinău", "Asunción", "São Tomé", "Lomé", "Nuku'alofa")
+new_names_largest_city <- c("Brasília", "Bogotá", "San José", "Nicosa", "Reykjavík", "Malé", "Chişinău", "São Tomé", "Stockholm", "Zürich", "Lomé", "Nuku'alofa")
+
+# Apply changes to the specified rows and columns
+world_data$Country[rows_to_change_country] <- new_names_country
+world_data$`Capital/Major City`[rows_to_change_capital] <- new_names_capital
+world_data$`Largest city`[rows_to_change_largest_city] <- new_names_largest_city
+
+world_data
+```
+
+## Visualization
+
+In order to plot the following graphs, we need to convert Unemployment rate,  and gross primary education enrollment from "character" to "numeric". 
+```{r}
+#convert from character to numeric
+world_data$`Unemployment rate` <- gsub("%", "", world_data$`Unemployment rate`)
+world_data$`Unemployment rate` <- as.numeric (world_data$`Unemployment rate`)
+class(world_data$`Unemployment rate`)
+
+world_data$`Gross primary education enrollment (%)` <- gsub("%", "", world_data$`Gross primary education enrollment (%)`)
+world_data$`Gross primary education enrollment (%)` <- as.numeric (world_data$`Gross primary education enrollment (%)`)
+class(world_data$`Gross primary education enrollment (%)`)
+
+```
+
+```{r}
+
+# Correlation between Education enrollment and unemployment rate
+ggplot(world_data, aes(x = `Gross primary education enrollment (%)`, y = `Unemployment rate`)) +
+  geom_point()+
+  labs(x = "Education Enrollment Rate", y = "Unemployment Rate") +
+  theme_minimal()+
+  ggtitle("Correlation between Education Enrollment Rate and Unemployment Rate")
+
+```
+
+
+The scatter plot suggests a negative correlation between primary education enrollment and unemployment; meaning as education enrollment increases, the unemployment rate tends to decrease, and vice versa. The plots are also fairly tightly clustered, which can suggest a stronger correlation. Although correlation does not have to imply causation, the negative correlation can suggest that countries with higher education enrollment rates are also more likely to have lower unemployment rates. 
+
+
+
+```{r}
+ggplot(world_data, aes(x = `Co2-Emissions`, y=Rate)) +
+  geom_line(aes(y = `Life expectancy`, color = "Life Expectancy")) +
+  geom_line(aes(y = `Fertility Rate`, color = "Fertility Rate")) +
+  geom_line(aes(y = `Infant mortality`, color = "Infant Mortality Rate")) +
+  scale_color_manual(name = "Variables",
+                     values = c("CO2 Emissions" = "brown",
+                                "Life Expectancy" = "green",
+                                "Fertility Rate" = "blue",
+                                "Infant Mortality Rate" = "black")) +
+  theme_minimal()+
+  ggtitle("Correlation between Co2 Emissions, Fertility Rate, and Infant Mortality Rate")
+```
+
+While the line graph is difficult to inspect visually based on the graph above, it appears the higher levels of Co2 emmisions result in generally higher levels of infant mortality rate, lower fertility rate, and lower life expectancy. 
+
+```{r}
+top_10_most<- world_data %>%
+  arrange(desc(Population)) %>%
+  head(10)
+
+top_10_least <- world_data %>%
+  arrange(Population) %>%
+  head(10)
+
+ggplot(top_10_most, aes(x = Country, y = Population, fill=Country)) +
+  geom_bar(stat = "identity", alpha = 0.8) +
+  labs(title = "Top 10 most populated Country",
+       y = "Population",
+       x = "Country") +
+  theme_linedraw()+
+  coord_flip(xlim = NULL, ylim = NULL, expand = FALSE, clip = "on") 
+  
+```
+
+```{r}
+ggplot(top_10_least, aes(x = Country, y = Population, fill=Country)) +
+  geom_bar(stat = "identity", alpha = 0.8) +
+  labs(title = "10 Least populated countries",
+       y = "Population",
+       x = "Country") +
+  theme_linedraw()+
+  coord_flip(xlim = NULL, ylim = NULL, expand = FALSE, clip = "on") 
+```
+The graphs encompass all countries, with a distinction between the most populated and least populated ones. I initially tried to graph all the countries together,;however, due to the extensive number of countries in the data set, I narrowed down the data set to focus on the top 10 most populated and 10 least populated countries for improved visualization. These graphs show the most populated country in this data set is China, and the least populated country is Vatican City. 
+
+## Future Analysis 
+
+Although my analysis was limited to a select set of variables, this data set provides many additional aspects  that can be subject to further analysis. Geographical data using latitude and longitude can be used to create heat maps to patterns. Another analysis could be done to use tax data to analyze tax rates in different countries and how it can relate to economic developments. 
+
+In conclusion, while my analysis was focused on only a few variables, there is potential for numerous other types of analysis due to the rich and diverse information provided in this data set. 
+
+
+

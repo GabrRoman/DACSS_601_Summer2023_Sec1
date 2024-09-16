@@ -1,0 +1,31 @@
+---
+title: "Tenzin Latoe"
+image: images/Panda.jpeg
+about:
+  template: solana
+  image-width: 15em
+  image-shape: round
+  image: images/Panda.jpeg
+  links:
+    - icon: github
+      text: Github
+      href: https://github.com/tenzinl
+---
+
+## Education/Work Background
+BS Psychology
+
+## R experience
+None
+
+## Research interests
+Open to all as a newbie
+
+## Hometown
+Santa Fe,NM
+
+## Hobbies
+Reading
+
+## Fun fact
+I'm learning the kalimba instrument

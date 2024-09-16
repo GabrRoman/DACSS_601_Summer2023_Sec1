@@ -1,0 +1,63 @@
+---
+title: "Matt Zambetti: HW2 Submission"
+author: "Matt Zambetti"
+date: "2023-06-10"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - hw2
+---
+# Homwork Two: Reading in Data
+
+```{r setup, include=FALSE}
+library(tidyverse)
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Choosing the Data Set
+
+The data that I am using is the McDonalds menu data. The first few entries can be seen below.
+
+I got the data at: (https://www.kaggle.com/datasets/deepcontractor/mcdonalds-india-menu-nutrition-facts)
+
+```{r}
+
+mcdonalds_tidy <- read_csv("_data/mcdonaldata.csv")
+
+head(mcdonalds_tidy)
+```
+
+## Cleaning the Data Set
+
+In my opinion, there is nothing I need to do with cleaning the data. It is nicely organized and in a "tidy" form.
+
+## Narrative About the Data Set
+
+This data provides a plethora of information of each menu option at McDonalds. Each entry contains the serving size, the calories for that serving, common macro-nutrients, and the type of product the entry is (whether its on the regular, gourmet, beverages, etc. menus).
+
+Below is a list of each variable and their type.
+
+```{r}
+for (idx in 2:14) {
+  cat(colnames(mcdonalds_tidy)[idx], ": ", sapply(mcdonalds_tidy[idx], typeof),"\n")
+}
+```
+
+Here we can see the first few entries are character and then once we get into the nutrition facts all of the values are doubles. The final variable 'menu' can be seen as a character as well.
+
+## Potential Research Questions
+
+As a student athlete that travels a lot I am interested in healthier options in fast food all the time. Using this data I could answer a few potential research questions. What are some lower calorie options at McDonalds, and what are some higher calorie foods that contain more protein? A lot of times I will still eat higher calorie foods even if the macro-nutrients are good. This means finding things that are low in fat and high in protein.
+
+This data can be very useful in finding foods with low saturated and total fat, and also to find foods that I should avoid because of the high fat content. To my surprise, many foods that are lower in carbohydrates tend to be very high in fat which is not always good.
+
+Not only can this analysis of the data be useful for me, but it can be useful for many other athletes are I am sure many experience the same dilemmas.
+
+Another useful piece of data is to find healthier options in each of the menu categories, for example there are the categories "regular" and "beverage", which finding good options in both of these can help make a better complete meal.
+
+

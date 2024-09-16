@@ -1,0 +1,20 @@
+{
+  "hash": "adf7fce107d89539e72f995d31552643",
+  "result": {
+    "markdown": "---\ntitle: \"Challenge 10\"\nauthor: \"Danny Holt\"\ndescription: \"purrr\"\ndate: \"7/6/2023\"\nformat:\n  html:\n    df-print: paged\n    toc: true\n    code-fold: true\n    code-copy: true\n    code-tools: true\ncategories:\n  - challenge_10\n---\n\n\n\n\n## First steps\n\n### `scatter`\nFirst, I'll define the function I used for Challenge 9. The function creates a scatter plot with arguments of a dataframe, two variables, and a plot title.\n\n::: {.cell}\n\n```{.r .cell-code}\n# Function to plot a scatter plot\nscatter <- function(data, x, y, title) {\n  # Convert x and y to symbols\n  x <- substitute(x)\n  y <- substitute(y)\n  \n  # Create the scatter plot using ggplot2\n  plot <- ggplot(data, aes(x = !!x, y = !!y)) +\n    geom_point() +\n    labs(title = title, x = deparse(x), y = deparse(y)) +\n    theme_minimal()\n  \n  # Print the scatter plot\n  print(plot)\n}\n```\n:::\n\n### Define dataframe\nNext, we need to define a dataframe, `df`, to use.\n\n::: {.cell}\n\n```{.r .cell-code}\n# define a dataframe\nset.seed(489)  # set seed\nx <- rnorm(100)\ny <- rnorm(100)\ndf <- data.frame(x = x, y = y)\n```\n:::\n\n## Examples\nNow, we'll use my `scatter` function with `purrr`. `purrr` will apply `scatter` to different subsets of `df`.\n\n### Example 1\n\n::: {.cell}\n\n```{.r .cell-code}\n# Apply scatter function to each subset of data\ndf_list <- split(df, df$x > 0)  # Split data frame based on x > 0\nscatter_list <- map(df_list, ~scatter(.x, x, y, title = \"Scatter Plot\"))\n```\n\n::: {.cell-output-display}\n![](dannyholt_challenge10_files/figure-html/unnamed-chunk-4-1.png){width=672}\n:::\n\n::: {.cell-output-display}\n![](dannyholt_challenge10_files/figure-html/unnamed-chunk-4-2.png){width=672}\n:::\n:::\n\nIn the first example, `split(df, df$x > 0)` splits `df` into 2 subsets based on whether `x` is greater than 0. The resulting list `df_list` contains two dataframes. Then, `map()` applies `scatter` to each dataframe in the list, creating a list of scatterplots: `scatter_list`.\n\n### Example 2\n\n::: {.cell}\n\n```{.r .cell-code}\n# Apply scatter function to multiple data frames\ndf2 <- data.frame(x = rnorm(100), y = rnorm(100))\ndf_list <- list(df, df2)\nscatter_list <- map(df_list, ~scatter(.x, x, y, title = \"Scatter Plot\"))\n```\n\n::: {.cell-output-display}\n![](dannyholt_challenge10_files/figure-html/unnamed-chunk-5-1.png){width=672}\n:::\n\n::: {.cell-output-display}\n![](dannyholt_challenge10_files/figure-html/unnamed-chunk-5-2.png){width=672}\n:::\n:::\n\nIn the second example, we create another data frame `df2`. We then combine `df` and `df2` into a list `df_list`, and `map()` applies `scatter` to each dataframe in the list, again generating a list of scatter plots `scatter_list`.\n",
+    "supporting": [
+      "dannyholt_challenge10_files"
+    ],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {
+      "include-in-header": [
+        "<link href=\"../site_libs/pagedtable-1.1/css/pagedtable.css\" rel=\"stylesheet\" />\n<script src=\"../site_libs/pagedtable-1.1/js/pagedtable.js\"></script>\n"
+      ]
+    },
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}

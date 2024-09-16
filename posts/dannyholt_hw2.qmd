@@ -1,0 +1,131 @@
+---
+title: "Homework 2"
+author: "Danny Holt"
+description: "Reading in Data"
+date: "6/13/2023"
+format:
+  html:
+    df-print: paged
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - HW2
+  - strikes
+---
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(readxl)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Read in a dataset
+First, we'll read in the data from the Excel sheet `monthly-listing.xlsx`.
+
+Source: https://www.bls.gov/web/wkstp/monthly-listing.xlsx 
+```{r}
+  #Read in data
+  strike <- read_excel("_data/monthly-listing.xlsx", skip=1)
+  strike
+```
+
+## Clean the data
+Next, we'll clean the data. First, we'll remove redundant and unnecessary variables. Then, we'll rename some variables with cumbersome or confusing titles.
+```{r}
+  # remove redundant and unnecessary variables
+  strike <- strike %>%
+    select("Organizations involved","States","Areas","Ownership","Union acronym","Work stoppage beginning date","Work stoppage ending date","Number of workers[2]","Days idle, cumulative for this work stoppage[3]")
+  # rename variables
+  strike <- strike %>%
+    rename(
+      "Employer"="Organizations involved",
+      "Union"="Union acronym",
+      "Start date"="Work stoppage beginning date",
+      "End date"="Work stoppage ending date",
+      "Workers"="Number of workers[2]",
+      "Days struck"="Days idle, cumulative for this work stoppage[3]"
+    )
+  # view cleaned data
+  strike
+```
+
+## Provide a narrative about the data set
+
+This data set shows data on work stoppages (strikes) from the Bureau of Labor Statistics, from 1993 to the present.
+
+### Variables
+`Employer` shows the employer of the workers striking. This variable is categorical.
+`States` shows the state or state(s) in which the strike took place. This variable is categorical.
+`Areas` shows a more specific location of the strike, at a lower level than the state(s). This variable is categorical.
+`Ownership` tells what type of entity the employer is of the following options: private industry, local and/or state government. This variable is categorical.
+`Union` shows the acronym of the union to which the striking workers belonged. This variable is categorical.
+`Start date` shows the date on which the strike began. This column contains numerical, discrete, interval data.
+`End date` shows the date on which the strike ended. This column contains numerical, discrete, interval data.
+`Workers` shows the number of workers who went on strike. This column contains numerical, discrete, ratio data.
+`Days struck` shows the total number of hours of labor workers withheld during the strike. This is distinct from the difference between `Start date` and `End date` because, in some strikes, some workers go back to work before the strike ends. This column contains numerical, discrete, ratio data.
+
+### Some notable trends
+Let's see if anything jumps out when we create a new data frame, combining strikes that start in the same year. How have numbers of workers on strike and number of days struck changed over time in the past 30 years?
+```{r}
+  # select relevant variables
+  strike_yr <- strike %>%
+    select(
+      "Start date",
+      "Workers",
+      "Days struck")
+  # truncate start date to year
+  strike_yr$"Start date" <- as.numeric(format(strike_yr$"Start date", "%Y"))
+  # rename start date to year
+  strike_yr <- strike_yr %>%
+    rename("Year"="Start date") %>%
+    rename("Days" = "Days struck")
+  # condense rows by year and remove problematic rows
+    strike_yr_sum <- strike_yr %>%
+      filter(Year>1990) %>%
+      group_by(Year) %>%
+      summarize(
+        Workers=sum(Workers, na.rm=TRUE),
+        Days.Struck=sum(Days, na.rm=TRUE)
+      )
+```
+
+First, let's view the years in order from most workers on strike to least.
+```{r}
+  strike_yr_sum%>%
+    arrange(desc(Workers))
+```
+
+Next, we'll view the years in order from most days struck to least.
+```{r}
+  strike_yr_sum%>%
+    arrange(desc(Days.Struck))
+```
+
+We can see that 2000 features high in both views. Let's go back to the un-condensed data and filter to strikes in 2000 with more than 5000 workers, sorted from most to least workers involved, to look at the most significant contributors.
+```{r}
+  strike00 <- strike
+# change date to year
+  strike00$"Start date" <- as.numeric(format(strike00$"Start date", "%Y"))
+  strike00 <- strike00 %>%
+    rename("Year" = "Start date") %>%
+# filter to 2000, large strikes
+    filter(Year==2000,Workers>5000) %>%
+    select(Union,Employer,States,Areas,Workers,"Days struck")
+  strike00workers <- arrange(strike00, desc(Workers))
+  strike00workers
+```
+
+### Some more potential research questions
+Has the average strike size and length changed over time?
+
+How have strikes changed in length, frequency, and magnitude (number of workers and days struck) within the private sector and within the public sector, viewed separately?
+
+Are there significant geographic trends?
+
+Do large strikes in an area or industry tend to be followed by more strikes in that area or industry?

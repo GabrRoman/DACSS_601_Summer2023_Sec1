@@ -1,0 +1,135 @@
+---
+title: "Challenge 4 Submission"
+author: "Matt Zambetti"
+description: "More data wrangling: pivoting"
+date: "5/30/2023"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_4
+  - abc_poll
+  - eggs
+  - fed_rates
+  - hotel_bookings
+  - debt
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(readxl)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to:
+
+1)  read in a data set, and describe the data set using both words and any supporting information (e.g., tables, etc)
+2)  tidy data (as needed, including sanity checks)
+3)  identify variables that need to be mutated
+4)  mutate variables and sanity check all mutations
+
+## Read in data
+
+The Data Set I chose to read in was the organic poultry data:
+
+-   organiceggpoultry.xls⭐⭐
+
+```{r}
+
+org_poultry_data <- read_excel("_data/organiceggpoultry.xls")
+
+head(org_poultry_data)
+
+```
+
+### Briefly describe the data
+
+This data has various parts of the chicken (ranging from whole, to breast) with their month, year and price.
+
+## Tidy Data (as needed)
+
+We needed to do a few things to tidy the data. The first was removing the first three rows, these all contained data that was not necessary. 
+
+The second was adding the column headers. Interestingly enough, these were actually in the fourth row, so we moved it up. In addition, some of the names had an extra newline character, so we removed those with gsub.
+
+Finally, the "Extra Large 1/2 Dozen" has some weird formatting so we manually edited this column name.
+
+
+```{r}
+
+org_poultry_data <- org_poultry_data[-c(1,2,3),]
+
+# Changing the column names
+colnames(org_poultry_data) <- 
+  gsub('\n','',org_poultry_data[1,])
+
+colnames(org_poultry_data)[1] = 'Month'
+
+org_poultry_data <- org_poultry_data[-c(1),]
+
+# This one is weird
+colnames(org_poultry_data)[3] <- "Extra Large 1/2 Dozen"
+
+head(org_poultry_data)
+
+```
+
+
+## Identify variables that need to be mutated
+
+The first set of variables that need to be mutated are the dates. The issue here is that only January of every year has a year attached to it. So the issue is expanding the year to a new column so every month is paired with a year.
+
+Secondly, in the "Bone-in Breast" column, there were some string values that were labeled "too few", so we had to replace those with the value 0.
+
+Finally, all the columns aside from the month, needed to be converted into ints from chrs, which we were able to do as seen below.
+
+
+```{r}
+
+# Add the year
+org_poultry_data <- add_column(org_poultry_data, year = 0, .before=1)
+
+year <- 2003
+for (idx in 1:120) {
+  if (idx %% 12 == 1) {
+    year <- year + 1
+    org_poultry_data[idx, 2] <- "January"
+  }
+  org_poultry_data[idx, 1] <- year
+}
+
+# Replacing non-numbers to 0
+org_poultry_data[9] <- replace(org_poultry_data$`Bone-in Breast`, 
+                            org_poultry_data$`Bone-in Breast`=='too few','0')
+
+# Change chr to int
+
+org_poultry_data$'Extra Large Dozen' <- as.numeric(org_poultry_data$'Extra Large Dozen')
+org_poultry_data$'Extra Large 1/2 Dozen' <- as.numeric(org_poultry_data$'Extra Large 1/2 Dozen')
+org_poultry_data$'Large 1/2 Doz.' <- as.numeric(org_poultry_data$'Large 1/2 Doz.')
+org_poultry_data$'Whole' <- as.numeric(org_poultry_data$'Whole')
+org_poultry_data$'B/S Breast' <- as.numeric(org_poultry_data$'B/S Breast')
+org_poultry_data$'Large Dozen' <- as.numeric(org_poultry_data$'Large Dozen')
+org_poultry_data$'Bone-in Breast' <- as.numeric(org_poultry_data$'Bone-in Breast')
+org_poultry_data$'Whole Legs' <- as.numeric(org_poultry_data$'Whole Legs')
+org_poultry_data$'Thighs' <- as.numeric(org_poultry_data$'Thighs')
+
+# Removing column 7 (NA)
+org_poultry_data <- org_poultry_data[-c(7)]
+
+
+# Printing the final data
+org_poultry_data
+
+```
+

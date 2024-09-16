@@ -1,9 +1,10 @@
 comments:
   giscus:
-    repo: DACSS/DACSS_601_Summer2023_Sec1
+    repo: DACSS/SummerCommentRepo
     category: Announcements
-toc-location: right
-search: true
+    mapping: url
+toc-location: left
+search: false
 execute:
   freeze: true
   error: true

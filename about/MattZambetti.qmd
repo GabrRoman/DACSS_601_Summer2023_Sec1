@@ -1,0 +1,41 @@
+---
+title: "Matt Zambetti"
+image: images/matt_zambetti.jpg
+about:
+  template: solana
+  image-width: 15em
+  image-shape: round
+  image: images/matt_zambetti.jpg
+  links:
+    - icon: github
+      text: Github
+      href: https://github.com/mzambetti01
+---
+
+## Education/Work Background
+
+Previously, I went to Virginia Tech (VT) for undergrad. There I studied Computer Science and minored in Mathematics and Human Computer Interaction. Here I was also on the Men's Soccer team where I was fortunate enough to play in an NCAA Sweet 16 game.
+
+For the previous two summers (2021 and 2022) and the current summer, I have worked at COllins Aerospace. The first internship focused on Chaos Engineering on UASs, the second summer focused on integrating computer vision models into projectiles, and the current summer focuses on autonomy algorithms in UASs.
+
+
+## R experience
+
+I have very little R experience. In fact, the only R experience I have is in one of my undergrad statistics classes where I explored basic commands that were covered already in Session 1 and Session 2.
+
+## Research interests
+
+I have not conducted much research myself, but I am interested in autonomous algorithms. Mostly pertaining to vehicle navigation, but also financial analytics.
+
+## Hometown
+
+I grew up in a suburb in Pennsylvania, the town is called Mechanicsburg, PA.
+
+## Hobbies
+
+Outside of school, I play for the Varsity Men's Soccer team at UMass. When I have free time I enjoy fishing, hiking, kayaking, and golf.
+
+
+## Fun fact
+
+I just bought a new truck.

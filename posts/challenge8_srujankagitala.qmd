@@ -1,0 +1,211 @@
+---
+title: "Challenge 8 - FAOSTAT"
+author: "Srujan Kagitala"
+description: "Joining Data"
+date: "7/1/2023"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_8
+  - faostat
+  - srujan_kagitala
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(ggplot2)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to:
+
+1)  read in multiple data sets, and describe the data set using both words and any supporting information (e.g., tables, etc)
+2)  tidy data (as needed, including sanity checks)
+3)  mutate variables as needed (including sanity checks)
+4)  join two or more data sets and analyze some aspect of the joined data
+
+(be sure to only include the category tags for the data you use!)
+
+## Read in data
+
+Read in one (or more) of the following datasets, using the correct R package and command.
+
+  - faostat ⭐⭐
+  
+I will doing some analysis around FAOSTAT datasets.
+
+```{r}
+#| label: read
+
+cattle_data <- read_csv("_data/FAOSTAT_cattle_dairy.csv")
+country_groups_data <- read_csv("_data/FAOSTAT_country_groups.csv")
+egg_chicken_data <- read_csv("_data/FAOSTAT_egg_chicken.csv")
+livestock_data <- read_csv("_data/FAOSTAT_livestock.csv")
+head(cattle_data)
+head(country_groups_data)
+head(egg_chicken_data)
+head(livestock_data)
+```
+
+### Briefly describe the data
+
+FAOSTAT provides data on cattle_dairy, country_groups, egg_chicken and livestock across the world.
+
+1. FAOSTAT_cattle_dairy.csv  - This dataset contains information on number of milk producing animals, yield and production from year 1961 to 2018 across the world. The information recorded per observation are `r names(cattle_data)`. There are atmost `r length(unique(cattle_data$Element))` observations per country every year. The total observations recorded are `r nrow(cattle_data)`.
+
+2. FAOSTAT_country_groups.csv  - This dataset contains information on how countries are grouped and their internationally accepted codes. There is information about `r length(unique(country_groups_data$Country))` countries. Each country is a part of multiple country groups. So, there are a total of `r nrow(country_groups_data)` data points.
+
+3. FAOSTAT_egg_chicken.csv  - This dataset contains information on number of laying chicken, yield and production from year 1961 to 2018 across the world. The information recorded per observation are `r names(egg_chicken_data)`. There are atmost `r length(unique(cattle_data$Element))` observations per country every year. The total observations recorded are `r nrow(egg_chicken_data)`.
+
+4. FAOSTAT_livestock.csv  - This dataset contains information on quantity of various livestock from year 1961 to 2018 across the world. The information recorded per observation are `r names(livestock_data)`. There are atmost `r length(unique(livestock_data$Item))` observations per country every year. The total observations recorded are `r nrow(livestock_data)`.
+
+## Tidy Data (as needed)
+
+I want to analyse variations in cattle, egg_chicken and livestock details among various country groups over the years. So, we have to preserve "Area code", "Area", "Element", "Item", "Year Code", "Value" in each of the cattle, egg_chicken and livestock dataset. All the other columns can be dropped for this analysis. Also, only one country group per country is considered for the ease of analysis. "Item" column in cattle and egg_chicken datasets and "Element" column in livestock can be dropped as they have unique values and they are not necessary for the analysis.
+
+For each of the cattle, livestock and egg_chicken dataset, we pivot_wider to record only one observation per country. Also, categorical variables are converted to factors to get better insights on view of the summary. We can also convert all the columns that represent "code" to character format (but not doing this currently). Also, we need to have consistent units of measurement. For this analysis, the units are as follows
+
+1. number - Head,
+2. yield - 100mg/An,
+3. production - tonnes.
+
+```{r}
+#| label: tidy
+
+#Tidy cattle dataset
+cattle_data_tidy <- cattle_data %>%
+select(`Area Code`, Area, `Year Code`, Element, Value) %>%
+  mutate_if(is.character, as.factor) %>%
+  pivot_wider(names_from=Element, values_from=Value) %>%
+  mutate(`Yield` = `Yield`*1000) %>%
+  rename(`milk_animals` = `Milk Animals`,
+         `cattle_yield` = `Yield`,
+         `cattle_production` = `Production`)
+
+#Tidy egg_chicken dataset
+egg_chicken_data_tidy <- egg_chicken_data %>%
+select(`Area Code`, Area, `Year Code`, Element, Value) %>%
+  mutate_if(is.character, as.factor) %>%
+  pivot_wider(names_from=Element, values_from=Value) %>%
+  mutate(`Laying` = `Laying`*1000) %>%
+  rename(`laying_chicken` = `Laying`,
+         `egg_chicken_yield` = `Yield`,
+         `egg_chicken_production` = `Production`)
+
+#Tidy livestock dataset
+livestock_data_tidy <- livestock_data %>%
+  select(`Area Code`, Area, `Year Code`, Item, Value) %>%
+  mutate_if(is.character, as.factor) %>%
+  pivot_wider(names_from=Item, values_from=Value)
+
+#Tidy country_groups dataset
+country_groups_tidy <- country_groups_data[
+  !duplicated(country_groups_data$`Country Code`),] %>%
+  select(`Country Group`, `Country Code`) %>%
+  mutate_if(is.character, as.factor)
+
+head(cattle_data_tidy)
+head(egg_chicken_data_tidy)
+head(livestock_data_tidy)
+head(country_groups_tidy)
+```
+
+After pre processing,
+
+Number of observations in cattle dataset= `r nrow(cattle_data_tidy)`
+Number of columns in cattle dataset= `r ncol(cattle_data_tidy)`
+
+Number of observations in egg_chicken dataset= `r nrow(egg_chicken_data_tidy)`
+Number of columns in egg_chicken dataset= `r ncol(egg_chicken_data_tidy)`
+
+Number of observations in livestock dataset= `r nrow(livestock_data_tidy)`
+Number of columns in livestock dataset= `r ncol(cattle_data_tidy)`
+
+Number of observations in country_groups dataset= `r nrow(country_groups_tidy)`
+Number of columns in country_groups dataset= `r ncol(country_groups_tidy)`
+
+## Join Data
+
+livestock, egg_chicken and cattle are joined based on "Area Code" and "Year Code". Then we pivot longer to represent each measurement column as category. This dataframe is merged on to country_groups_tidy to create the final dataset for analysis.
+
+```{r}
+#| label: join
+
+#Full join cattle and egg_chicken
+cattle_egg <- full_join(livestock_data_tidy,
+                              egg_chicken_data_tidy,
+                              by = c("Area Code", "Year Code")) %>%
+  select(-`Area.y`) %>%
+  rename(`Area` = `Area.x`)
+
+#Full join livestock, cattle and egg_chicken
+cattle_egg_stock <- full_join(cattle_egg,
+                              cattle_data_tidy,
+                              by = c("Area Code", "Year Code")) %>%
+  select(-`Area.y`) %>%
+  rename(`Area` = `Area.x`)
+
+#Inner join country and cattle_egg_stock
+country_cattle_egg_stock <- inner_join(country_groups_tidy,
+                                       cattle_egg_stock,
+                                       by = c("Country Code" = "Area Code")) %>%
+  select(-Area)
+
+#Pivot longer to get one observation per row per country.
+final_data <- country_cattle_egg_stock %>%
+  pivot_longer(c("Asses", "Camels", "Cattle", "Goats", "Horses", "Mules",
+                 "Sheep","Buffaloes", "Pigs", "laying_chicken",
+                 "egg_chicken_yield", "egg_chicken_production", "milk_animals",
+                 "cattle_yield", "cattle_production"),
+               names_to = "category",
+               values_to = "value")
+head(final_data)
+```
+
+No of columns in final dataset = `r ncol(final_data)`
+No of observations in final dataset = `r nrow(final_data)`
+
+```{r}
+#| label: plot
+
+ggplot(data = final_data, aes(x= `Year Code`, y = value)) +
+  geom_bar(stat = "identity",
+           mapping = aes(fill = category),
+           position = "stack") +
+  labs(title ="Global Trend in various categories over years",
+       y = "Value",
+       x = "Year",
+       fill = "Category")
+
+ggplot(data = final_data, aes(x= `Year Code`, y = value)) +
+  geom_bar(stat = "identity",
+           mapping = aes(fill = category),
+           position = "stack") +
+  facet_wrap(~`Country Group`, scales = "free_y") +
+  labs(title ="Trend in various categories over years for each country group",
+       y = "Value",
+       x = "Year",
+       fill = "Category")
+
+ggplot(data = final_data, aes(x= `Year Code`, y = value)) +
+  geom_bar(stat = "identity",
+           mapping = aes(fill = `Country Group`),
+           position = "stack") +
+  facet_wrap(~category, scales = "free_y") +
+  labs(title ="Global Trend over years for each category",
+       y = "Value",
+       x = "Year",
+       fill = "Area")
+```
+

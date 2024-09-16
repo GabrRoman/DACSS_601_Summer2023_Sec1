@@ -1,0 +1,41 @@
+---
+title: "Xinpeng Liu"
+image: images/xinpengliu.jpg
+about:
+  template: solana
+  image-width: 15em
+  image-shape: round
+  image: images/xinpengliu.jpg
+  links:
+    - icon: github
+      text: Github
+      href: https://github.com/LiuDanDanYA
+---
+
+##Instructions
+
+  - save a copy of this document as *FirstLast.qmd* in the **about** folder
+  - replace *Your Name* in yaml header with your first and last name
+  - save an image (jpeg, png) to use in the **about/images** folder
+  - replace image names in yaml header
+  - replace github user name
+  - fill in information below, as appropriate
+  - commit to github and submit pull request
+
+## Education/Work Background
+  - I am ECE master student in UMASS, I was study CS in the Oregon    - state university for undergraduate.
+
+## R experience
+  - This my first time use R, I was use MATLAB before
+
+## Research interests
+  - everything is new for me, so I want to try everything.
+
+## Hometown
+  - I from China, I am take in course online in my country
+
+## Hobbies
+  - I like pet, I have a cat in my home
+
+## Fun fact
+  - This my last course for my master degree, I am late six day to    - join in this course, thanks Prof help me add this course

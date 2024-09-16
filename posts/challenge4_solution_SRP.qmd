@@ -1,0 +1,167 @@
+---
+title: "Challenge 4 Solution"
+author: "Susannah Reed Poland"
+description: "More data wrangling: pivoting"
+date: "6/22/2023"
+format:
+  html:
+    df-print: paged
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_4
+  - abc_poll
+  - eggs
+  - fed_rates
+  - hotel_bookings
+  - debt
+  - Susannah Reed Poland
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(readxl)
+library(lubridate)
+library(stringr)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Today's challenge is to:
+
+1)  read in a data set, and describe the data set using both words and any supporting information (e.g., tables, etc)
+2)  tidy data (as needed, including sanity checks)
+3)  identify variables that need to be mutated
+4)  mutate variables and sanity check all mutations
+
+## Read in data
+
+```{r}
+#Read in the data
+abc_poll<- read_csv("_data/abc_poll_2021.csv")
+abc_poll
+
+#Which states were included in this poll, and how many people were polled in each?
+statesdesc<- abc_poll%>%
+  group_by(ppstaten)%>%
+  summarise(count= n())%>%
+  arrange(count, desc(n()))
+statesdesc
+
+#... and by another method! 
+n_distinct(abc_poll$ppstaten, na.rm = FALSE)
+
+#To scan the list of demographic variables: 
+abc_poll%>%
+  select(starts_with("pp"))%>%
+colnames()
+
+#How many demographic variables are we working with? 
+abc_poll%>%
+  select(starts_with("pp"))%>%
+ncol()
+
+#How many variables relate to political attitudes? 
+abc_poll%>%
+  select(starts_with("Q"))%>%
+ncol()
+
+```
+
+### Briefly describe the data
+
+From inspection, this seems to be a national poll of political identification and beliefs from 2021. 527 people from 49 unique states/territory were polled. A quick scan of the list shows that Alaska and Hawaii are excluded, and the District of Columbia is included -- so all samples are within the continental US. Generally,  the more populous the state, the more samples taken. 
+
+Each row is a unique case of one person's responses, which cover 14 personal demographic questions covering variables such as gender, marital status, household size and housing status. Then there are 11 political questions which seem to caputure political affiliation, views, and attitudes. The remaining 6 questions catpure information that may be specific to the administration of the poll itself, such as the person's age bracket, language, and ID number, etc.
+
+## Clean up a column of interest: Political ID 
+
+These data will be difficult to visualize or analyze by other means because the some values for variables of interest are non-standard For instance, the QPID column - presumably, the respondent's political identification - contains values that mimic natural language, eg. "A Democrat". 
+
+```{r}
+#tabulate the frequency of political identities, so that we can see the different types of responses
+table(abc_poll$QPID)
+
+#Create a new column, "political_party" which contains the string responses but removes the 'A' and "An" strings, and then remove the QPID column
+abc_poll_tidy<- abc_poll%>%
+  mutate(political_party = str_remove(QPID, "A[n]* "))%>%
+select(-QPID)
+
+#Create a new "politicalparty" column from the "political_party" vector that we just cleaned up. In this new column, the "Skipped" response becomes "NA", which more accurately represents this value. Delete the old "Political_Party" column.
+abc_poll_tidy<- abc_poll_tidy%>%
+  mutate(politicalparty = case_when(str_detect(political_party, "Skipped")~NA_character_, TRUE~political_party))%>%
+  select(-political_party)
+
+#tablulate, again, the politicalparty vector to check that values are properly renamed and "Skipped" removed entirely (and this tabulation note will not show NA values). 
+table(abc_poll_tidy$politicalparty)
+```
+
+## Clean up the "Contact" variable
+
+```{r}
+#As it stands, we have two very wordy values under the the column "Contact", simply indicating whether or not a person is willing to be contacted after responding to this poll. Here is a tablulation of those values: 
+table(abc_poll_tidy$interview)
+
+#Remove the unwanted text so that the values are just "yes" or "no"
+abc_poll_tidyer<-abc_poll_tidy%>%
+  mutate(followup = str_remove(interview, ", I am[ not]* willing to be interviewed")
+         )%>%
+  select(-interview)
+
+#and check the tabulation of new values
+table(abc_poll_tidyer$followup)
+```
+
+## Across all Political variables, code "Skipped" responses as "NA" 
+
+As we did with the Political ID variable, we should change all the responses that are now coded as "skipped" to "NA", so that they are understood as absent. 
+
+```{r}
+#select all columns that start with Q (i.e. those having to do with political beliefs and attitudes) and change all values to "NA" if they are currently coded as "Skipped". Because na_if() using the format na_if(data, value), we use ".x" to indicate any vector/column that we have selected (i.e. those that start with "Q"). 
+
+abc_poll_tidyest<-abc_poll_tidyer%>%
+  mutate(across(starts_with("Q"), ~ na_if(.x, "Skipped")))
+
+```
+
+#Order the categories of the income variable
+
+For the sake visualization, I will order the category "ppinc7" by increasing income bracket. I could re-code these values as numeric, and then arrange them accordingly, but since they are coded as strings I will have to use the 'factor' variable type to link variable labels to an number.  
+
+```{r}
+#Check out the variable names 
+table(abc_poll_tidyest$ppinc7)
+
+#select the unique values within the ppinc7 column 
+inclabels <- unique(abc_poll_tidyest$ppinc7)
+inclabels
+
+#create a new variable called "inclevels" that puts inclabels in the desired order
+inclevels <- c("Less than $10,000",
+              "10,000 to $24,999",
+              "$25,000 to $49,999", 
+              "$50,000 to $74,999",
+              "$75,000 to $99,999", 
+              "$100,000 to $149,999", 
+              "$150,000 or more")
+
+#Create a new column, "income" that lists ppinc7 in the order of the vector "inclevels"
+abc_poll_final<- abc_poll_tidyest%>%
+  mutate(inclevels = factor(ppinc7, 
+                            levels=inclevels))%>% #inclabels[c(7,4,1,6,5,3,2)]))%>%
+  select(-ppinc7)
+
+#check it out! Factor the new "inclevels" column
+table(abc_poll_final$inclevels)
+
+```
+Et voila! The dataframe should now be more easily analyzed and visualized, as values of interest are more legibly coded and sequenced. 
+

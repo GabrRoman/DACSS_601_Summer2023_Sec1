@@ -1,0 +1,179 @@
+---
+title: "Homework 2"
+author: "Srujan Kagitala"
+description: "Homework 2"
+date: "7/1/2023"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-copy: true
+    code-tools: true
+categories:
+  - hw2
+  - olympics
+  - srujan_kagitala
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(ggplot2)
+library(treemap)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Overview
+
+For my final project, I would do exploratory analysis on the Olympics data right from the year it started in 1896 in Athena till 2016 in Rio de Janeiro.
+
+### Olympics
+
+Olympics is the most decorated sporting event in an athlete's career. The Olympics are the leading international sporting events featuring summer and winter sports competitions in which thousands of athletes from around the world participate in a variety of competitions. The Olympic Games are considered the world's foremost sports competition with more than 200 teams, representing sovereign states and territories, participating. The Olympic Games are normally held every four years, and since 1994, have alternated between the Summer and Winter Olympics every two years during the four-year period. The first, second, and third place finishers in each event receive Olympic medals: gold, silver, and bronze, respectively.
+
+## Dataset
+
+The dataset I would use for this analysis is downloaded from
+[Kaggle](https://www.kaggle.com/datasets/samruddhim/olympics-althlete-events-analysis). 
+
+This dataset consists of Olympics data of over a century, from the year 1896 to 2016. Studying this dataset will help to understand the patterns followed in the games of Olympics, patterns of the most successful athletes and countries in their Olympics journey and much more!
+
+```{r}
+#| label: read
+
+olympics_data <- read_csv("_data/athlete_events_olympics.csv")
+head(olympics_data)
+```
+
+The data set has `r nrow(olympics_data)` observations and `r ncol(olympics_data)` data points recorded per observation. Each observation records variables like `r names(olympics_data)`.
+
+The youngest and the oldest athlete that ever participated are `r min(olympics_data$Age, na.rm = TRUE)` and `r max(olympics_data$Age, na.rm = TRUE)` years of age respectively. Athletes from across the world compete in `r length(unique(olympics_data$Event))` events that happen across `r length(unique(olympics_data$Sport))` sports. These happen in `r length(unique(olympics_data$Season))` Olympic seasons i.e `r unique(olympics_data$Season)`.
+
+## Data Cleaning
+
+The dataset is mostly clean and we don't have to work around much. Although, for doing some analysis, we might need to create various subsets of data like medals, teams, etc, drop na values for a few variables and mutate new variables(Most of these can be done during the analysis). We need to convert categorical variables into factor to get overall summary across various variables. We don't need the "ID" column for our analysis as it only serves the purpose of a key.
+
+```{r}
+#| label: clean
+
+olympics_data <- olympics_data %>%
+  mutate_if(is_character, as.factor) %>%
+  select(-ID)
+
+medals <- olympics_data %>%
+  filter(!is.na(Medal))
+
+summary(olympics_data)
+head(olympics_data)
+head(medals)
+```
+
+## Insights
+
+```{r}
+#| label: insight_1
+
+#Type of medals won by teams.
+teams_medals_type <- medals %>%
+  group_by(NOC, Medal) %>%
+  summarise(count = n())
+
+#Total medals won by teams
+teams_medals_total <- medals %>%
+  group_by(NOC) %>%
+  summarise(total_medals = n()) %>%
+  arrange(desc(total_medals))
+
+#Top 50 countries(by total medals won) medal_type tally.
+(teams_medals_tally <- inner_join(teams_medals_type,
+                              teams_medals_total[1:50, ],
+                              by = "NOC") %>%
+    arrange(desc(total_medals)))
+
+#Bar plot of medals won by top 50 countries.
+ggplot(data = teams_medals_tally , aes(x= reorder(NOC, total_medals), y = count)) +
+  geom_bar(stat = "identity",
+           mapping = aes(fill = Medal),
+           position = "stack") +
+  labs(title ="Top 50 countries that won most medals",
+       y = "No of medals",
+       x = "Nation of Origin",
+       fill = "Medal")+
+  coord_flip()
+```
+We can see that USA has won the highest number of medals, more than double the number of medals won by Soviet Union.
+
+```{r}
+#| label: insight_2
+
+#Sport with events count
+(sport_events <- olympics_data %>%
+  distinct(Sport, Event) %>%
+  group_by(Sport) %>%
+  summarise(no_events = n()) %>%
+  arrange(desc(no_events)))
+
+#Treemap representing each Sport proportional to number of events in olympics
+treemap(sport_events,
+        index = "Sport",
+        vSize = "no_events",
+        type = "index",
+        fontsize.labels = 10,
+        fontcolor.labels = "black",
+        align.labels=list(
+          c("center", "center")),
+        inflate.labels=F,
+        palette = "Set1",
+        title="Treemap representing each Sport proportional to number of events in olympics",
+        fontsize.title=12)
+```
+
+Athletics and shooting are the sports with highest number of events (`r sport_events$no_events[1]` events each) followed by swimming with `r sport_events$no_events[3]` events.
+
+```{r}
+#| label: insight_3
+
+#Age distribution among females and males in olympics.
+ggplot(olympics_data, aes(x = Age, fill = Sex, na.rm = TRUE)) +
+  geom_density(adjust=2, alpha = 0.5) +
+  theme_linedraw() +
+  labs(title = "Age distribution of atheletes in Olympics",
+       x = "Age",
+       y = "proportion")
+```
+
+We can see that the mean age of men athletes is higher than the mean age of women athletes.
+Most frequent age in men athletes is approximately equal to the most frequent age in women athletes.
+
+```{r}
+#| label: insight_4
+
+#Times series for how top 10 nations performed over years.
+teams_medals_yearly <- medals %>%
+  filter(NOC %in% teams_medals_total[1:9,]$NOC) %>%
+  group_by(NOC, Year) %>%
+  summarise(total_medals = n()) %>%
+  arrange(NOC,Year)
+
+ggplot(teams_medals_yearly,
+       aes(x= Year, y = total_medals)) + 
+  geom_line() +
+  facet_wrap(~NOC, scales = "free") +
+  #scale_x_continuous(breaks = c(2015, 2016, 2017),
+                     #labels = c("2015", "2016", "2017")) +
+  theme_linedraw()+
+  labs(title = "Medals won over years by top 10 countries since 1896",
+       x = "Year",
+       y = "Number of medals")
+```
+
+## Research Questions
+
+1. Is there an unbiased ranking system to determine the rankings of nations in Olympics? Can we rank different nations on varied ranking systems (different weightage for gold, silver and bronze) and observe how their ranks differ based on weightage given to gold, silver and bronze medals?
+2. Can we identify the most decorated athlete of all time, most decorated men and women athlete?
+3. Can we identify the age of men and women athletes where their performance is maximized? Does this differ for countries?
+4. Can we identify if there is a correlation of features like height/weight/age to a specific sports? (For example if height positively impacts basketball, age helps in shooting or athletics, etc.) Does it equally hold for both the genders?

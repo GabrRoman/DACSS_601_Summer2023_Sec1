@@ -1,0 +1,30 @@
+---
+title: "Danny Holt"
+image: images/YourName.jpeg
+about:
+  template: solana
+  image-width: 15em
+  image-shape: round
+  image: images/DannyHolt.png
+  links:
+    - icon: DannyHolt
+      text: Danny Holt
+      href: https://github.com/dgholt
+---
+## Education/Work Background
+I finished my Master's in Labor Studies at UMass earlier this year. Since then, I've been working as a researcher at SEIU District 1199NE, a healthcare workers' union based in Hartford, CT.
+
+## R experience
+I have no previous R experience.
+
+## Research interests
+Labor and politics
+
+## Hometown
+Belmont, MA
+
+## Hobbies
+Playing drums, biking, watching basketball
+
+## Fun fact
+I collect things with owls on them.

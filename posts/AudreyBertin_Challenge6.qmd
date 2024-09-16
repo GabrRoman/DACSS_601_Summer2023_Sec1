@@ -1,0 +1,190 @@
+---
+title: "Challenge 6"
+author: "Audrey Bertin"
+description: "Visualizing Time and Relationships"
+date: "6/15/2023"
+format:
+  html:
+    df-print: paged
+    toc: true
+    code-copy: true
+    code-tools: true
+categories:
+  - challenge_6
+  - air_bnb
+  - ggplot2
+  - audrey_bertin
+---
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+For this challenge, I'll be reading in the `AB_NYC_1019.csv ⭐⭐⭐⭐⭐` data.
+
+This was the dataset I read for challenge 5, so I will be continuing to visualize it and add on to what I discovered in the last challenge. 
+
+For the data overview below, I will be reproducing the steps from challenge 5 so that the data is in the same format.
+
+## The Data
+
+
+```{r, message = FALSE}
+airbnb <- readr::read_csv("_data/AB_NYC_2019.csv")
+
+```
+
+```{r}
+glimpse(airbnb)
+```
+
+This dataset has 48,895 rows and 16 columns. It contains information on different AirBnB properties located in New York City, NY.
+
+Each row represents a single property in the city. For each property, we have the following information;
+
+- `id`: unique identifier for the property
+- `name`: descriptive name shown on the AirBnB website that customers see when clicking on the property
+- `host_id`: unique identifier for the host of the property
+- `host_name`: first name of the property host
+- `neighbourhood_group`: borough name where property is located
+- `neighborhood`: neighborhood within the burough (more detailed location)
+- `latitude/longitude`: geographical coordinates of property
+- `room_type`: what type of property is being booked (private room in shared home, a whole home/apartment, etc)
+- `price`: nightly price, presumably in USD
+- `minimum_nights`: minimum length of stay
+- `number_of_reviews`: total number of reviews for the property on AirBnB so far
+- `last_review`: date of last review
+- `reviews_per_month`: average number of reviews left for the property each month
+- `calculated_host_listings_count`: number of listings/properties that this specific host has on AirBnB overall
+- `availability_365`: number of nights in the year that the property is available for booking on AirBnB
+
+Room types include:
+
+```{r}
+unique(airbnb$room_type)
+```
+
+All boroughs appear to be included:
+
+```{r}
+unique(airbnb$neighbourhood_group)
+```
+
+For each borough, we have the following count of neighborhoods and properties:
+
+```{r}
+airbnb %>%
+  group_by(neighbourhood_group) %>%
+  summarize(n_properties = n(), n_neighborhoods = n_distinct(neighbourhood)) %>%
+  arrange(desc(n_properties))
+```
+Most of the properties are located in Manhattan and Brooklyn, with significantly fewer in Queens, the Bronx, and Staten Island. Within each borough, we have a few dozen neighborhoods covered, so this data seems to have pretty good coverage of the city with no obvious big missing areas of data.
+
+## Tidy Data
+
+Data is already in a tidy format, so no pivoting is necessary. Each row represents a single property, which can't be broken down into a longer format.
+
+However, we can mutate a few of the variables to get them into a better format for visualization. Specifically, the following variables should be turned into factors:
+
+- `neighbourhood_group`
+- `neighbourhood`
+- `room_type`
+
+There are a few other modifications that can be made (e.g. converting some doubles to integers), but they are not necessary for the purpose of this visualization.
+
+We do this mutation below:
+
+```{r}
+airbnb_tidy <- airbnb %>%
+  mutate(neighbourhood_group = as_factor(neighbourhood_group),
+         neighbourhood = as_factor(neighbourhood),
+         room_type = as_factor(room_type))
+```
+
+
+## Additional Mutation
+
+In order to create variables for time-dependent visualization, it could help to do some additional steps to our data beyond what was done for challenge 5.
+
+The only time related variable we have is `last_review` which has a `YYYY-MM-DD` format. To get something useful/interesting out of this date, it would help to be able to group these dates into larger categories.
+
+For this example, we'll create a YEAR-only version of the date, so that we can then group by *year* of last review to produce a graph and compare properties over time.
+
+Below, we create this variable:
+
+```{r}
+airbnb_tidy <- airbnb_tidy %>%
+  rowwise() %>%
+  mutate(year_last_review = year(last_review))
+```
+
+```{r}
+unique(airbnb_tidy$year_last_review)
+```
+
+
+
+## Time Dependent Visualization
+
+For our time dependent visualization, we can graph the number of unique properties by last review date. To do this, we'll need to create a summary using group by with our new variable.
+
+```{r}
+airbnb_tidy %>%
+  group_by(year_last_review) %>%
+  summarize(n_properties = n_distinct(id)) %>%
+  filter(!is.na(year_last_review)) %>%
+  ggplot(aes(x= year_last_review, y = n_properties)) + 
+  geom_line() +
+  xlab("Year of Last Review") +
+  ylab("Number of Properties") + 
+  ggtitle("Number of AirBnB Properties in NYC by Date of Last Review") +
+  scale_x_continuous(breaks = c(2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019), labels = c("2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019")) +
+  theme_minimal()
+  
+```
+
+With this graph, we can see that the vast majority of properties have a last review date in 2019, the most recent available year. There is also a clear pattern over time, where there are very few properties with early last review dates, and as the years get more recent, there are many more properties with a last review date in that year. This indicates that the dataset is mostly newer properties versus properties that have not been rented in a long time.
+
+
+## Visualizing Part-Whole Relationships
+
+In challenge 5, we calculated the number of distinct properties by neighborhood (borough) in NYC. 
+
+```{r}
+airbnb_by_neighborhood <- airbnb %>%
+  group_by(neighbourhood_group) %>%
+  summarize(n_properties = n()) %>%
+  arrange(desc(n_properties))
+
+airbnb_by_neighborhood
+```
+In this challenge, we can visualize these results, looking at the number of properties by neighborhood. A stacked bar chart can do this for us:
+
+```{r}
+bar_graph <- airbnb_by_neighborhood %>%
+  ggplot(aes(x="", y=n_properties, fill=neighbourhood_group)) +
+  geom_col(position="fill") +
+  scale_fill_brewer(palette = "Dark2") +
+  xlab(NULL) +
+  ylab("% of Properties") +
+  ggtitle("Percentage of AirBnBs in NYC By Borough") +
+  theme_minimal()
+
+bar_graph
+```
+We can also convert this to a pie chart by adding one line of code:
+
+```{r}
+bar_graph + coord_polar("y", start=0)
+```
+
+
+
